@@ -4,6 +4,7 @@ import { buyWiseAgent } from "../agents/buyWiseAgent";
 import { db } from "../../db";
 import { users, favorites } from "../../db/schema";
 import { eq, and } from "drizzle-orm";
+import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
 const productCache = new Map<string, { title: string; url: string; img: string; price: number }>();
 
@@ -313,43 +314,86 @@ const processWithAgentStep = createStep({
         };
       }
       
-      let messageToProcess = message;
-      if (inputData.isCallback && inputData.callbackData === "action:top10") {
-        messageToProcess = "/top";
+      const isTop = message === "/top" || (inputData.isCallback && inputData.callbackData === "action:top10");
+      const isSearch = message.length > 1 && !message.startsWith("/");
+      
+      if (isTop || isSearch) {
+        logger?.info("🔍 [Step 1] Direct product search", { isTop, query: message });
+        
+        let products: any[] = [];
+        
+        if (isTop) {
+          const result = await getTopProductsTool.execute({
+            context: {
+              country: existingUser.country,
+              currency: existingUser.currency,
+              category: "",
+            },
+            mastra,
+            runtimeContext: {} as any,
+          });
+          if (result.success) {
+            products = result.products.slice(0, 5);
+          }
+        } else {
+          const result = await searchProductsTool.execute({
+            context: {
+              query: message,
+              country: existingUser.country,
+              currency: existingUser.currency,
+              quality: "default",
+              maxPrice: 0,
+              freeShipping: false,
+              onlyDiscount: false,
+              preferCheaper: false,
+            },
+            mastra,
+            runtimeContext: {} as any,
+          });
+          if (result.success) {
+            products = result.products.slice(0, 5);
+          }
+        }
+        
+        logger?.info("✅ [Step 1] Products found", { count: products.length });
+        
+        if (products.length > 0) {
+          const title = isTop ? `🔥 <b>ТОП-${products.length} товарів:</b>` : `🔍 <b>Знайдено ${products.length} товарів:</b>`;
+          return {
+            response: title,
+            chatId: inputData.chatId,
+            success: true,
+            keyboard: "none",
+            products,
+            telegramId: inputData.telegramId,
+          };
+        }
+        
+        return {
+          response: "😔 На жаль, нічого не знайдено. Спробуйте інший запит.",
+          chatId: inputData.chatId,
+          success: true,
+          keyboard: "main",
+          telegramId: inputData.telegramId,
+        };
       }
       
-      const fullPrompt = `[Telegram ID: ${inputData.telegramId}]\n[Language: ${inputData.languageCode || "uk"}]\n\nUser: ${messageToProcess}`;
+      const fullPrompt = `[Telegram ID: ${inputData.telegramId}]\n[Language: ${inputData.languageCode || "uk"}]\n\nUser: ${message}`;
       
       const response = await buyWiseAgent.generateLegacy(fullPrompt, {
         resourceId: "telegram-bot",
         threadId: `telegram_${inputData.telegramId}`,
-        maxSteps: 5,
+        maxSteps: 3,
       });
       
       const responseText = response.text || "Вибачте, сталася помилка. Спробуйте ще раз.";
-      logger?.info("✅ [Step 1] Response generated", { length: responseText.length });
-      
-      let products: any[] = [];
-      if (response.toolResults) {
-        for (const result of response.toolResults) {
-          if (result && typeof result === "object" && "result" in result) {
-            const toolResult = result.result as any;
-            if (toolResult && toolResult.products && Array.isArray(toolResult.products)) {
-              products = toolResult.products.slice(0, 5);
-              break;
-            }
-          }
-        }
-      }
-      
-      logger?.info("✅ [Step 1] Products extracted", { count: products.length });
+      logger?.info("✅ [Step 1] Agent response", { length: responseText.length });
       
       return {
-        response: products.length > 0 ? `🔍 <b>Знайдено ${products.length} товарів:</b>` : responseText,
+        response: responseText,
         chatId: inputData.chatId,
         success: true,
-        keyboard: products.length > 0 ? "none" : "main",
-        products: products.length > 0 ? products : undefined,
+        keyboard: "main",
         telegramId: inputData.telegramId,
       };
     } catch (error) {
