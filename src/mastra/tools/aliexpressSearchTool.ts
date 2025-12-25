@@ -114,11 +114,19 @@ async function searchAliExpressAPI(
     });
     
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
+      console.log("❌ [AliExpress] API request failed:", response.statusText);
+      return generateDemoProducts(query, country, currency, filters);
     }
     
     const data = await response.json();
+    console.log("📦 [AliExpress] API response:", JSON.stringify(data).slice(0, 500));
+    
     const products = data?.aliexpress_affiliate_product_query_response?.resp_result?.result?.products?.product || [];
+    
+    if (products.length === 0) {
+      console.log("⚠️ [AliExpress] No products from API, using demo data");
+      return generateDemoProducts(query, country, currency, filters);
+    }
     
     return products.map((p: any) => ({
       id: p.product_id,
