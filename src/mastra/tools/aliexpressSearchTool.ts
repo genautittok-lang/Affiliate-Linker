@@ -73,14 +73,13 @@ async function searchAliExpressAPI(
   }
   
   try {
-    const apiUrl = "http://gw.api.taobao.com/router/rest";
-    const now = new Date();
-    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    const apiUrl = "https://api-sg.aliexpress.com/sync";
+    const timestamp = new Date().toISOString().replace('T', ' ').replace('Z', '').split('.')[0];
     
     const params: Record<string, string> = {
       app_key: appKey,
       method: "aliexpress.affiliate.product.query",
-      sign_method: "md5",
+      sign_method: "hmac-sha256",
       timestamp: timestamp,
       format: "json",
       v: "2.0",
@@ -104,14 +103,16 @@ async function searchAliExpressAPI(
     }
     
     const sortedParams = Object.keys(params).sort().map(key => `${key}${params[key]}`).join("");
-    const signString = appSecret + sortedParams + appSecret;
     const crypto = await import("crypto");
-    const sign = crypto.createHash("md5").update(signString).digest("hex").toUpperCase();
+    const sign = crypto.createHmac("sha256", appSecret).update(sortedParams).digest("hex").toUpperCase();
     params.sign = sign;
     
-    const response = await fetch(apiUrl + "?" + new URLSearchParams(params).toString(), {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
+    console.log("🔑 [AliExpress] Request params:", JSON.stringify({ ...params, app_key: "***", sign: "***" }));
+    
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
+      body: new URLSearchParams(params).toString(),
     });
     
     if (!response.ok) {
