@@ -85,14 +85,17 @@ async function searchAliExpressAPI(
       v: "2.0",
     };
     
+    const translatedQuery = translateQuery(query);
+    console.log("🌐 [AliExpress] Query translation:", query, "->", translatedQuery);
+    
     const appParams: Record<string, string> = {
-      keywords: query,
+      keywords: translatedQuery,
       target_currency: currency,
       target_language: "en",
       ship_to_country: getCountryCode(country),
       page_no: "1",
       page_size: "40",
-      sort: "SALE_PRICE_ASC",
+      sort: "LAST_VOLUME_DESC",
     };
     
     if (trackingId) {
@@ -188,6 +191,131 @@ function getCountryCode(country: string): string {
     "USA": "US", "United States": "US",
   };
   return codes[country] || "US";
+}
+
+function translateQuery(query: string): string {
+  const translations: Record<string, string> = {
+    "кофта": "sweater hoodie women",
+    "светр": "sweater pullover",
+    "худі": "hoodie sweatshirt",
+    "футболка": "t-shirt tee",
+    "штани": "pants trousers",
+    "джинси": "jeans denim",
+    "куртка": "jacket coat",
+    "пальто": "coat overcoat",
+    "плаття": "dress women",
+    "спідниця": "skirt women",
+    "шкарпетки": "socks",
+    "взуття": "shoes footwear",
+    "кросівки": "sneakers running shoes",
+    "черевики": "boots shoes",
+    "сумка": "bag handbag",
+    "рюкзак": "backpack bag",
+    "годинник": "watch smartwatch",
+    "навушники": "headphones earbuds wireless",
+    "телефон": "phone smartphone",
+    "чохол": "case cover phone",
+    "зарядка": "charger cable usb",
+    "ноутбук": "laptop notebook",
+    "планшет": "tablet ipad",
+    "мишка": "mouse wireless gaming",
+    "клавіатура": "keyboard mechanical",
+    "іграшки": "toys kids children",
+    "косметика": "makeup cosmetics beauty",
+    "прикраси": "jewelry accessories",
+    "окуляри": "glasses sunglasses",
+    "парфуми": "perfume fragrance",
+    "велосипед": "bicycle bike cycling",
+    "самокат": "scooter electric",
+    "лампа": "lamp led light",
+    "постіль": "bedding sheets pillowcase",
+    "посуд": "dishes kitchenware",
+    "каструля": "pot pan cookware",
+    "сковорода": "frying pan non-stick",
+    "ніж": "knife kitchen",
+    "ложка": "spoon fork cutlery",
+    "чашка": "cup mug coffee",
+    "пляшка": "bottle water thermos",
+    "термос": "thermos bottle vacuum",
+    "повербанк": "power bank charger portable",
+    "флешка": "usb flash drive",
+    "кабель": "cable usb type-c",
+    "адаптер": "adapter charger",
+    "чайник": "kettle electric",
+    "кавоварка": "coffee maker machine",
+    "пилосос": "vacuum cleaner robot",
+    "фен": "hair dryer",
+    "праска": "iron steamer",
+    "масажер": "massager electric",
+    "ваги": "scale weight",
+    "дзеркало": "mirror makeup",
+    "гаманець": "wallet purse",
+    "пояс": "belt leather",
+    "краватка": "tie necktie",
+    "шарф": "scarf winter",
+    "рукавички": "gloves winter",
+    "шапка": "hat beanie cap",
+    "кепка": "cap baseball",
+    "парасолька": "umbrella rain",
+    "ліхтар": "flashlight led",
+    "мультитул": "multitool knife",
+    "інструмент": "tools set",
+    "свитер": "sweater pullover",
+    "толстовка": "hoodie sweatshirt",
+    "брюки": "pants trousers",
+    "туфли": "shoes heels women",
+    "ботинки": "boots shoes winter",
+    "наушники": "headphones earbuds wireless",
+    "часы": "watch smartwatch",
+    "зарядное": "charger cable",
+    "чехол": "case cover phone",
+    "игрушки": "toys kids children",
+    "украшения": "jewelry accessories",
+    "очки": "glasses sunglasses",
+    "духи": "perfume fragrance",
+    "кошелек": "wallet purse",
+    "ремень": "belt leather",
+    "перчатки": "gloves winter",
+    "платье": "dress women",
+    "юбка": "skirt women",
+    "носки": "socks men women",
+    "кроссовки": "sneakers running shoes",
+    "сапоги": "boots shoes winter",
+    "тапочки": "slippers home",
+    "пижама": "pajamas sleepwear",
+    "нижнее белье": "underwear lingerie",
+    "купальник": "swimsuit bikini",
+    "спортивный костюм": "tracksuit sportswear",
+    "постельное": "bedding sheets",
+    "посуда": "dishes kitchenware",
+    "кастрюля": "pot pan cookware",
+    "нож": "knife kitchen",
+    "бутылка": "bottle water thermos",
+    "powerbank": "power bank charger portable",
+    "кофеварка": "coffee maker machine",
+    "пылесос": "vacuum cleaner robot",
+    "утюг": "iron steamer",
+    "массажер": "massager electric",
+    "весы": "scale weight",
+    "зеркало": "mirror makeup",
+    "зонт": "umbrella rain",
+    "фонарь": "flashlight led",
+    "инструмент": "tools set",
+  };
+  
+  const lowerQuery = query.toLowerCase().trim();
+  
+  for (const [key, value] of Object.entries(translations)) {
+    if (lowerQuery.includes(key)) {
+      return value;
+    }
+  }
+  
+  if (/^[a-zA-Z0-9\s]+$/.test(query)) {
+    return query;
+  }
+  
+  return query + " product";
 }
 
 function generateDemoProducts(
@@ -388,7 +516,7 @@ export const getTopProductsTool = createTool({
       );
       
       const scoredProducts = products
-        .filter(p => p.rating >= 4.5 && p.orders >= 100)
+        .filter(p => p.price >= 1)
         .map(p => ({ ...p, score: calculateScore(p) }))
         .sort((a, b) => b.score - a.score)
         .slice(0, 10);
