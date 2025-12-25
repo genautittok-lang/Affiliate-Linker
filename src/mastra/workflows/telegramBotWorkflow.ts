@@ -2,8 +2,10 @@ import { createStep, createWorkflow } from "../inngest";
 import { z } from "zod";
 import { buyWiseAgent } from "../agents/buyWiseAgent";
 import { db } from "../../db";
-import { users } from "../../db/schema";
-import { eq } from "drizzle-orm";
+import { users, favorites } from "../../db/schema";
+import { eq, and } from "drizzle-orm";
+
+const productCache = new Map<string, { title: string; url: string; img: string; price: number }>();
 
 const COUNTRY_BUTTONS = [
   [{ text: "🇺🇦 Україна", callback_data: "country:Ukraine" }, { text: "🇩🇪 Deutschland", callback_data: "country:Germany" }],
@@ -95,6 +97,20 @@ const processWithAgentStep = createStep({
     chatId: z.string(),
     success: z.boolean(),
     keyboard: z.string(),
+    products: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      price: z.number(),
+      originalPrice: z.number(),
+      currency: z.string(),
+      discount: z.number(),
+      rating: z.number(),
+      orders: z.number(),
+      imageUrl: z.string(),
+      affiliateUrl: z.string(),
+      freeShipping: z.boolean(),
+    })).optional(),
+    telegramId: z.string().optional(),
   }),
   
   execute: async ({ inputData, mastra }) => {
@@ -149,34 +165,69 @@ const processWithAgentStep = createStep({
             chatId: inputData.chatId,
             success: true,
             keyboard: "main",
+            telegramId: inputData.telegramId,
           };
         }
         
         if (type === "action") {
           switch (value) {
             case "search":
-              return { response: texts.search, chatId: inputData.chatId, success: true, keyboard: "none" };
+              return { response: texts.search, chatId: inputData.chatId, success: true, keyboard: "none", telegramId: inputData.telegramId };
             case "best_price":
-              return { response: texts.price, chatId: inputData.chatId, success: true, keyboard: "none" };
+              return { response: texts.price, chatId: inputData.chatId, success: true, keyboard: "none", telegramId: inputData.telegramId };
             case "menu":
-              return { response: "📱 Головне меню:", chatId: inputData.chatId, success: true, keyboard: "main" };
+              return { response: "📱 Головне меню:", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
             case "help":
-              return { response: texts.help, chatId: inputData.chatId, success: true, keyboard: "main" };
+              return { response: texts.help, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
             case "settings":
               if (existingUser) {
                 const settingsText = texts.settings
                   .replace("{country}", existingUser.country)
                   .replace("{currency}", existingUser.currency);
-                return { response: settingsText, chatId: inputData.chatId, success: true, keyboard: "settings" };
+                return { response: settingsText, chatId: inputData.chatId, success: true, keyboard: "settings", telegramId: inputData.telegramId };
               }
-              return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country" };
+              return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
             case "top10":
               break;
           }
         }
         
         if (type === "settings" && value === "country") {
-          return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country" };
+          return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+        }
+        
+        if (type === "like") {
+          if (!existingUser) {
+            return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+          }
+          
+          const [existingFav] = await db
+            .select()
+            .from(favorites)
+            .where(and(
+              eq(favorites.userId, existingUser.id),
+              eq(favorites.productId, value)
+            ));
+          
+          if (existingFav) {
+            await db.delete(favorites).where(eq(favorites.id, existingFav.id));
+            logger?.info("✅ Removed from favorites:", value);
+            return { response: "❌ Видалено з обраного", chatId: inputData.chatId, success: true, keyboard: "none", telegramId: inputData.telegramId };
+          } else {
+            const productInfo = productCache.get(value);
+            await db.insert(favorites).values({
+              userId: existingUser.id,
+              productId: value,
+              productTitle: productInfo?.title || "Product",
+              productUrl: productInfo?.url || "",
+              productImage: productInfo?.img || null,
+              currentPrice: productInfo?.price || 0,
+              currency: existingUser.currency,
+              createdAt: new Date(),
+            });
+            logger?.info("✅ Added to favorites:", value);
+            return { response: "❤️ Додано до обраного!", chatId: inputData.chatId, success: true, keyboard: "none", telegramId: inputData.telegramId };
+          }
         }
       }
       
@@ -189,6 +240,7 @@ const processWithAgentStep = createStep({
             chatId: inputData.chatId,
             success: true,
             keyboard: "country",
+            telegramId: inputData.telegramId,
           };
         }
         return {
@@ -196,11 +248,12 @@ const processWithAgentStep = createStep({
           chatId: inputData.chatId,
           success: true,
           keyboard: "main",
+          telegramId: inputData.telegramId,
         };
       }
       
       if (message === "/help") {
-        return { response: texts.help, chatId: inputData.chatId, success: true, keyboard: "main" };
+        return { response: texts.help, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
       }
       
       if (message === "/settings") {
@@ -208,9 +261,46 @@ const processWithAgentStep = createStep({
           const settingsText = texts.settings
             .replace("{country}", existingUser.country)
             .replace("{currency}", existingUser.currency);
-          return { response: settingsText, chatId: inputData.chatId, success: true, keyboard: "settings" };
+          return { response: settingsText, chatId: inputData.chatId, success: true, keyboard: "settings", telegramId: inputData.telegramId };
         }
-        return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country" };
+        return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+      }
+      
+      if (message === "/favorites" || message === "/fav") {
+        if (!existingUser) {
+          return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+        }
+        const userFavorites = await db
+          .select()
+          .from(favorites)
+          .where(eq(favorites.userId, existingUser.id));
+        
+        if (userFavorites.length === 0) {
+          return { response: "❤️ У вас поки немає обраних товарів", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
+        }
+        
+        const favProducts = userFavorites.map(f => ({
+          id: f.productId,
+          title: f.productTitle,
+          price: f.currentPrice || 0,
+          originalPrice: f.currentPrice || 0,
+          currency: f.currency,
+          discount: 0,
+          rating: 0,
+          orders: 0,
+          imageUrl: f.productImage || "",
+          affiliateUrl: f.productUrl,
+          freeShipping: false,
+        }));
+        
+        return {
+          response: `❤️ <b>Ваші обрані товари (${favProducts.length}):</b>`,
+          chatId: inputData.chatId,
+          success: true,
+          keyboard: "main",
+          products: favProducts,
+          telegramId: inputData.telegramId,
+        };
       }
       
       if (!existingUser) {
@@ -219,6 +309,7 @@ const processWithAgentStep = createStep({
           chatId: inputData.chatId,
           success: true,
           keyboard: "country",
+          telegramId: inputData.telegramId,
         };
       }
       
@@ -238,11 +329,28 @@ const processWithAgentStep = createStep({
       const responseText = response.text || "Вибачте, сталася помилка. Спробуйте ще раз.";
       logger?.info("✅ [Step 1] Response generated", { length: responseText.length });
       
+      let products: any[] = [];
+      if (response.toolResults) {
+        for (const result of response.toolResults) {
+          if (result && typeof result === "object" && "result" in result) {
+            const toolResult = result.result as any;
+            if (toolResult && toolResult.products && Array.isArray(toolResult.products)) {
+              products = toolResult.products.slice(0, 5);
+              break;
+            }
+          }
+        }
+      }
+      
+      logger?.info("✅ [Step 1] Products extracted", { count: products.length });
+      
       return {
-        response: responseText,
+        response: products.length > 0 ? `🔍 <b>Знайдено ${products.length} товарів:</b>` : responseText,
         chatId: inputData.chatId,
         success: true,
-        keyboard: "none",
+        keyboard: products.length > 0 ? "none" : "main",
+        products: products.length > 0 ? products : undefined,
+        telegramId: inputData.telegramId,
       };
     } catch (error) {
       logger?.error("❌ [Step 1] Error:", error);
@@ -251,6 +359,7 @@ const processWithAgentStep = createStep({
         chatId: inputData.chatId,
         success: false,
         keyboard: "none",
+        telegramId: inputData.telegramId,
       };
     }
   },
@@ -265,6 +374,20 @@ const sendToTelegramStep = createStep({
     chatId: z.string(),
     success: z.boolean(),
     keyboard: z.string(),
+    products: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      price: z.number(),
+      originalPrice: z.number(),
+      currency: z.string(),
+      discount: z.number(),
+      rating: z.number(),
+      orders: z.number(),
+      imageUrl: z.string(),
+      affiliateUrl: z.string(),
+      freeShipping: z.boolean(),
+    })).optional(),
+    telegramId: z.string().optional(),
   }),
   
   outputSchema: z.object({
@@ -275,74 +398,112 @@ const sendToTelegramStep = createStep({
   
   execute: async ({ inputData, mastra }) => {
     const logger = mastra?.getLogger();
-    logger?.info("📤 [Step 2] Sending to Telegram", { chatId: inputData.chatId, keyboard: inputData.keyboard });
+    logger?.info("📤 [Step 2] Sending to Telegram", { 
+      chatId: inputData.chatId, 
+      keyboard: inputData.keyboard,
+      productsCount: inputData.products?.length || 0,
+    });
     
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) {
       return { sent: false, error: "Bot token not configured" };
     }
     
-    try {
-      let inlineKeyboard = null;
-      
-      switch (inputData.keyboard) {
-        case "country":
-          inlineKeyboard = COUNTRY_BUTTONS;
-          break;
-        case "main":
-          inlineKeyboard = MAIN_MENU_BUTTONS;
-          break;
-        case "settings":
-          inlineKeyboard = SETTINGS_BUTTONS;
-          break;
-      }
-      
-      const messageBody: any = {
+    const sendMessage = async (text: string, keyboard?: any) => {
+      const body: any = {
         chat_id: inputData.chatId,
-        text: inputData.response,
+        text,
         parse_mode: "HTML",
         disable_web_page_preview: true,
       };
-      
-      if (inlineKeyboard) {
-        messageBody.reply_markup = { inline_keyboard: inlineKeyboard };
+      if (keyboard) {
+        body.reply_markup = { inline_keyboard: keyboard };
+      }
+      const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      return res.json();
+    };
+    
+    const sendPhoto = async (photoUrl: string, caption: string, keyboard: any) => {
+      const body = {
+        chat_id: inputData.chatId,
+        photo: photoUrl,
+        caption,
+        parse_mode: "HTML",
+        reply_markup: { inline_keyboard: keyboard },
+      };
+      const res = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      return res.json();
+    };
+    
+    try {
+      let inlineKeyboard = null;
+      switch (inputData.keyboard) {
+        case "country": inlineKeyboard = COUNTRY_BUTTONS; break;
+        case "main": inlineKeyboard = MAIN_MENU_BUTTONS; break;
+        case "settings": inlineKeyboard = SETTINGS_BUTTONS; break;
       }
       
-      const response = await fetch(
-        `https://api.telegram.org/bot${botToken}/sendMessage`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(messageBody),
+      if (inputData.products && inputData.products.length > 0) {
+        await sendMessage(inputData.response);
+        
+        for (const product of inputData.products) {
+          const discount = product.discount > 0 ? ` <s>${product.originalPrice}</s> -${product.discount}%` : "";
+          const shipping = product.freeShipping ? "🚚 Free" : "";
+          const rating = product.rating > 0 ? `⭐ ${product.rating.toFixed(1)}` : "";
+          const orders = product.orders > 0 ? `🛒 ${product.orders >= 1000 ? (product.orders / 1000).toFixed(1) + "K" : product.orders}` : "";
+          
+          const caption = `📦 <b>${product.title.slice(0, 100)}</b>\n\n💰 <b>${product.price} ${product.currency}</b>${discount}\n${[rating, orders, shipping].filter(Boolean).join(" | ")}`;
+          
+          productCache.set(product.id, {
+            title: product.title.slice(0, 100),
+            url: product.affiliateUrl,
+            img: product.imageUrl,
+            price: product.price,
+          });
+          
+          const productButtons = [
+            [
+              { text: "🛒 Купити", url: product.affiliateUrl },
+              { text: "❤️", callback_data: `like:${product.id.slice(0, 50)}` },
+            ],
+          ];
+          
+          if (product.imageUrl && !product.imageUrl.includes("placeholder")) {
+            const photoResult = await sendPhoto(product.imageUrl, caption, productButtons);
+            if (!photoResult.ok) {
+              logger?.warn("⚠️ Photo failed, sending text", { error: photoResult.description });
+              await sendMessage(caption, productButtons);
+            }
+          } else {
+            await sendMessage(caption, productButtons);
+          }
+          
+          await new Promise(r => setTimeout(r, 100));
         }
-      );
+        
+        await sendMessage("📱 Головне меню:", MAIN_MENU_BUTTONS);
+        logger?.info("✅ [Step 2] Products sent");
+        return { sent: true };
+      }
       
-      const result = await response.json();
+      const result = await sendMessage(inputData.response, inlineKeyboard);
       
       if (result.ok) {
         logger?.info("✅ [Step 2] Sent successfully");
         return { sent: true, messageId: result.result?.message_id };
       } else {
-        const plainBody = {
-          chat_id: inputData.chatId,
-          text: inputData.response.replace(/<[^>]*>/g, ""),
-          reply_markup: inlineKeyboard ? { inline_keyboard: inlineKeyboard } : undefined,
-        };
-        
-        const plainResponse = await fetch(
-          `https://api.telegram.org/bot${botToken}/sendMessage`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(plainBody),
-          }
-        );
-        
-        const plainResult = await plainResponse.json();
+        const plainResult = await sendMessage(inputData.response.replace(/<[^>]*>/g, ""), inlineKeyboard);
         if (plainResult.ok) {
           return { sent: true, messageId: plainResult.result?.message_id };
         }
-        
         logger?.error("❌ [Step 2] Telegram error:", result);
         return { sent: false, error: result.description };
       }

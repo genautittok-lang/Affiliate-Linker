@@ -6,6 +6,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { getUserProfileTool, createUserProfileTool, updateUserSettingsTool } from "../tools/userProfileTool";
 import { searchProductsTool, getTopProductsTool, getBestUnderPriceTool } from "../tools/aliexpressSearchTool";
 import { getUITextTool, translateTextTool, formatProductMessageTool } from "../tools/localizationTool";
+import { toggleFavoriteTool, getFavoritesTool } from "../tools/favoritesTool";
 
 const openai = createOpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
@@ -63,6 +64,8 @@ export const buyWiseAgent = new Agent({
     getUITextTool,
     translateTextTool,
     formatProductMessageTool,
+    toggleFavoriteTool,
+    getFavoritesTool,
   },
 
   memory: new Memory({
