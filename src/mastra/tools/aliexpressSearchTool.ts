@@ -198,7 +198,7 @@ function generateDemoProducts(
       discount: p.discount,
       rating: p.rating,
       orders: p.orders,
-      imageUrl: `https://via.placeholder.com/300x300?text=${encodeURIComponent(query)}`,
+      imageUrl: `https://picsum.photos/seed/${i + Date.now()}/400/400`,
       productUrl: `https://aliexpress.com/item/${i}.html`,
       affiliateUrl: `https://s.click.aliexpress.com/e/_${i}`,
       freeShipping: freeShipping,

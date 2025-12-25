@@ -18,65 +18,120 @@ const COUNTRY_BUTTONS = [
 
 const MAIN_MENU_BUTTONS = [
   [{ text: "🔍 Пошук", callback_data: "action:search" }, { text: "🔥 ТОП-10", callback_data: "action:top10" }],
-  [{ text: "💰 До ціни", callback_data: "action:best_price" }, { text: "⚙️ Налаштування", callback_data: "action:settings" }],
+  [{ text: "❤️ Обране", callback_data: "action:favorites" }, { text: "👤 Профіль", callback_data: "action:profile" }],
+  [{ text: "🌐 Мова", callback_data: "action:language" }, { text: "💬 Підтримка", callback_data: "action:support" }],
 ];
 
-const SETTINGS_BUTTONS = [
+const PROFILE_BUTTONS = [
   [{ text: "🌍 Змінити країну", callback_data: "settings:country" }],
+  [{ text: "🌐 Змінити мову", callback_data: "action:language" }],
+  [{ text: "🔙 Меню", callback_data: "action:menu" }],
+];
+
+const LANGUAGE_BUTTONS = [
+  [{ text: "🇺🇦 Українська", callback_data: "lang:uk" }, { text: "🇷🇺 Русский", callback_data: "lang:ru" }],
+  [{ text: "🇬🇧 English", callback_data: "lang:en" }, { text: "🇩🇪 Deutsch", callback_data: "lang:de" }],
+  [{ text: "🇵🇱 Polski", callback_data: "lang:pl" }, { text: "🇫🇷 Français", callback_data: "lang:fr" }],
   [{ text: "🔙 Назад", callback_data: "action:menu" }],
 ];
 
-const LANG_GREETINGS: Record<string, { welcome: string; chooseCountry: string; ready: string; search: string; price: string; help: string; settings: string }> = {
+const BACK_BUTTON = [
+  [{ text: "🔙 Меню", callback_data: "action:menu" }],
+];
+
+interface LangTexts {
+  welcome: string;
+  chooseCountry: string;
+  chooseLang: string;
+  ready: string;
+  search: string;
+  profile: string;
+  support: string;
+  langChanged: string;
+  noFavorites: string;
+}
+
+const LANG_TEXTS: Record<string, LangTexts> = {
   uk: {
-    welcome: "Вітаю! 👋 Я BuyWise - допоможу знайти найкращі товари на AliExpress.",
-    chooseCountry: "Оберіть вашу країну для доставки:",
-    ready: "Готово! ✅ Тепер можу шукати товари для вас.",
-    search: "🔍 Напишіть що шукаєте:\n• навушники bluetooth\n• чохол iPhone 15\n• кросівки Nike",
-    price: "💰 Напишіть максимальну ціну:\n• до 500 грн\n• під 20 євро",
-    help: "📖 <b>Як користуватися:</b>\n\n🔍 <b>Пошук</b> - напишіть назву товару\n🔥 <b>ТОП-10</b> - найкращі пропозиції дня\n💰 <b>До ціни</b> - товари до вказаної суми\n⚙️ <b>Налаштування</b> - змінити країну\n\n<i>Приклад:</i> бездротові навушники",
-    settings: "⚙️ <b>Налаштування</b>\n\nВаша країна: {country}\nВалюта: {currency}",
+    welcome: "👋 <b>Вітаю!</b> Я BuyWise - твій помічник для пошуку найкращих товарів на AliExpress.\n\n🔍 Шукай товари\n🔥 Дивись ТОП пропозиції\n❤️ Зберігай улюблене",
+    chooseCountry: "🌍 Оберіть вашу країну для доставки:",
+    chooseLang: "🌐 Оберіть мову:",
+    ready: "✅ Готово! Тепер можу шукати товари для вас.",
+    search: "🔍 <b>Пошук товарів</b>\n\nНапишіть що шукаєте:\n• навушники bluetooth\n• чохол iPhone 15\n• кросівки Nike",
+    profile: "👤 <b>Ваш профіль</b>\n\n🌍 Країна: <b>{country}</b>\n💰 Валюта: <b>{currency}</b>\n🌐 Мова: <b>{language}</b>\n👤 Ім'я: <b>{name}</b>",
+    support: "💬 <b>Підтримка</b>\n\nЯкщо у вас виникли питання або пропозиції, напишіть нам:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
+    langChanged: "✅ Мову змінено на Українську",
+    noFavorites: "❤️ У вас поки немає обраних товарів.\n\nДодайте товари в обране натиснувши ❤️ під товаром.",
   },
   ru: {
-    welcome: "Привет! 👋 Я BuyWise - помогу найти лучшие товары на AliExpress.",
-    chooseCountry: "Выберите вашу страну для доставки:",
-    ready: "Готово! ✅ Теперь могу искать товары для вас.",
-    search: "🔍 Напишите что ищете:\n• наушники bluetooth\n• чехол iPhone 15\n• кроссовки Nike",
-    price: "💰 Напишите максимальную цену:\n• до 500 грн\n• до 20 евро",
-    help: "📖 <b>Как пользоваться:</b>\n\n🔍 <b>Поиск</b> - напишите название товара\n🔥 <b>ТОП-10</b> - лучшие предложения дня\n💰 <b>До цены</b> - товары до указанной суммы\n⚙️ <b>Настройки</b> - сменить страну",
-    settings: "⚙️ <b>Настройки</b>\n\nВаша страна: {country}\nВалюта: {currency}",
+    welcome: "👋 <b>Привет!</b> Я BuyWise - твой помощник для поиска лучших товаров на AliExpress.\n\n🔍 Ищи товары\n🔥 Смотри ТОП предложения\n❤️ Сохраняй избранное",
+    chooseCountry: "🌍 Выберите вашу страну для доставки:",
+    chooseLang: "🌐 Выберите язык:",
+    ready: "✅ Готово! Теперь могу искать товары для вас.",
+    search: "🔍 <b>Поиск товаров</b>\n\nНапишите что ищете:\n• наушники bluetooth\n• чехол iPhone 15\n• кроссовки Nike",
+    profile: "👤 <b>Ваш профиль</b>\n\n🌍 Страна: <b>{country}</b>\n💰 Валюта: <b>{currency}</b>\n🌐 Язык: <b>{language}</b>\n👤 Имя: <b>{name}</b>",
+    support: "💬 <b>Поддержка</b>\n\nЕсли у вас возникли вопросы или предложения, напишите нам:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
+    langChanged: "✅ Язык изменен на Русский",
+    noFavorites: "❤️ У вас пока нет избранных товаров.\n\nДобавьте товары в избранное нажав ❤️ под товаром.",
   },
   en: {
-    welcome: "Hello! 👋 I'm BuyWise - I'll help you find the best deals on AliExpress.",
-    chooseCountry: "Choose your country for shipping:",
-    ready: "Done! ✅ Now I can search products for you.",
-    search: "🔍 Tell me what you're looking for:\n• bluetooth headphones\n• iPhone 15 case\n• Nike sneakers",
-    price: "💰 Enter maximum price:\n• under 50 EUR\n• max 30 USD",
-    help: "📖 <b>How to use:</b>\n\n🔍 <b>Search</b> - type product name\n🔥 <b>TOP-10</b> - best deals today\n💰 <b>Under price</b> - products under budget\n⚙️ <b>Settings</b> - change country",
-    settings: "⚙️ <b>Settings</b>\n\nYour country: {country}\nCurrency: {currency}",
+    welcome: "👋 <b>Hello!</b> I'm BuyWise - your assistant for finding the best deals on AliExpress.\n\n🔍 Search products\n🔥 View TOP deals\n❤️ Save favorites",
+    chooseCountry: "🌍 Choose your country for shipping:",
+    chooseLang: "🌐 Choose your language:",
+    ready: "✅ Done! Now I can search products for you.",
+    search: "🔍 <b>Product Search</b>\n\nTell me what you're looking for:\n• bluetooth headphones\n• iPhone 15 case\n• Nike sneakers",
+    profile: "👤 <b>Your Profile</b>\n\n🌍 Country: <b>{country}</b>\n💰 Currency: <b>{currency}</b>\n🌐 Language: <b>{language}</b>\n👤 Name: <b>{name}</b>",
+    support: "💬 <b>Support</b>\n\nIf you have questions or suggestions, contact us:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
+    langChanged: "✅ Language changed to English",
+    noFavorites: "❤️ You don't have any favorites yet.\n\nAdd products to favorites by tapping ❤️ below a product.",
   },
   de: {
-    welcome: "Hallo! 👋 Ich bin BuyWise - ich helfe dir die besten Angebote auf AliExpress zu finden.",
-    chooseCountry: "Wählen Sie Ihr Land für den Versand:",
-    ready: "Fertig! ✅ Jetzt kann ich Produkte für Sie suchen.",
-    search: "🔍 Schreiben Sie was Sie suchen:\n• Bluetooth Kopfhörer\n• iPhone 15 Hülle\n• Nike Schuhe",
-    price: "💰 Maximaler Preis eingeben:\n• bis 50 EUR\n• max 30 USD",
-    help: "📖 <b>Anleitung:</b>\n\n🔍 <b>Suche</b> - Produktname eingeben\n🔥 <b>TOP-10</b> - beste Angebote\n💰 <b>Bis Preis</b> - Produkte bis Budget\n⚙️ <b>Einstellungen</b> - Land ändern",
-    settings: "⚙️ <b>Einstellungen</b>\n\nIhr Land: {country}\nWährung: {currency}",
+    welcome: "👋 <b>Hallo!</b> Ich bin BuyWise - dein Assistent für die besten Angebote auf AliExpress.\n\n🔍 Produkte suchen\n🔥 TOP Angebote\n❤️ Favoriten speichern",
+    chooseCountry: "🌍 Wählen Sie Ihr Land für den Versand:",
+    chooseLang: "🌐 Sprache wählen:",
+    ready: "✅ Fertig! Jetzt kann ich Produkte für Sie suchen.",
+    search: "🔍 <b>Produktsuche</b>\n\nSchreiben Sie was Sie suchen:\n• Bluetooth Kopfhörer\n• iPhone 15 Hülle\n• Nike Schuhe",
+    profile: "👤 <b>Ihr Profil</b>\n\n🌍 Land: <b>{country}</b>\n💰 Währung: <b>{currency}</b>\n🌐 Sprache: <b>{language}</b>\n👤 Name: <b>{name}</b>",
+    support: "💬 <b>Support</b>\n\nBei Fragen oder Vorschlägen kontaktieren Sie uns:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
+    langChanged: "✅ Sprache auf Deutsch geändert",
+    noFavorites: "❤️ Sie haben noch keine Favoriten.\n\nFügen Sie Produkte zu Favoriten hinzu, indem Sie ❤️ unter einem Produkt tippen.",
   },
   pl: {
-    welcome: "Cześć! 👋 Jestem BuyWise - pomogę znaleźć najlepsze oferty na AliExpress.",
-    chooseCountry: "Wybierz swój kraj dostawy:",
-    ready: "Gotowe! ✅ Teraz mogę szukać produktów dla Ciebie.",
-    search: "🔍 Napisz czego szukasz:\n• słuchawki bluetooth\n• etui iPhone 15\n• buty Nike",
-    price: "💰 Podaj maksymalną cenę:\n• do 100 PLN\n• max 20 EUR",
-    help: "📖 <b>Jak korzystać:</b>\n\n🔍 <b>Szukaj</b> - wpisz nazwę produktu\n🔥 <b>TOP-10</b> - najlepsze oferty\n💰 <b>Do ceny</b> - produkty w budżecie\n⚙️ <b>Ustawienia</b> - zmień kraj",
-    settings: "⚙️ <b>Ustawienia</b>\n\nTwój kraj: {country}\nWaluta: {currency}",
+    welcome: "👋 <b>Cześć!</b> Jestem BuyWise - twój asystent do znajdowania najlepszych ofert na AliExpress.\n\n🔍 Szukaj produktów\n🔥 TOP oferty\n❤️ Zapisuj ulubione",
+    chooseCountry: "🌍 Wybierz swój kraj dostawy:",
+    chooseLang: "🌐 Wybierz język:",
+    ready: "✅ Gotowe! Teraz mogę szukać produktów dla Ciebie.",
+    search: "🔍 <b>Szukaj produktów</b>\n\nNapisz czego szukasz:\n• słuchawki bluetooth\n• etui iPhone 15\n• buty Nike",
+    profile: "👤 <b>Twój profil</b>\n\n🌍 Kraj: <b>{country}</b>\n💰 Waluta: <b>{currency}</b>\n🌐 Język: <b>{language}</b>\n👤 Imię: <b>{name}</b>",
+    support: "💬 <b>Wsparcie</b>\n\nJeśli masz pytania lub sugestie, skontaktuj się z nami:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
+    langChanged: "✅ Język zmieniony na Polski",
+    noFavorites: "❤️ Nie masz jeszcze ulubionych.\n\nDodaj produkty do ulubionych, klikając ❤️ pod produktem.",
+  },
+  fr: {
+    welcome: "👋 <b>Bonjour!</b> Je suis BuyWise - votre assistant pour trouver les meilleures offres sur AliExpress.\n\n🔍 Rechercher des produits\n🔥 TOP offres\n❤️ Sauvegarder les favoris",
+    chooseCountry: "🌍 Choisissez votre pays de livraison:",
+    chooseLang: "🌐 Choisissez votre langue:",
+    ready: "✅ C'est fait! Je peux maintenant rechercher des produits pour vous.",
+    search: "🔍 <b>Recherche de produits</b>\n\nDites-moi ce que vous cherchez:\n• écouteurs bluetooth\n• coque iPhone 15\n• baskets Nike",
+    profile: "👤 <b>Votre profil</b>\n\n🌍 Pays: <b>{country}</b>\n💰 Devise: <b>{currency}</b>\n🌐 Langue: <b>{language}</b>\n👤 Nom: <b>{name}</b>",
+    support: "💬 <b>Support</b>\n\nSi vous avez des questions ou des suggestions, contactez-nous:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
+    langChanged: "✅ Langue changée en Français",
+    noFavorites: "❤️ Vous n'avez pas encore de favoris.\n\nAjoutez des produits aux favoris en appuyant sur ❤️ sous un produit.",
   },
 };
 
-function getLang(code: string): typeof LANG_GREETINGS.uk {
+const LANG_NAMES: Record<string, string> = {
+  uk: "Українська",
+  ru: "Русский", 
+  en: "English",
+  de: "Deutsch",
+  pl: "Polski",
+  fr: "Français",
+};
+
+function getTexts(code: string): LangTexts {
   const lang = code?.toLowerCase().slice(0, 2) || "en";
-  return LANG_GREETINGS[lang] || LANG_GREETINGS.en;
+  return LANG_TEXTS[lang] || LANG_TEXTS.en;
 }
 
 const processWithAgentStep = createStep({
@@ -122,13 +177,16 @@ const processWithAgentStep = createStep({
       isCallback: inputData.isCallback,
     });
     
-    const texts = getLang(inputData.languageCode || "uk");
+    const userLang = inputData.languageCode?.slice(0, 2) || "uk";
     
     try {
       const [existingUser] = await db
         .select()
         .from(users)
         .where(eq(users.telegramId, inputData.telegramId));
+      
+      const lang = existingUser?.language || userLang;
+      const texts = getTexts(lang);
       
       if (inputData.isCallback && inputData.callbackData) {
         const [type, value] = inputData.callbackData.split(":");
@@ -139,7 +197,6 @@ const processWithAgentStep = createStep({
             Romania: "RON", France: "EUR", Spain: "EUR", Italy: "EUR", UK: "GBP", USA: "USD",
           };
           const currency = COUNTRY_CURRENCY[value] || "USD";
-          const lang = inputData.languageCode?.slice(0, 2) || "en";
           
           if (existingUser) {
             await db.update(users).set({ 
@@ -170,24 +227,79 @@ const processWithAgentStep = createStep({
           };
         }
         
+        if (type === "lang") {
+          if (existingUser) {
+            await db.update(users).set({ 
+              language: value, 
+              updatedAt: new Date() 
+            }).where(eq(users.telegramId, inputData.telegramId));
+          }
+          const newTexts = getTexts(value);
+          logger?.info("✅ [Step 1] Language changed:", value);
+          return {
+            response: newTexts.langChanged,
+            chatId: inputData.chatId,
+            success: true,
+            keyboard: "main",
+            telegramId: inputData.telegramId,
+          };
+        }
+        
         if (type === "action") {
           switch (value) {
             case "search":
-              return { response: texts.search, chatId: inputData.chatId, success: true, keyboard: "none", telegramId: inputData.telegramId };
-            case "best_price":
-              return { response: texts.price, chatId: inputData.chatId, success: true, keyboard: "none", telegramId: inputData.telegramId };
+              return { response: texts.search, chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId };
             case "menu":
-              return { response: "📱 Головне меню:", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
-            case "help":
-              return { response: texts.help, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
-            case "settings":
+              return { response: "📱 <b>Головне меню</b>\n\nОберіть дію:", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
+            case "profile":
               if (existingUser) {
-                const settingsText = texts.settings
-                  .replace("{country}", existingUser.country)
-                  .replace("{currency}", existingUser.currency);
-                return { response: settingsText, chatId: inputData.chatId, success: true, keyboard: "settings", telegramId: inputData.telegramId };
+                const profileText = texts.profile
+                  .replace("{country}", existingUser.country || "-")
+                  .replace("{currency}", existingUser.currency)
+                  .replace("{language}", LANG_NAMES[existingUser.language] || LANG_NAMES.en || existingUser.language)
+                  .replace("{name}", existingUser.userName || inputData.userName || "-");
+                return { response: profileText, chatId: inputData.chatId, success: true, keyboard: "profile", telegramId: inputData.telegramId };
               }
               return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+            case "language":
+              return { response: texts.chooseLang, chatId: inputData.chatId, success: true, keyboard: "language", telegramId: inputData.telegramId };
+            case "support":
+              return { response: texts.support, chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId };
+            case "favorites":
+              if (!existingUser) {
+                return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+              }
+              const userFavs = await db
+                .select()
+                .from(favorites)
+                .where(eq(favorites.userId, existingUser.id));
+              
+              if (userFavs.length === 0) {
+                return { response: texts.noFavorites, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
+              }
+              
+              const favProds = userFavs.map(f => ({
+                id: f.productId,
+                title: f.productTitle,
+                price: f.currentPrice || 0,
+                originalPrice: f.currentPrice || 0,
+                currency: f.currency,
+                discount: 0,
+                rating: 0,
+                orders: 0,
+                imageUrl: f.productImage || "",
+                affiliateUrl: f.productUrl,
+                freeShipping: false,
+              }));
+              
+              return {
+                response: `❤️ <b>Обране (${favProds.length}):</b>`,
+                chatId: inputData.chatId,
+                success: true,
+                keyboard: "main",
+                products: favProds,
+                telegramId: inputData.telegramId,
+              };
             case "top10":
               break;
           }
@@ -233,11 +345,12 @@ const processWithAgentStep = createStep({
       }
       
       const message = inputData.message || "";
+      const texts2 = existingUser ? getTexts(existingUser.language) : getTexts(userLang);
       
       if (message === "/start") {
         if (!existingUser) {
           return {
-            response: `${texts.welcome}\n\n${texts.chooseCountry}`,
+            response: `${texts2.welcome}\n\n${texts2.chooseCountry}`,
             chatId: inputData.chatId,
             success: true,
             keyboard: "country",
@@ -245,7 +358,7 @@ const processWithAgentStep = createStep({
           };
         }
         return {
-          response: `${texts.welcome}\n\n📱 Оберіть дію:`,
+          response: texts2.welcome,
           chatId: inputData.chatId,
           success: true,
           keyboard: "main",
@@ -254,22 +367,24 @@ const processWithAgentStep = createStep({
       }
       
       if (message === "/help") {
-        return { response: texts.help, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
+        return { response: texts2.support, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
       }
       
-      if (message === "/settings") {
+      if (message === "/profile") {
         if (existingUser) {
-          const settingsText = texts.settings
-            .replace("{country}", existingUser.country)
-            .replace("{currency}", existingUser.currency);
-          return { response: settingsText, chatId: inputData.chatId, success: true, keyboard: "settings", telegramId: inputData.telegramId };
+          const profileText = texts2.profile
+            .replace("{country}", existingUser.country || "-")
+            .replace("{currency}", existingUser.currency)
+            .replace("{language}", LANG_NAMES[existingUser.language] || LANG_NAMES.en || existingUser.language)
+            .replace("{name}", existingUser.userName || inputData.userName || "-");
+          return { response: profileText, chatId: inputData.chatId, success: true, keyboard: "profile", telegramId: inputData.telegramId };
         }
-        return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+        return { response: texts2.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
       }
       
       if (message === "/favorites" || message === "/fav") {
         if (!existingUser) {
-          return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+          return { response: texts2.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
         }
         const userFavorites = await db
           .select()
@@ -277,7 +392,7 @@ const processWithAgentStep = createStep({
           .where(eq(favorites.userId, existingUser.id));
         
         if (userFavorites.length === 0) {
-          return { response: "❤️ У вас поки немає обраних товарів", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
+          return { response: texts2.noFavorites, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
         }
         
         const favProducts = userFavorites.map(f => ({
@@ -492,7 +607,9 @@ const sendToTelegramStep = createStep({
       switch (inputData.keyboard) {
         case "country": inlineKeyboard = COUNTRY_BUTTONS; break;
         case "main": inlineKeyboard = MAIN_MENU_BUTTONS; break;
-        case "settings": inlineKeyboard = SETTINGS_BUTTONS; break;
+        case "profile": inlineKeyboard = PROFILE_BUTTONS; break;
+        case "language": inlineKeyboard = LANGUAGE_BUTTONS; break;
+        case "back": inlineKeyboard = BACK_BUTTON; break;
       }
       
       if (inputData.products && inputData.products.length > 0) {
