@@ -140,25 +140,33 @@ async function searchAliExpressAPI(
       console.log("⚠️ [AliExpress] No products from API");
     }
     
-    return products.map((p: any) => ({
-      id: p.product_id,
-      title: p.product_title,
-      description: p.product_title,
-      price: parseFloat(p.target_sale_price || p.target_original_price),
-      originalPrice: parseFloat(p.target_original_price),
-      currency: currency,
-      discount: p.discount ? parseInt(p.discount.replace("%", "")) : 0,
-      rating: parseFloat(p.evaluate_rate?.replace("%", "") || "0") / 20,
-      orders: parseInt(p.lastest_volume || "0"),
-      imageUrl: p.product_main_image_url,
-      productUrl: p.product_detail_url,
-      affiliateUrl: p.promotion_link || p.product_detail_url,
-      freeShipping: p.ship_to_days ? true : false,
-      shippingTo: country,
-      shippingCost: 0,
-      colors: 1,
-      seller: p.shop_title || "AliExpress Seller",
-    }));
+    console.log("📦 [AliExpress] First product sample:", JSON.stringify(products[0] || {}).slice(0, 800));
+    
+    return products.map((p: any) => {
+      const salePrice = parseFloat(p.app_sale_price || p.target_sale_price || p.original_price || "0");
+      const origPrice = parseFloat(p.original_price || p.app_sale_price || "0");
+      const discountPercent = origPrice > salePrice ? Math.round((1 - salePrice / origPrice) * 100) : 0;
+      
+      return {
+        id: String(p.product_id),
+        title: p.product_title || "Product",
+        description: p.product_title || "Product",
+        price: salePrice,
+        originalPrice: origPrice,
+        currency: currency,
+        discount: discountPercent,
+        rating: parseFloat(p.evaluate_rate?.replace("%", "") || "80") / 20,
+        orders: parseInt(p.lastest_volume || "0"),
+        imageUrl: p.product_main_image_url || (p.product_small_image_urls?.string?.[0]) || "",
+        productUrl: p.product_detail_url || "",
+        affiliateUrl: p.promotion_link || p.product_detail_url || "",
+        freeShipping: true,
+        shippingTo: country,
+        shippingCost: 0,
+        colors: 1,
+        seller: p.shop_title || "AliExpress",
+      };
+    });
   } catch (error) {
     console.error("❌ [AliExpress] API error:", error);
     return [];
