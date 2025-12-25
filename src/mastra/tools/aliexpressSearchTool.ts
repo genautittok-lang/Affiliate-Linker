@@ -73,16 +73,19 @@ async function searchAliExpressAPI(
   }
   
   try {
-    const apiUrl = "https://api-sg.aliexpress.com/rest";
-    const timestamp = new Date().toISOString().replace('T', ' ').replace('Z', '').split('.')[0];
+    const crypto = await import("crypto");
+    const timestamp = String(Date.now());
     
-    const params: Record<string, string> = {
+    const systemParams: Record<string, string> = {
       app_key: appKey,
       method: "aliexpress.affiliate.product.query",
-      sign_method: "hmac-sha256",
+      sign_method: "md5",
       timestamp: timestamp,
       format: "json",
       v: "2.0",
+    };
+    
+    const appParams: Record<string, string> = {
       keywords: query,
       target_currency: currency,
       target_language: "en",
@@ -93,26 +96,34 @@ async function searchAliExpressAPI(
     };
     
     if (trackingId) {
-      params.tracking_id = trackingId;
+      appParams.tracking_id = trackingId;
     }
     if (filters.maxPrice) {
-      params.max_sale_price = String(filters.maxPrice * 100);
+      appParams.max_sale_price = String(filters.maxPrice * 100);
     }
     if (filters.freeShipping) {
-      params.delivery_days = "60";
+      appParams.delivery_days = "60";
     }
     
-    const sortedParams = Object.keys(params).sort().map(key => `${key}${params[key]}`).join("");
-    const crypto = await import("crypto");
-    const sign = crypto.createHmac("sha256", appSecret).update(sortedParams).digest("hex").toUpperCase();
-    params.sign = sign;
+    const allParams = { ...systemParams, ...appParams };
+    const sortedKeys = Object.keys(allParams).sort();
+    const signStr = appSecret + sortedKeys.map(k => `${k}${allParams[k]}`).join("") + appSecret;
+    const sign = crypto.createHash("md5").update(signStr).digest("hex").toUpperCase();
+    systemParams.sign = sign;
     
-    console.log("🔑 [AliExpress] Request params:", JSON.stringify({ ...params, app_key: "***", sign: "***" }));
+    const queryString = new URLSearchParams(systemParams).toString();
+    const apiUrl = `https://api-sg.aliexpress.com/sync?${queryString}`;
+    
+    console.log("🔑 [AliExpress] Request URL:", apiUrl.replace(appKey, "***").replace(sign, "***"));
+    console.log("🔑 [AliExpress] App params:", JSON.stringify(appParams));
     
     const response = await fetch(apiUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
-      body: new URLSearchParams(params).toString(),
+      headers: { 
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        "Cache-Control": "no-cache",
+      },
+      body: new URLSearchParams(appParams).toString(),
     });
     
     if (!response.ok) {
