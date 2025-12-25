@@ -73,7 +73,7 @@ async function searchAliExpressAPI(
   }
   
   try {
-    const apiUrl = "https://eco.taobao.com/router/rest";
+    const apiUrl = "https://api.aliexpress.com/sync";
     const timestamp = new Date().toISOString().replace('T', ' ').replace('Z', '').split('.')[0];
     
     const params: Record<string, string> = {
