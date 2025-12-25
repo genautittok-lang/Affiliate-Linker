@@ -115,40 +115,32 @@ export const mastra = new Mastra({
         triggerType: "telegram/message",
         handler: async (mastra, triggerInfo) => {
           const logger = mastra.getLogger();
-          logger?.info("📥 [Telegram Trigger] Received message", {
-            userName: triggerInfo.params.userName,
-            message: triggerInfo.params.message?.substring(0, 50),
+          const params = triggerInfo.params;
+          
+          logger?.info("📥 [Telegram] Received", {
+            isCallback: params.isCallback,
+            message: params.message?.substring(0, 30),
           });
 
-          const payload = triggerInfo.payload;
-          const chatId = payload?.message?.chat?.id?.toString();
-          const telegramId = payload?.message?.from?.id?.toString();
-          const userName = payload?.message?.from?.username || payload?.message?.from?.first_name || "";
-          const languageCode = payload?.message?.from?.language_code || "en";
-          const messageText = payload?.message?.text || "";
-
-          if (!chatId || !telegramId || !messageText) {
-            logger?.warn("⚠️ [Telegram Trigger] Invalid payload", { payload });
+          if (!params.chatId || !params.telegramId) {
+            logger?.warn("⚠️ [Telegram] Invalid params");
             return;
           }
 
           const run = await telegramBotWorkflow.createRunAsync();
-          logger?.info("🚀 [Telegram Trigger] Starting workflow", {
-            runId: run?.runId,
-            chatId,
-            telegramId,
-          });
-
+          
           await inngest.send({
             name: `workflow.${telegramBotWorkflow.id}`,
             data: {
               runId: run?.runId,
               inputData: {
-                telegramId,
-                userName,
-                message: messageText,
-                chatId,
-                languageCode,
+                telegramId: params.telegramId,
+                userName: params.userName,
+                message: params.message,
+                chatId: params.chatId,
+                languageCode: params.languageCode,
+                isCallback: params.isCallback,
+                callbackData: params.callbackData,
               },
             },
           });

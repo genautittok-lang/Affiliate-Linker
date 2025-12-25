@@ -1,54 +1,21 @@
-/**
- * Telegram Trigger - Webhook-based Workflow Triggering
- *
- * This module provides Telegram bot event handling for Mastra workflows.
- * When Telegram messages are received, this trigger starts your workflow.
- *
- * PATTERN:
- * 1. Import registerTelegramTrigger and your workflow
- * 2. Call registerTelegramTrigger with a triggerType and handler
- * 3. Spread the result into the apiRoutes array in src/mastra/index.ts
- *
- * USAGE in src/mastra/index.ts:
- *
- * ```typescript
- * import { registerTelegramTrigger } from "../triggers/telegramTriggers";
- * import { telegramBotWorkflow } from "./workflows/telegramBotWorkflow";
- * import { inngest } from "./inngest";
- *
- * // In the apiRoutes array:
- * ...registerTelegramTrigger({
- *   triggerType: "telegram/message",
- *   handler: async (mastra, triggerInfo) => {
- *     const run = await telegramBotWorkflow.createRunAsync();
- *     return await inngest.send({
- *       name: `workflow.${telegramBotWorkflow.id}`,
- *       data: {
- *         runId: run?.runId,
- *         inputData: {},
- *       },
- *     });
- *   }
- * })
- * ```
- */
-
-import type { ContentfulStatusCode } from "hono/utils/http-status";
-
 import { registerApiRoute } from "../mastra/inngest";
 import { Mastra } from "@mastra/core";
 
 if (!process.env.TELEGRAM_BOT_TOKEN) {
-  console.warn(
-    "Trying to initialize Telegram triggers without TELEGRAM_BOT_TOKEN. Can you confirm that the Telegram integration is configured correctly?",
-  );
+  console.warn("TELEGRAM_BOT_TOKEN not configured");
 }
 
-export type TriggerInfoTelegramOnNewMessage = {
-  type: "telegram/message";
+export type TriggerInfoTelegram = {
+  type: "telegram/message" | "telegram/callback";
   params: {
     userName: string;
     message: string;
+    telegramId: string;
+    chatId: string;
+    languageCode: string;
+    isCallback: boolean;
+    callbackData?: string;
+    callbackQueryId?: string;
   };
   payload: any;
 };
@@ -58,10 +25,7 @@ export function registerTelegramTrigger({
   handler,
 }: {
   triggerType: string;
-  handler: (
-    mastra: Mastra,
-    triggerInfo: TriggerInfoTelegramOnNewMessage,
-  ) => Promise<void>;
+  handler: (mastra: Mastra, triggerInfo: TriggerInfoTelegram) => Promise<void>;
 }) {
   return [
     registerApiRoute("/webhooks/telegram/action", {
@@ -69,24 +33,66 @@ export function registerTelegramTrigger({
       handler: async (c) => {
         const mastra = c.get("mastra");
         const logger = mastra.getLogger();
+        
         try {
           const payload = await c.req.json();
+          logger?.info("📥 [Telegram] Webhook received");
 
-          logger?.info("📝 [Telegram] payload", payload);
+          if (payload.callback_query) {
+            const cb = payload.callback_query;
+            const botToken = process.env.TELEGRAM_BOT_TOKEN;
+            
+            if (botToken && cb.id) {
+              fetch(`https://api.telegram.org/bot${botToken}/answerCallbackQuery`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ callback_query_id: cb.id }),
+              }).catch(() => {});
+            }
+            
+            await handler(mastra, {
+              type: "telegram/callback",
+              params: {
+                userName: cb.from?.username || cb.from?.first_name || "",
+                message: cb.data || "",
+                telegramId: cb.from?.id?.toString() || "",
+                chatId: cb.message?.chat?.id?.toString() || "",
+                languageCode: cb.from?.language_code || "en",
+                isCallback: true,
+                callbackData: cb.data,
+                callbackQueryId: cb.id,
+              },
+              payload,
+            });
+            
+            return c.text("OK", 200);
+          }
 
-          await handler(mastra, {
-            type: triggerType,
-            params: {
-              userName: payload.message.from.username,
-              message: payload.message.text,
-            },
-            payload,
-          } as TriggerInfoTelegramOnNewMessage);
+          if (payload.message) {
+            const msg = payload.message;
+            
+            await handler(mastra, {
+              type: "telegram/message",
+              params: {
+                userName: msg.from?.username || msg.from?.first_name || "",
+                message: msg.text || "",
+                telegramId: msg.from?.id?.toString() || "",
+                chatId: msg.chat?.id?.toString() || "",
+                languageCode: msg.from?.language_code || "en",
+                isCallback: false,
+              },
+              payload,
+            });
+            
+            return c.text("OK", 200);
+          }
 
+          logger?.warn("⚠️ [Telegram] Unknown payload type");
           return c.text("OK", 200);
+          
         } catch (error) {
-          logger?.error("Error handling Telegram webhook:", error);
-          return c.text("Internal Server Error", 500);
+          logger?.error("❌ [Telegram] Error:", error);
+          return c.text("OK", 200);
         }
       },
     }),
