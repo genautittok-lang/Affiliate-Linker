@@ -96,7 +96,7 @@ const processWithAgentStep = createStep({
       
       const fullPrompt = `${contextPrompt}[Telegram ID: ${inputData.telegramId}]\n\nUser message: ${messageToProcess}`;
       
-      const response = await buyWiseAgent.generate(fullPrompt, {
+      const response = await buyWiseAgent.generateLegacy(fullPrompt, {
         resourceId: "telegram-bot",
         threadId: `telegram_${inputData.telegramId}`,
         maxSteps: 5,
