@@ -1,6 +1,9 @@
 import { createStep, createWorkflow } from "../inngest";
 import { z } from "zod";
 import { buyWiseAgent } from "../agents/buyWiseAgent";
+import { db } from "../../db";
+import { users } from "../../db/schema";
+import { eq } from "drizzle-orm";
 
 const COUNTRY_BUTTONS = [
   [{ text: "🇺🇦 Україна", callback_data: "country:Ukraine" }, { text: "🇩🇪 Deutschland", callback_data: "country:Germany" }],
@@ -11,10 +14,67 @@ const COUNTRY_BUTTONS = [
 ];
 
 const MAIN_MENU_BUTTONS = [
-  [{ text: "🔍 Пошук товарів", callback_data: "action:search" }],
-  [{ text: "🔥 ТОП-10 сьогодні", callback_data: "action:top10" }, { text: "💰 Краще до ціни", callback_data: "action:best_price" }],
-  [{ text: "⚙️ Налаштування", callback_data: "action:settings" }, { text: "❓ Допомога", callback_data: "action:help" }],
+  [{ text: "🔍 Пошук", callback_data: "action:search" }, { text: "🔥 ТОП-10", callback_data: "action:top10" }],
+  [{ text: "💰 До ціни", callback_data: "action:best_price" }, { text: "⚙️ Налаштування", callback_data: "action:settings" }],
 ];
+
+const SETTINGS_BUTTONS = [
+  [{ text: "🌍 Змінити країну", callback_data: "settings:country" }],
+  [{ text: "🔙 Назад", callback_data: "action:menu" }],
+];
+
+const LANG_GREETINGS: Record<string, { welcome: string; chooseCountry: string; ready: string; search: string; price: string; help: string; settings: string }> = {
+  uk: {
+    welcome: "Вітаю! 👋 Я BuyWise - допоможу знайти найкращі товари на AliExpress.",
+    chooseCountry: "Оберіть вашу країну для доставки:",
+    ready: "Готово! ✅ Тепер можу шукати товари для вас.",
+    search: "🔍 Напишіть що шукаєте:\n• навушники bluetooth\n• чохол iPhone 15\n• кросівки Nike",
+    price: "💰 Напишіть максимальну ціну:\n• до 500 грн\n• під 20 євро",
+    help: "📖 <b>Як користуватися:</b>\n\n🔍 <b>Пошук</b> - напишіть назву товару\n🔥 <b>ТОП-10</b> - найкращі пропозиції дня\n💰 <b>До ціни</b> - товари до вказаної суми\n⚙️ <b>Налаштування</b> - змінити країну\n\n<i>Приклад:</i> бездротові навушники",
+    settings: "⚙️ <b>Налаштування</b>\n\nВаша країна: {country}\nВалюта: {currency}",
+  },
+  ru: {
+    welcome: "Привет! 👋 Я BuyWise - помогу найти лучшие товары на AliExpress.",
+    chooseCountry: "Выберите вашу страну для доставки:",
+    ready: "Готово! ✅ Теперь могу искать товары для вас.",
+    search: "🔍 Напишите что ищете:\n• наушники bluetooth\n• чехол iPhone 15\n• кроссовки Nike",
+    price: "💰 Напишите максимальную цену:\n• до 500 грн\n• до 20 евро",
+    help: "📖 <b>Как пользоваться:</b>\n\n🔍 <b>Поиск</b> - напишите название товара\n🔥 <b>ТОП-10</b> - лучшие предложения дня\n💰 <b>До цены</b> - товары до указанной суммы\n⚙️ <b>Настройки</b> - сменить страну",
+    settings: "⚙️ <b>Настройки</b>\n\nВаша страна: {country}\nВалюта: {currency}",
+  },
+  en: {
+    welcome: "Hello! 👋 I'm BuyWise - I'll help you find the best deals on AliExpress.",
+    chooseCountry: "Choose your country for shipping:",
+    ready: "Done! ✅ Now I can search products for you.",
+    search: "🔍 Tell me what you're looking for:\n• bluetooth headphones\n• iPhone 15 case\n• Nike sneakers",
+    price: "💰 Enter maximum price:\n• under 50 EUR\n• max 30 USD",
+    help: "📖 <b>How to use:</b>\n\n🔍 <b>Search</b> - type product name\n🔥 <b>TOP-10</b> - best deals today\n💰 <b>Under price</b> - products under budget\n⚙️ <b>Settings</b> - change country",
+    settings: "⚙️ <b>Settings</b>\n\nYour country: {country}\nCurrency: {currency}",
+  },
+  de: {
+    welcome: "Hallo! 👋 Ich bin BuyWise - ich helfe dir die besten Angebote auf AliExpress zu finden.",
+    chooseCountry: "Wählen Sie Ihr Land für den Versand:",
+    ready: "Fertig! ✅ Jetzt kann ich Produkte für Sie suchen.",
+    search: "🔍 Schreiben Sie was Sie suchen:\n• Bluetooth Kopfhörer\n• iPhone 15 Hülle\n• Nike Schuhe",
+    price: "💰 Maximaler Preis eingeben:\n• bis 50 EUR\n• max 30 USD",
+    help: "📖 <b>Anleitung:</b>\n\n🔍 <b>Suche</b> - Produktname eingeben\n🔥 <b>TOP-10</b> - beste Angebote\n💰 <b>Bis Preis</b> - Produkte bis Budget\n⚙️ <b>Einstellungen</b> - Land ändern",
+    settings: "⚙️ <b>Einstellungen</b>\n\nIhr Land: {country}\nWährung: {currency}",
+  },
+  pl: {
+    welcome: "Cześć! 👋 Jestem BuyWise - pomogę znaleźć najlepsze oferty na AliExpress.",
+    chooseCountry: "Wybierz swój kraj dostawy:",
+    ready: "Gotowe! ✅ Teraz mogę szukać produktów dla Ciebie.",
+    search: "🔍 Napisz czego szukasz:\n• słuchawki bluetooth\n• etui iPhone 15\n• buty Nike",
+    price: "💰 Podaj maksymalną cenę:\n• do 100 PLN\n• max 20 EUR",
+    help: "📖 <b>Jak korzystać:</b>\n\n🔍 <b>Szukaj</b> - wpisz nazwę produktu\n🔥 <b>TOP-10</b> - najlepsze oferty\n💰 <b>Do ceny</b> - produkty w budżecie\n⚙️ <b>Ustawienia</b> - zmień kraj",
+    settings: "⚙️ <b>Ustawienia</b>\n\nTwój kraj: {country}\nWaluta: {currency}",
+  },
+};
+
+function getLang(code: string): typeof LANG_GREETINGS.uk {
+  const lang = code?.toLowerCase().slice(0, 2) || "en";
+  return LANG_GREETINGS[lang] || LANG_GREETINGS.en;
+}
 
 const processWithAgentStep = createStep({
   id: "process-with-agent",
@@ -34,67 +94,140 @@ const processWithAgentStep = createStep({
     response: z.string(),
     chatId: z.string(),
     success: z.boolean(),
-    showCountryButtons: z.boolean(),
-    showMainMenu: z.boolean(),
-    isNewUser: z.boolean(),
+    keyboard: z.string(),
   }),
   
   execute: async ({ inputData, mastra }) => {
     const logger = mastra?.getLogger();
-    logger?.info("🚀 [Step 1] Processing message", {
+    logger?.info("🚀 [Step 1] Processing", {
       telegramId: inputData.telegramId,
-      message: inputData.message?.substring(0, 50),
+      message: inputData.message?.substring(0, 30),
       isCallback: inputData.isCallback,
     });
     
+    const texts = getLang(inputData.languageCode || "uk");
+    
     try {
-      let messageToProcess = inputData.message;
-      let showCountryButtons = false;
-      let showMainMenu = false;
-      let isNewUser = false;
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.telegramId, inputData.telegramId));
       
       if (inputData.isCallback && inputData.callbackData) {
         const [type, value] = inputData.callbackData.split(":");
+        
         if (type === "country") {
-          messageToProcess = `Моя країна: ${value}`;
-        } else if (type === "action") {
+          const COUNTRY_CURRENCY: Record<string, string> = {
+            Ukraine: "UAH", Germany: "EUR", Poland: "PLN", Czechia: "CZK",
+            Romania: "RON", France: "EUR", Spain: "EUR", Italy: "EUR", UK: "GBP", USA: "USD",
+          };
+          const currency = COUNTRY_CURRENCY[value] || "USD";
+          const lang = inputData.languageCode?.slice(0, 2) || "en";
+          
+          if (existingUser) {
+            await db.update(users).set({ 
+              country: value, 
+              currency, 
+              updatedAt: new Date() 
+            }).where(eq(users.telegramId, inputData.telegramId));
+          } else {
+            await db.insert(users).values({
+              telegramId: inputData.telegramId,
+              userName: inputData.userName || null,
+              language: lang,
+              country: value,
+              currency,
+              dailyTopEnabled: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+          }
+          
+          logger?.info("✅ [Step 1] Country saved:", value);
+          return {
+            response: texts.ready,
+            chatId: inputData.chatId,
+            success: true,
+            keyboard: "main",
+          };
+        }
+        
+        if (type === "action") {
           switch (value) {
             case "search":
-              return {
-                response: "🔍 Напишіть що шукаєте, наприклад:\n• навушники bluetooth\n• чохол iPhone 15\n• кросівки Nike",
-                chatId: inputData.chatId,
-                success: true,
-                showCountryButtons: false,
-                showMainMenu: false,
-                isNewUser: false,
-              };
-            case "top10":
-              messageToProcess = "/top";
-              break;
+              return { response: texts.search, chatId: inputData.chatId, success: true, keyboard: "none" };
             case "best_price":
-              return {
-                response: "💰 Введіть максимальну ціну, наприклад:\n• до 500 грн\n• під 20 євро\n• best 30",
-                chatId: inputData.chatId,
-                success: true,
-                showCountryButtons: false,
-                showMainMenu: false,
-                isNewUser: false,
-              };
-            case "settings":
-              messageToProcess = "/settings";
-              break;
+              return { response: texts.price, chatId: inputData.chatId, success: true, keyboard: "none" };
+            case "menu":
+              return { response: "📱 Головне меню:", chatId: inputData.chatId, success: true, keyboard: "main" };
             case "help":
-              messageToProcess = "/help";
+              return { response: texts.help, chatId: inputData.chatId, success: true, keyboard: "main" };
+            case "settings":
+              if (existingUser) {
+                const settingsText = texts.settings
+                  .replace("{country}", existingUser.country)
+                  .replace("{currency}", existingUser.currency);
+                return { response: settingsText, chatId: inputData.chatId, success: true, keyboard: "settings" };
+              }
+              return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country" };
+            case "top10":
               break;
           }
         }
+        
+        if (type === "settings" && value === "country") {
+          return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country" };
+        }
       }
       
-      const contextPrompt = inputData.languageCode 
-        ? `[User Telegram language: ${inputData.languageCode}]\n`
-        : "";
+      const message = inputData.message || "";
       
-      const fullPrompt = `${contextPrompt}[Telegram ID: ${inputData.telegramId}]\n\nUser message: ${messageToProcess}`;
+      if (message === "/start") {
+        if (!existingUser) {
+          return {
+            response: `${texts.welcome}\n\n${texts.chooseCountry}`,
+            chatId: inputData.chatId,
+            success: true,
+            keyboard: "country",
+          };
+        }
+        return {
+          response: `${texts.welcome}\n\n📱 Оберіть дію:`,
+          chatId: inputData.chatId,
+          success: true,
+          keyboard: "main",
+        };
+      }
+      
+      if (message === "/help") {
+        return { response: texts.help, chatId: inputData.chatId, success: true, keyboard: "main" };
+      }
+      
+      if (message === "/settings") {
+        if (existingUser) {
+          const settingsText = texts.settings
+            .replace("{country}", existingUser.country)
+            .replace("{currency}", existingUser.currency);
+          return { response: settingsText, chatId: inputData.chatId, success: true, keyboard: "settings" };
+        }
+        return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country" };
+      }
+      
+      if (!existingUser) {
+        return {
+          response: texts.chooseCountry,
+          chatId: inputData.chatId,
+          success: true,
+          keyboard: "country",
+        };
+      }
+      
+      let messageToProcess = message;
+      if (inputData.isCallback && inputData.callbackData === "action:top10") {
+        messageToProcess = "/top";
+      }
+      
+      const fullPrompt = `[Telegram ID: ${inputData.telegramId}]\n[Language: ${inputData.languageCode || "uk"}]\n\nUser: ${messageToProcess}`;
       
       const response = await buyWiseAgent.generateLegacy(fullPrompt, {
         resourceId: "telegram-bot",
@@ -103,29 +236,13 @@ const processWithAgentStep = createStep({
       });
       
       const responseText = response.text || "Вибачте, сталася помилка. Спробуйте ще раз.";
-      
-      if (responseText.includes("країни") || responseText.includes("country")) {
-        showCountryButtons = true;
-        isNewUser = true;
-      }
-      
-      if (messageToProcess.includes("/start") && !isNewUser) {
-        showMainMenu = true;
-      }
-      
-      if (inputData.isCallback && inputData.callbackData?.startsWith("country:")) {
-        showMainMenu = true;
-      }
-      
       logger?.info("✅ [Step 1] Response generated", { length: responseText.length });
       
       return {
         response: responseText,
         chatId: inputData.chatId,
         success: true,
-        showCountryButtons,
-        showMainMenu,
-        isNewUser,
+        keyboard: "none",
       };
     } catch (error) {
       logger?.error("❌ [Step 1] Error:", error);
@@ -133,9 +250,7 @@ const processWithAgentStep = createStep({
         response: "Вибачте, сталася помилка. Спробуйте ще раз.",
         chatId: inputData.chatId,
         success: false,
-        showCountryButtons: false,
-        showMainMenu: false,
-        isNewUser: false,
+        keyboard: "none",
       };
     }
   },
@@ -149,9 +264,7 @@ const sendToTelegramStep = createStep({
     response: z.string(),
     chatId: z.string(),
     success: z.boolean(),
-    showCountryButtons: z.boolean(),
-    showMainMenu: z.boolean(),
-    isNewUser: z.boolean(),
+    keyboard: z.string(),
   }),
   
   outputSchema: z.object({
@@ -162,14 +275,9 @@ const sendToTelegramStep = createStep({
   
   execute: async ({ inputData, mastra }) => {
     const logger = mastra?.getLogger();
-    logger?.info("📤 [Step 2] Sending to Telegram", {
-      chatId: inputData.chatId,
-      showCountryButtons: inputData.showCountryButtons,
-      showMainMenu: inputData.showMainMenu,
-    });
+    logger?.info("📤 [Step 2] Sending to Telegram", { chatId: inputData.chatId, keyboard: inputData.keyboard });
     
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    
     if (!botToken) {
       return { sent: false, error: "Bot token not configured" };
     }
@@ -177,22 +285,27 @@ const sendToTelegramStep = createStep({
     try {
       let inlineKeyboard = null;
       
-      if (inputData.showCountryButtons) {
-        inlineKeyboard = COUNTRY_BUTTONS;
-      } else if (inputData.showMainMenu) {
-        inlineKeyboard = MAIN_MENU_BUTTONS;
+      switch (inputData.keyboard) {
+        case "country":
+          inlineKeyboard = COUNTRY_BUTTONS;
+          break;
+        case "main":
+          inlineKeyboard = MAIN_MENU_BUTTONS;
+          break;
+        case "settings":
+          inlineKeyboard = SETTINGS_BUTTONS;
+          break;
       }
       
       const messageBody: any = {
         chat_id: inputData.chatId,
         text: inputData.response,
         parse_mode: "HTML",
+        disable_web_page_preview: true,
       };
       
       if (inlineKeyboard) {
-        messageBody.reply_markup = {
-          inline_keyboard: inlineKeyboard,
-        };
+        messageBody.reply_markup = { inline_keyboard: inlineKeyboard };
       }
       
       const response = await fetch(
@@ -213,10 +326,8 @@ const sendToTelegramStep = createStep({
         const plainBody = {
           chat_id: inputData.chatId,
           text: inputData.response.replace(/<[^>]*>/g, ""),
+          reply_markup: inlineKeyboard ? { inline_keyboard: inlineKeyboard } : undefined,
         };
-        if (inlineKeyboard) {
-          (plainBody as any).reply_markup = { inline_keyboard: inlineKeyboard };
-        }
         
         const plainResponse = await fetch(
           `https://api.telegram.org/bot${botToken}/sendMessage`,
