@@ -68,8 +68,8 @@ async function searchAliExpressAPI(
   const trackingId = process.env.ALIEXPRESS_TRACKING_ID;
   
   if (!appKey || !appSecret) {
-    console.log("🔧 [AliExpress] API keys not configured, using demo data");
-    return generateDemoProducts(query, country, currency, filters);
+    console.log("❌ [AliExpress] API keys not configured");
+    return [];
   }
   
   try {
@@ -115,7 +115,7 @@ async function searchAliExpressAPI(
     
     if (!response.ok) {
       console.log("❌ [AliExpress] API request failed:", response.statusText);
-      return generateDemoProducts(query, country, currency, filters);
+      return [];
     }
     
     const data = await response.json();
@@ -124,8 +124,7 @@ async function searchAliExpressAPI(
     const products = data?.aliexpress_affiliate_product_query_response?.resp_result?.result?.products?.product || [];
     
     if (products.length === 0) {
-      console.log("⚠️ [AliExpress] No products from API, using demo data");
-      return generateDemoProducts(query, country, currency, filters);
+      console.log("⚠️ [AliExpress] No products from API");
     }
     
     return products.map((p: any) => ({
@@ -149,7 +148,7 @@ async function searchAliExpressAPI(
     }));
   } catch (error) {
     console.error("❌ [AliExpress] API error:", error);
-    return generateDemoProducts(query, country, currency, filters);
+    return [];
   }
 }
 
