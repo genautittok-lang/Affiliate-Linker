@@ -1,5 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { translateProductQuery } from "./translateTool";
 
 const QUALITY_MAPPING = {
   minimum: { minRating: 4.0, minOrders: 50 },
@@ -85,8 +86,14 @@ async function searchAliExpressAPI(
       v: "2.0",
     };
     
-    const translatedQuery = translateQuery(query);
-    console.log("🌐 [AliExpress] Query translation:", query, "->", translatedQuery);
+    let translatedQuery: string;
+    try {
+      translatedQuery = await translateProductQuery(query);
+      console.log("🌐 [AliExpress] AI translation:", query, "->", translatedQuery);
+    } catch (e) {
+      translatedQuery = translateQueryFallback(query);
+      console.log("🌐 [AliExpress] Fallback translation:", query, "->", translatedQuery);
+    }
     
     const appParams: Record<string, string> = {
       keywords: translatedQuery,
@@ -146,9 +153,12 @@ async function searchAliExpressAPI(
     console.log("📦 [AliExpress] First product sample:", JSON.stringify(products[0] || {}).slice(0, 800));
     
     return products.map((p: any) => {
-      const salePrice = parseFloat(p.app_sale_price || p.target_sale_price || p.original_price || "0");
-      const origPrice = parseFloat(p.original_price || p.app_sale_price || "0");
+      const salePrice = parseFloat(p.target_sale_price || p.app_sale_price || p.original_price || "0");
+      const origPrice = parseFloat(p.target_original_price || p.original_price || salePrice || "0");
       const discountPercent = origPrice > salePrice ? Math.round((1 - salePrice / origPrice) * 100) : 0;
+      const actualCurrency = p.target_sale_price_currency || currency;
+      
+      console.log(`💰 [Price] ${p.product_title?.slice(0,30)}: target=${p.target_sale_price} ${actualCurrency}, app=${p.app_sale_price}, orig=${p.target_original_price}`);
       
       return {
         id: String(p.product_id),
@@ -156,7 +166,7 @@ async function searchAliExpressAPI(
         description: p.product_title || "Product",
         price: salePrice,
         originalPrice: origPrice,
-        currency: currency,
+        currency: actualCurrency,
         discount: discountPercent,
         rating: parseFloat(p.evaluate_rate?.replace("%", "") || "80") / 20,
         orders: parseInt(p.lastest_volume || "0"),
@@ -193,7 +203,7 @@ function getCountryCode(country: string): string {
   return codes[country] || "US";
 }
 
-function translateQuery(query: string): string {
+function translateQueryFallback(query: string): string {
   const translations: Record<string, string> = {
     "кофта": "sweater hoodie women",
     "светр": "sweater pullover",

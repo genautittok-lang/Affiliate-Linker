@@ -32,6 +32,8 @@ const LANGUAGE_BUTTONS = [
   [{ text: "🇺🇦 Українська", callback_data: "lang:uk" }, { text: "🇷🇺 Русский", callback_data: "lang:ru" }],
   [{ text: "🇬🇧 English", callback_data: "lang:en" }, { text: "🇩🇪 Deutsch", callback_data: "lang:de" }],
   [{ text: "🇵🇱 Polski", callback_data: "lang:pl" }, { text: "🇫🇷 Français", callback_data: "lang:fr" }],
+  [{ text: "🇪🇸 Español", callback_data: "lang:es" }, { text: "🇮🇹 Italiano", callback_data: "lang:it" }],
+  [{ text: "🇨🇿 Čeština", callback_data: "lang:cs" }, { text: "🇷🇴 Română", callback_data: "lang:ro" }],
   [{ text: "🔙 Назад", callback_data: "action:menu" }],
 ];
 
@@ -118,6 +120,50 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     langChanged: "✅ Langue changée en Français",
     noFavorites: "❤️ Vous n'avez pas encore de favoris.\n\nAjoutez des produits aux favoris en appuyant sur ❤️ sous un produit.",
   },
+  es: {
+    welcome: "👋 <b>¡Hola!</b> Soy BuyWise - tu asistente para encontrar las mejores ofertas en AliExpress.\n\n🔍 Buscar productos\n🔥 TOP ofertas\n❤️ Guardar favoritos",
+    chooseCountry: "🌍 Elige tu país de envío:",
+    chooseLang: "🌐 Elige tu idioma:",
+    ready: "✅ ¡Listo! Ahora puedo buscar productos para ti.",
+    search: "🔍 <b>Buscar productos</b>\n\nDime qué buscas:\n• auriculares bluetooth\n• funda iPhone 15\n• zapatillas Nike",
+    profile: "👤 <b>Tu perfil</b>\n\n🌍 País: <b>{country}</b>\n💰 Moneda: <b>{currency}</b>\n🌐 Idioma: <b>{language}</b>\n👤 Nombre: <b>{name}</b>",
+    support: "💬 <b>Soporte</b>\n\nSi tienes preguntas o sugerencias, contáctanos:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
+    langChanged: "✅ Idioma cambiado a Español",
+    noFavorites: "❤️ Aún no tienes favoritos.\n\nAñade productos a favoritos tocando ❤️ debajo de un producto.",
+  },
+  it: {
+    welcome: "👋 <b>Ciao!</b> Sono BuyWise - il tuo assistente per trovare le migliori offerte su AliExpress.\n\n🔍 Cerca prodotti\n🔥 TOP offerte\n❤️ Salva preferiti",
+    chooseCountry: "🌍 Scegli il tuo paese di spedizione:",
+    chooseLang: "🌐 Scegli la lingua:",
+    ready: "✅ Fatto! Ora posso cercare prodotti per te.",
+    search: "🔍 <b>Cerca prodotti</b>\n\nDimmi cosa cerchi:\n• cuffie bluetooth\n• custodia iPhone 15\n• scarpe Nike",
+    profile: "👤 <b>Il tuo profilo</b>\n\n🌍 Paese: <b>{country}</b>\n💰 Valuta: <b>{currency}</b>\n🌐 Lingua: <b>{language}</b>\n👤 Nome: <b>{name}</b>",
+    support: "💬 <b>Supporto</b>\n\nSe hai domande o suggerimenti, contattaci:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
+    langChanged: "✅ Lingua cambiata in Italiano",
+    noFavorites: "❤️ Non hai ancora preferiti.\n\nAggiungi prodotti ai preferiti toccando ❤️ sotto un prodotto.",
+  },
+  cs: {
+    welcome: "👋 <b>Ahoj!</b> Jsem BuyWise - tvůj asistent pro hledání nejlepších nabídek na AliExpress.\n\n🔍 Hledat produkty\n🔥 TOP nabídky\n❤️ Uložit oblíbené",
+    chooseCountry: "🌍 Vyber svou zemi pro doručení:",
+    chooseLang: "🌐 Vyber jazyk:",
+    ready: "✅ Hotovo! Teď můžu hledat produkty pro tebe.",
+    search: "🔍 <b>Hledat produkty</b>\n\nŘekni mi, co hledáš:\n• bluetooth sluchátka\n• pouzdro iPhone 15\n• boty Nike",
+    profile: "👤 <b>Tvůj profil</b>\n\n🌍 Země: <b>{country}</b>\n💰 Měna: <b>{currency}</b>\n🌐 Jazyk: <b>{language}</b>\n👤 Jméno: <b>{name}</b>",
+    support: "💬 <b>Podpora</b>\n\nMáš-li dotazy nebo návrhy, kontaktuj nás:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
+    langChanged: "✅ Jazyk změněn na Češtinu",
+    noFavorites: "❤️ Zatím nemáš oblíbené.\n\nPřidej produkty do oblíbených kliknutím na ❤️ pod produktem.",
+  },
+  ro: {
+    welcome: "👋 <b>Bună!</b> Sunt BuyWise - asistentul tău pentru a găsi cele mai bune oferte pe AliExpress.\n\n🔍 Caută produse\n🔥 TOP oferte\n❤️ Salvează favorite",
+    chooseCountry: "🌍 Alege țara ta de livrare:",
+    chooseLang: "🌐 Alege limba:",
+    ready: "✅ Gata! Acum pot căuta produse pentru tine.",
+    search: "🔍 <b>Caută produse</b>\n\nSpune-mi ce cauți:\n• căști bluetooth\n• husă iPhone 15\n• pantofi Nike",
+    profile: "👤 <b>Profilul tău</b>\n\n🌍 Țară: <b>{country}</b>\n💰 Monedă: <b>{currency}</b>\n🌐 Limbă: <b>{language}</b>\n👤 Nume: <b>{name}</b>",
+    support: "💬 <b>Suport</b>\n\nDacă ai întrebări sau sugestii, contactează-ne:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
+    langChanged: "✅ Limba schimbată în Română",
+    noFavorites: "❤️ Nu ai încă favorite.\n\nAdaugă produse la favorite atingând ❤️ sub un produs.",
+  },
 };
 
 const LANG_NAMES: Record<string, string> = {
@@ -127,6 +173,10 @@ const LANG_NAMES: Record<string, string> = {
   de: "Deutsch",
   pl: "Polski",
   fr: "Français",
+  es: "Español",
+  it: "Italiano",
+  cs: "Čeština",
+  ro: "Română",
 };
 
 function getTexts(code: string): LangTexts {
@@ -380,6 +430,10 @@ const processWithAgentStep = createStep({
           return { response: profileText, chatId: inputData.chatId, success: true, keyboard: "profile", telegramId: inputData.telegramId };
         }
         return { response: texts2.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+      }
+      
+      if (message === "/lang" || message === "/language") {
+        return { response: texts2.chooseLang, chatId: inputData.chatId, success: true, keyboard: "language", telegramId: inputData.telegramId };
       }
       
       if (message === "/favorites" || message === "/fav") {
