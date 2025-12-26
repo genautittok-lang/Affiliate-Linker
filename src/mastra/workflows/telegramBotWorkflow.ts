@@ -2,9 +2,11 @@ import { createStep, createWorkflow } from "../inngest";
 import { z } from "zod";
 import { buyWiseAgent } from "../agents/buyWiseAgent";
 import { db } from "../../db";
-import { users, favorites } from "../../db/schema";
-import { eq, and } from "drizzle-orm";
+import { users, favorites, referrals } from "../../db/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
+import { getReferralLinkTool, processReferralTool } from "../tools/referralTool";
+import { isAdmin, getSupportInfoTool } from "../tools/adminTool";
 
 const productCache = new Map<string, { title: string; url: string; img: string; price: number }>();
 const searchCache = new Map<string, { query: string; page: number; isTop: boolean }>();
@@ -20,7 +22,8 @@ const COUNTRY_BUTTONS = [
 const MAIN_MENU_BUTTONS = [
   [{ text: "🔍 Пошук", callback_data: "action:search" }, { text: "🔥 ТОП-10", callback_data: "action:top10" }],
   [{ text: "❤️ Обране", callback_data: "action:favorites" }, { text: "👤 Профіль", callback_data: "action:profile" }],
-  [{ text: "🌐 Мова", callback_data: "action:language" }, { text: "💬 Підтримка", callback_data: "action:support" }],
+  [{ text: "🎁 Рефералка", callback_data: "action:referral" }, { text: "🌐 Мова", callback_data: "action:language" }],
+  [{ text: "💬 Підтримка", callback_data: "action:support" }],
 ];
 
 const PROFILE_BUTTONS = [
@@ -44,6 +47,7 @@ const BACK_BUTTON = [
 
 interface LangTexts {
   welcome: string;
+  welcomeBack: string;
   chooseCountry: string;
   chooseLang: string;
   ready: string;
@@ -52,118 +56,150 @@ interface LangTexts {
   support: string;
   langChanged: string;
   noFavorites: string;
+  referral: string;
+  referralStats: string;
 }
 
 const LANG_TEXTS: Record<string, LangTexts> = {
   uk: {
-    welcome: "👋 <b>Вітаю!</b> Я BuyWise - твій помічник для пошуку найкращих товарів на AliExpress.\n\n🔍 Шукай товари\n🔥 Дивись ТОП пропозиції\n❤️ Зберігай улюблене",
-    chooseCountry: "🌍 Оберіть вашу країну для доставки:",
-    chooseLang: "🌐 Оберіть мову:",
-    ready: "✅ Готово! Тепер можу шукати товари для вас.",
-    search: "🔍 <b>Пошук товарів</b>\n\nНапишіть що шукаєте:\n• навушники bluetooth\n• чохол iPhone 15\n• кросівки Nike",
-    profile: "👤 <b>Ваш профіль</b>\n\n🌍 Країна: <b>{country}</b>\n💰 Валюта: <b>{currency}</b>\n🌐 Мова: <b>{language}</b>\n👤 Ім'я: <b>{name}</b>",
-    support: "💬 <b>Підтримка</b>\n\nЯкщо у вас виникли питання або пропозиції, напишіть нам:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
-    langChanged: "✅ Мову змінено на Українську",
-    noFavorites: "❤️ У вас поки немає обраних товарів.\n\nДодайте товари в обране натиснувши ❤️ під товаром.",
+    welcome: "🎉 <b>Вітаю, {name}!</b> 🛍️\n\nЯ <b>BuyWise</b> - твій персональний помічник для пошуку найкращих товарів на AliExpress! 🌟\n\n🔍 <b>Шукай</b> - знайду найкраще\n🔥 <b>ТОП-10</b> - хіти продажів\n❤️ <b>Обране</b> - твої знахідки\n🎁 <b>Рефералка</b> - запрошуй друзів\n\n<i>Готовий до шопінгу?</i> 👇",
+    welcomeBack: "👋 <b>З поверненням, {name}!</b> 🌟\n\nРадий бачити тебе знову! Що шукаємо сьогодні? 🛍️",
+    chooseCountry: "🌍 <b>Оберіть вашу країну</b>\n\nЦе допоможе показувати правильні ціни та доставку:",
+    chooseLang: "🌐 <b>Оберіть мову:</b>",
+    ready: "🎊 <b>Чудово!</b> Тепер я готовий шукати найкращі пропозиції для тебе! 🛒\n\n<i>Напиши що шукаєш або натисни кнопку нижче</i> 👇",
+    search: "🔍 <b>Пошук товарів</b>\n\n✨ Напишіть що шукаєте:\n• навушники bluetooth 🎧\n• чохол iPhone 15 📱\n• кросівки Nike 👟",
+    profile: "👤 <b>Ваш профіль</b>\n\n🌍 Країна: <b>{country}</b>\n💰 Валюта: <b>{currency}</b>\n🌐 Мова: <b>{language}</b>\n👤 Ім'я: <b>{name}</b>\n🎁 Рефералів: <b>{referrals}</b>",
+    support: "💬 <b>Підтримка</b>\n\n❓ Є питання чи пропозиції?\n🐛 Знайшли помилку?\n💡 Маєте ідею?\n\n👇 <b>Напишіть нашому адміну:</b>",
+    langChanged: "✅ Мову змінено на Українську 🇺🇦",
+    noFavorites: "❤️ У вас поки немає обраних товарів.\n\n<i>Додайте товари в обране натиснувши</i> ❤️ <i>під товаром.</i>",
+    referral: "🎁 <b>Реферальна програма</b>\n\n📎 Твоє унікальне посилання:\n<code>{link}</code>\n\n👥 Запрошено друзів: <b>{count}</b>\n\n<i>Поділись посиланням з друзями!</i>",
+    referralStats: "📊 <b>Твоя статистика</b>\n\n👥 Запрошено друзів: <b>{count}</b>\n🔗 Твій код: <code>{code}</code>",
   },
   ru: {
-    welcome: "👋 <b>Привет!</b> Я BuyWise - твой помощник для поиска лучших товаров на AliExpress.\n\n🔍 Ищи товары\n🔥 Смотри ТОП предложения\n❤️ Сохраняй избранное",
-    chooseCountry: "🌍 Выберите вашу страну для доставки:",
-    chooseLang: "🌐 Выберите язык:",
-    ready: "✅ Готово! Теперь могу искать товары для вас.",
-    search: "🔍 <b>Поиск товаров</b>\n\nНапишите что ищете:\n• наушники bluetooth\n• чехол iPhone 15\n• кроссовки Nike",
-    profile: "👤 <b>Ваш профиль</b>\n\n🌍 Страна: <b>{country}</b>\n💰 Валюта: <b>{currency}</b>\n🌐 Язык: <b>{language}</b>\n👤 Имя: <b>{name}</b>",
-    support: "💬 <b>Поддержка</b>\n\nЕсли у вас возникли вопросы или предложения, напишите нам:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
-    langChanged: "✅ Язык изменен на Русский",
-    noFavorites: "❤️ У вас пока нет избранных товаров.\n\nДобавьте товары в избранное нажав ❤️ под товаром.",
+    welcome: "🎉 <b>Привет, {name}!</b> 🛍️\n\nЯ <b>BuyWise</b> - твой персональный помощник для поиска лучших товаров на AliExpress! 🌟\n\n🔍 <b>Поиск</b> - найду лучшее\n🔥 <b>ТОП-10</b> - хиты продаж\n❤️ <b>Избранное</b> - твои находки\n🎁 <b>Реферал</b> - приглашай друзей\n\n<i>Готов к шопингу?</i> 👇",
+    welcomeBack: "👋 <b>С возвращением, {name}!</b> 🌟\n\nРад тебя видеть снова! Что ищем сегодня? 🛍️",
+    chooseCountry: "🌍 <b>Выберите вашу страну</b>\n\nЭто поможет показывать правильные цены и доставку:",
+    chooseLang: "🌐 <b>Выберите язык:</b>",
+    ready: "🎊 <b>Отлично!</b> Теперь я готов искать лучшие предложения для тебя! 🛒\n\n<i>Напиши что ищешь или нажми кнопку ниже</i> 👇",
+    search: "🔍 <b>Поиск товаров</b>\n\n✨ Напишите что ищете:\n• наушники bluetooth 🎧\n• чехол iPhone 15 📱\n• кроссовки Nike 👟",
+    profile: "👤 <b>Ваш профиль</b>\n\n🌍 Страна: <b>{country}</b>\n💰 Валюта: <b>{currency}</b>\n🌐 Язык: <b>{language}</b>\n👤 Имя: <b>{name}</b>\n🎁 Рефералов: <b>{referrals}</b>",
+    support: "💬 <b>Поддержка</b>\n\n❓ Есть вопросы или предложения?\n🐛 Нашли ошибку?\n💡 Есть идея?\n\n👇 <b>Напишите нашему админу:</b>",
+    langChanged: "✅ Язык изменен на Русский 🇷🇺",
+    noFavorites: "❤️ У вас пока нет избранных товаров.\n\n<i>Добавьте товары в избранное нажав</i> ❤️ <i>под товаром.</i>",
+    referral: "🎁 <b>Реферальная программа</b>\n\n📎 Твоя уникальная ссылка:\n<code>{link}</code>\n\n👥 Приглашено друзей: <b>{count}</b>\n\n<i>Поделись ссылкой с друзьями!</i>",
+    referralStats: "📊 <b>Твоя статистика</b>\n\n👥 Приглашено друзей: <b>{count}</b>\n🔗 Твой код: <code>{code}</code>",
   },
   en: {
-    welcome: "👋 <b>Hello!</b> I'm BuyWise - your assistant for finding the best deals on AliExpress.\n\n🔍 Search products\n🔥 View TOP deals\n❤️ Save favorites",
-    chooseCountry: "🌍 Choose your country for shipping:",
-    chooseLang: "🌐 Choose your language:",
-    ready: "✅ Done! Now I can search products for you.",
-    search: "🔍 <b>Product Search</b>\n\nTell me what you're looking for:\n• bluetooth headphones\n• iPhone 15 case\n• Nike sneakers",
-    profile: "👤 <b>Your Profile</b>\n\n🌍 Country: <b>{country}</b>\n💰 Currency: <b>{currency}</b>\n🌐 Language: <b>{language}</b>\n👤 Name: <b>{name}</b>",
-    support: "💬 <b>Support</b>\n\nIf you have questions or suggestions, contact us:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
-    langChanged: "✅ Language changed to English",
-    noFavorites: "❤️ You don't have any favorites yet.\n\nAdd products to favorites by tapping ❤️ below a product.",
+    welcome: "🎉 <b>Hello, {name}!</b> 🛍️\n\nI'm <b>BuyWise</b> - your personal assistant for finding the best deals on AliExpress! 🌟\n\n🔍 <b>Search</b> - I'll find the best\n🔥 <b>TOP-10</b> - bestsellers\n❤️ <b>Favorites</b> - your finds\n🎁 <b>Referral</b> - invite friends\n\n<i>Ready to shop?</i> 👇",
+    welcomeBack: "👋 <b>Welcome back, {name}!</b> 🌟\n\nGreat to see you again! What are we looking for today? 🛍️",
+    chooseCountry: "🌍 <b>Choose your country</b>\n\nThis helps show correct prices and shipping:",
+    chooseLang: "🌐 <b>Choose your language:</b>",
+    ready: "🎊 <b>Awesome!</b> Now I'm ready to find the best deals for you! 🛒\n\n<i>Type what you're looking for or tap a button below</i> 👇",
+    search: "🔍 <b>Product Search</b>\n\n✨ Tell me what you're looking for:\n• bluetooth headphones 🎧\n• iPhone 15 case 📱\n• Nike sneakers 👟",
+    profile: "👤 <b>Your Profile</b>\n\n🌍 Country: <b>{country}</b>\n💰 Currency: <b>{currency}</b>\n🌐 Language: <b>{language}</b>\n👤 Name: <b>{name}</b>\n🎁 Referrals: <b>{referrals}</b>",
+    support: "💬 <b>Support</b>\n\n❓ Questions or suggestions?\n🐛 Found a bug?\n💡 Got an idea?\n\n👇 <b>Contact our admin:</b>",
+    langChanged: "✅ Language changed to English 🇬🇧",
+    noFavorites: "❤️ You don't have any favorites yet.\n\n<i>Add products to favorites by tapping</i> ❤️ <i>below a product.</i>",
+    referral: "🎁 <b>Referral Program</b>\n\n📎 Your unique link:\n<code>{link}</code>\n\n👥 Friends invited: <b>{count}</b>\n\n<i>Share this link with friends!</i>",
+    referralStats: "📊 <b>Your Stats</b>\n\n👥 Friends invited: <b>{count}</b>\n🔗 Your code: <code>{code}</code>",
   },
   de: {
-    welcome: "👋 <b>Hallo!</b> Ich bin BuyWise - dein Assistent für die besten Angebote auf AliExpress.\n\n🔍 Produkte suchen\n🔥 TOP Angebote\n❤️ Favoriten speichern",
-    chooseCountry: "🌍 Wählen Sie Ihr Land für den Versand:",
-    chooseLang: "🌐 Sprache wählen:",
-    ready: "✅ Fertig! Jetzt kann ich Produkte für Sie suchen.",
-    search: "🔍 <b>Produktsuche</b>\n\nSchreiben Sie was Sie suchen:\n• Bluetooth Kopfhörer\n• iPhone 15 Hülle\n• Nike Schuhe",
-    profile: "👤 <b>Ihr Profil</b>\n\n🌍 Land: <b>{country}</b>\n💰 Währung: <b>{currency}</b>\n🌐 Sprache: <b>{language}</b>\n👤 Name: <b>{name}</b>",
-    support: "💬 <b>Support</b>\n\nBei Fragen oder Vorschlägen kontaktieren Sie uns:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
-    langChanged: "✅ Sprache auf Deutsch geändert",
-    noFavorites: "❤️ Sie haben noch keine Favoriten.\n\nFügen Sie Produkte zu Favoriten hinzu, indem Sie ❤️ unter einem Produkt tippen.",
+    welcome: "🎉 <b>Hallo, {name}!</b> 🛍️\n\nIch bin <b>BuyWise</b> - dein persönlicher Assistent für die besten Angebote auf AliExpress! 🌟\n\n🔍 <b>Suche</b> - finde das Beste\n🔥 <b>TOP-10</b> - Bestseller\n❤️ <b>Favoriten</b> - deine Funde\n🎁 <b>Empfehlung</b> - lade Freunde ein\n\n<i>Bereit zum Shoppen?</i> 👇",
+    welcomeBack: "👋 <b>Willkommen zurück, {name}!</b> 🌟\n\nSchön dich wiederzusehen! Was suchen wir heute? 🛍️",
+    chooseCountry: "🌍 <b>Wähle dein Land</b>\n\nDas hilft, korrekte Preise und Versand anzuzeigen:",
+    chooseLang: "🌐 <b>Sprache wählen:</b>",
+    ready: "🎊 <b>Super!</b> Jetzt bin ich bereit, die besten Angebote für dich zu finden! 🛒\n\n<i>Schreib was du suchst oder tippe auf einen Button</i> 👇",
+    search: "🔍 <b>Produktsuche</b>\n\n✨ Schreib was du suchst:\n• Bluetooth Kopfhörer 🎧\n• iPhone 15 Hülle 📱\n• Nike Schuhe 👟",
+    profile: "👤 <b>Dein Profil</b>\n\n🌍 Land: <b>{country}</b>\n💰 Währung: <b>{currency}</b>\n🌐 Sprache: <b>{language}</b>\n👤 Name: <b>{name}</b>\n🎁 Empfehlungen: <b>{referrals}</b>",
+    support: "💬 <b>Support</b>\n\n❓ Fragen oder Vorschläge?\n🐛 Fehler gefunden?\n💡 Idee?\n\n👇 <b>Kontaktiere unseren Admin:</b>",
+    langChanged: "✅ Sprache auf Deutsch geändert 🇩🇪",
+    noFavorites: "❤️ Du hast noch keine Favoriten.\n\n<i>Füge Produkte zu Favoriten hinzu, indem du</i> ❤️ <i>unter einem Produkt tippst.</i>",
+    referral: "🎁 <b>Empfehlungsprogramm</b>\n\n📎 Dein einzigartiger Link:\n<code>{link}</code>\n\n👥 Eingeladene Freunde: <b>{count}</b>\n\n<i>Teile diesen Link mit Freunden!</i>",
+    referralStats: "📊 <b>Deine Statistik</b>\n\n👥 Eingeladene Freunde: <b>{count}</b>\n🔗 Dein Code: <code>{code}</code>",
   },
   pl: {
-    welcome: "👋 <b>Cześć!</b> Jestem BuyWise - twój asystent do znajdowania najlepszych ofert na AliExpress.\n\n🔍 Szukaj produktów\n🔥 TOP oferty\n❤️ Zapisuj ulubione",
-    chooseCountry: "🌍 Wybierz swój kraj dostawy:",
-    chooseLang: "🌐 Wybierz język:",
-    ready: "✅ Gotowe! Teraz mogę szukać produktów dla Ciebie.",
-    search: "🔍 <b>Szukaj produktów</b>\n\nNapisz czego szukasz:\n• słuchawki bluetooth\n• etui iPhone 15\n• buty Nike",
-    profile: "👤 <b>Twój profil</b>\n\n🌍 Kraj: <b>{country}</b>\n💰 Waluta: <b>{currency}</b>\n🌐 Język: <b>{language}</b>\n👤 Imię: <b>{name}</b>",
-    support: "💬 <b>Wsparcie</b>\n\nJeśli masz pytania lub sugestie, skontaktuj się z nami:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
-    langChanged: "✅ Język zmieniony na Polski",
-    noFavorites: "❤️ Nie masz jeszcze ulubionych.\n\nDodaj produkty do ulubionych, klikając ❤️ pod produktem.",
+    welcome: "🎉 <b>Cześć, {name}!</b> 🛍️\n\nJestem <b>BuyWise</b> - Twój osobisty asystent do znajdowania najlepszych ofert na AliExpress! 🌟\n\n🔍 <b>Szukaj</b> - znajdę najlepsze\n🔥 <b>TOP-10</b> - bestsellery\n❤️ <b>Ulubione</b> - Twoje znaleziska\n🎁 <b>Polecenia</b> - zaproś znajomych\n\n<i>Gotowy na zakupy?</i> 👇",
+    welcomeBack: "👋 <b>Witaj ponownie, {name}!</b> 🌟\n\nMiło Cię znowu widzieć! Czego szukamy dziś? 🛍️",
+    chooseCountry: "🌍 <b>Wybierz swój kraj</b>\n\nTo pomoże pokazać prawidłowe ceny i dostawę:",
+    chooseLang: "🌐 <b>Wybierz język:</b>",
+    ready: "🎊 <b>Świetnie!</b> Teraz jestem gotowy, aby znaleźć najlepsze oferty dla Ciebie! 🛒\n\n<i>Napisz czego szukasz lub kliknij przycisk poniżej</i> 👇",
+    search: "🔍 <b>Szukaj produktów</b>\n\n✨ Napisz czego szukasz:\n• słuchawki bluetooth 🎧\n• etui iPhone 15 📱\n• buty Nike 👟",
+    profile: "👤 <b>Twój profil</b>\n\n🌍 Kraj: <b>{country}</b>\n💰 Waluta: <b>{currency}</b>\n🌐 Język: <b>{language}</b>\n👤 Imię: <b>{name}</b>\n🎁 Poleceni: <b>{referrals}</b>",
+    support: "💬 <b>Wsparcie</b>\n\n❓ Pytania lub sugestie?\n🐛 Znalazłeś błąd?\n💡 Masz pomysł?\n\n👇 <b>Skontaktuj się z naszym adminem:</b>",
+    langChanged: "✅ Język zmieniony na Polski 🇵🇱",
+    noFavorites: "❤️ Nie masz jeszcze ulubionych.\n\n<i>Dodaj produkty do ulubionych, klikając</i> ❤️ <i>pod produktem.</i>",
+    referral: "🎁 <b>Program poleceń</b>\n\n📎 Twój unikalny link:\n<code>{link}</code>\n\n👥 Zaproszeni znajomi: <b>{count}</b>\n\n<i>Podziel się tym linkiem ze znajomymi!</i>",
+    referralStats: "📊 <b>Twoja statystyka</b>\n\n👥 Zaproszeni znajomi: <b>{count}</b>\n🔗 Twój kod: <code>{code}</code>",
   },
   fr: {
-    welcome: "👋 <b>Bonjour!</b> Je suis BuyWise - votre assistant pour trouver les meilleures offres sur AliExpress.\n\n🔍 Rechercher des produits\n🔥 TOP offres\n❤️ Sauvegarder les favoris",
-    chooseCountry: "🌍 Choisissez votre pays de livraison:",
-    chooseLang: "🌐 Choisissez votre langue:",
-    ready: "✅ C'est fait! Je peux maintenant rechercher des produits pour vous.",
-    search: "🔍 <b>Recherche de produits</b>\n\nDites-moi ce que vous cherchez:\n• écouteurs bluetooth\n• coque iPhone 15\n• baskets Nike",
-    profile: "👤 <b>Votre profil</b>\n\n🌍 Pays: <b>{country}</b>\n💰 Devise: <b>{currency}</b>\n🌐 Langue: <b>{language}</b>\n👤 Nom: <b>{name}</b>",
-    support: "💬 <b>Support</b>\n\nSi vous avez des questions ou des suggestions, contactez-nous:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
-    langChanged: "✅ Langue changée en Français",
-    noFavorites: "❤️ Vous n'avez pas encore de favoris.\n\nAjoutez des produits aux favoris en appuyant sur ❤️ sous un produit.",
+    welcome: "🎉 <b>Bonjour, {name}!</b> 🛍️\n\nJe suis <b>BuyWise</b> - votre assistant personnel pour trouver les meilleures offres sur AliExpress! 🌟\n\n🔍 <b>Recherche</b> - je trouve le meilleur\n🔥 <b>TOP-10</b> - best-sellers\n❤️ <b>Favoris</b> - vos trouvailles\n🎁 <b>Parrainage</b> - invitez des amis\n\n<i>Prêt à faire du shopping?</i> 👇",
+    welcomeBack: "👋 <b>Bon retour, {name}!</b> 🌟\n\nRavi de vous revoir! Que cherchons-nous aujourd'hui? 🛍️",
+    chooseCountry: "🌍 <b>Choisissez votre pays</b>\n\nCela aide à afficher les bons prix et la livraison:",
+    chooseLang: "🌐 <b>Choisissez votre langue:</b>",
+    ready: "🎊 <b>Génial!</b> Maintenant je suis prêt à trouver les meilleures offres pour vous! 🛒\n\n<i>Écrivez ce que vous cherchez ou appuyez sur un bouton</i> 👇",
+    search: "🔍 <b>Recherche de produits</b>\n\n✨ Dites-moi ce que vous cherchez:\n• écouteurs bluetooth 🎧\n• coque iPhone 15 📱\n• baskets Nike 👟",
+    profile: "👤 <b>Votre profil</b>\n\n🌍 Pays: <b>{country}</b>\n💰 Devise: <b>{currency}</b>\n🌐 Langue: <b>{language}</b>\n👤 Nom: <b>{name}</b>\n🎁 Parrainages: <b>{referrals}</b>",
+    support: "💬 <b>Support</b>\n\n❓ Questions ou suggestions?\n🐛 Bug trouvé?\n💡 Une idée?\n\n👇 <b>Contactez notre admin:</b>",
+    langChanged: "✅ Langue changée en Français 🇫🇷",
+    noFavorites: "❤️ Vous n'avez pas encore de favoris.\n\n<i>Ajoutez des produits aux favoris en appuyant sur</i> ❤️ <i>sous un produit.</i>",
+    referral: "🎁 <b>Programme de parrainage</b>\n\n📎 Votre lien unique:\n<code>{link}</code>\n\n👥 Amis invités: <b>{count}</b>\n\n<i>Partagez ce lien avec vos amis!</i>",
+    referralStats: "📊 <b>Vos statistiques</b>\n\n👥 Amis invités: <b>{count}</b>\n🔗 Votre code: <code>{code}</code>",
   },
   es: {
-    welcome: "👋 <b>¡Hola!</b> Soy BuyWise - tu asistente para encontrar las mejores ofertas en AliExpress.\n\n🔍 Buscar productos\n🔥 TOP ofertas\n❤️ Guardar favoritos",
-    chooseCountry: "🌍 Elige tu país de envío:",
-    chooseLang: "🌐 Elige tu idioma:",
-    ready: "✅ ¡Listo! Ahora puedo buscar productos para ti.",
-    search: "🔍 <b>Buscar productos</b>\n\nDime qué buscas:\n• auriculares bluetooth\n• funda iPhone 15\n• zapatillas Nike",
-    profile: "👤 <b>Tu perfil</b>\n\n🌍 País: <b>{country}</b>\n💰 Moneda: <b>{currency}</b>\n🌐 Idioma: <b>{language}</b>\n👤 Nombre: <b>{name}</b>",
-    support: "💬 <b>Soporte</b>\n\nSi tienes preguntas o sugerencias, contáctanos:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
-    langChanged: "✅ Idioma cambiado a Español",
-    noFavorites: "❤️ Aún no tienes favoritos.\n\nAñade productos a favoritos tocando ❤️ debajo de un producto.",
+    welcome: "🎉 <b>¡Hola, {name}!</b> 🛍️\n\nSoy <b>BuyWise</b> - tu asistente personal para encontrar las mejores ofertas en AliExpress! 🌟\n\n🔍 <b>Buscar</b> - encuentro lo mejor\n🔥 <b>TOP-10</b> - más vendidos\n❤️ <b>Favoritos</b> - tus hallazgos\n🎁 <b>Referidos</b> - invita amigos\n\n<i>¿Listo para comprar?</i> 👇",
+    welcomeBack: "👋 <b>¡Bienvenido de nuevo, {name}!</b> 🌟\n\n¡Qué alegría verte! ¿Qué buscamos hoy? 🛍️",
+    chooseCountry: "🌍 <b>Elige tu país</b>\n\nEsto ayuda a mostrar precios y envío correctos:",
+    chooseLang: "🌐 <b>Elige tu idioma:</b>",
+    ready: "🎊 <b>¡Genial!</b> ¡Ahora estoy listo para encontrar las mejores ofertas para ti! 🛒\n\n<i>Escribe qué buscas o toca un botón</i> 👇",
+    search: "🔍 <b>Buscar productos</b>\n\n✨ Dime qué buscas:\n• auriculares bluetooth 🎧\n• funda iPhone 15 📱\n• zapatillas Nike 👟",
+    profile: "👤 <b>Tu perfil</b>\n\n🌍 País: <b>{country}</b>\n💰 Moneda: <b>{currency}</b>\n🌐 Idioma: <b>{language}</b>\n👤 Nombre: <b>{name}</b>\n🎁 Referidos: <b>{referrals}</b>",
+    support: "💬 <b>Soporte</b>\n\n❓ ¿Preguntas o sugerencias?\n🐛 ¿Encontraste un error?\n💡 ¿Tienes una idea?\n\n👇 <b>Contacta a nuestro admin:</b>",
+    langChanged: "✅ Idioma cambiado a Español 🇪🇸",
+    noFavorites: "❤️ Aún no tienes favoritos.\n\n<i>Añade productos a favoritos tocando</i> ❤️ <i>debajo de un producto.</i>",
+    referral: "🎁 <b>Programa de referidos</b>\n\n📎 Tu enlace único:\n<code>{link}</code>\n\n👥 Amigos invitados: <b>{count}</b>\n\n<i>¡Comparte este enlace con amigos!</i>",
+    referralStats: "📊 <b>Tus estadísticas</b>\n\n👥 Amigos invitados: <b>{count}</b>\n🔗 Tu código: <code>{code}</code>",
   },
   it: {
-    welcome: "👋 <b>Ciao!</b> Sono BuyWise - il tuo assistente per trovare le migliori offerte su AliExpress.\n\n🔍 Cerca prodotti\n🔥 TOP offerte\n❤️ Salva preferiti",
-    chooseCountry: "🌍 Scegli il tuo paese di spedizione:",
-    chooseLang: "🌐 Scegli la lingua:",
-    ready: "✅ Fatto! Ora posso cercare prodotti per te.",
-    search: "🔍 <b>Cerca prodotti</b>\n\nDimmi cosa cerchi:\n• cuffie bluetooth\n• custodia iPhone 15\n• scarpe Nike",
-    profile: "👤 <b>Il tuo profilo</b>\n\n🌍 Paese: <b>{country}</b>\n💰 Valuta: <b>{currency}</b>\n🌐 Lingua: <b>{language}</b>\n👤 Nome: <b>{name}</b>",
-    support: "💬 <b>Supporto</b>\n\nSe hai domande o suggerimenti, contattaci:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
-    langChanged: "✅ Lingua cambiata in Italiano",
-    noFavorites: "❤️ Non hai ancora preferiti.\n\nAggiungi prodotti ai preferiti toccando ❤️ sotto un prodotto.",
+    welcome: "🎉 <b>Ciao, {name}!</b> 🛍️\n\nSono <b>BuyWise</b> - il tuo assistente personale per trovare le migliori offerte su AliExpress! 🌟\n\n🔍 <b>Cerca</b> - trovo il meglio\n🔥 <b>TOP-10</b> - bestseller\n❤️ <b>Preferiti</b> - le tue scoperte\n🎁 <b>Referral</b> - invita amici\n\n<i>Pronto per lo shopping?</i> 👇",
+    welcomeBack: "👋 <b>Bentornato, {name}!</b> 🌟\n\nFelice di rivederti! Cosa cerchiamo oggi? 🛍️",
+    chooseCountry: "🌍 <b>Scegli il tuo paese</b>\n\nQuesto aiuta a mostrare prezzi e spedizione corretti:",
+    chooseLang: "🌐 <b>Scegli la lingua:</b>",
+    ready: "🎊 <b>Fantastico!</b> Ora sono pronto a trovare le migliori offerte per te! 🛒\n\n<i>Scrivi cosa cerchi o tocca un pulsante</i> 👇",
+    search: "🔍 <b>Cerca prodotti</b>\n\n✨ Dimmi cosa cerchi:\n• cuffie bluetooth 🎧\n• custodia iPhone 15 📱\n• scarpe Nike 👟",
+    profile: "👤 <b>Il tuo profilo</b>\n\n🌍 Paese: <b>{country}</b>\n💰 Valuta: <b>{currency}</b>\n🌐 Lingua: <b>{language}</b>\n👤 Nome: <b>{name}</b>\n🎁 Referral: <b>{referrals}</b>",
+    support: "💬 <b>Supporto</b>\n\n❓ Domande o suggerimenti?\n🐛 Bug trovato?\n💡 Un'idea?\n\n👇 <b>Contatta il nostro admin:</b>",
+    langChanged: "✅ Lingua cambiata in Italiano 🇮🇹",
+    noFavorites: "❤️ Non hai ancora preferiti.\n\n<i>Aggiungi prodotti ai preferiti toccando</i> ❤️ <i>sotto un prodotto.</i>",
+    referral: "🎁 <b>Programma referral</b>\n\n📎 Il tuo link unico:\n<code>{link}</code>\n\n👥 Amici invitati: <b>{count}</b>\n\n<i>Condividi questo link con gli amici!</i>",
+    referralStats: "📊 <b>Le tue statistiche</b>\n\n👥 Amici invitati: <b>{count}</b>\n🔗 Il tuo codice: <code>{code}</code>",
   },
   cs: {
-    welcome: "👋 <b>Ahoj!</b> Jsem BuyWise - tvůj asistent pro hledání nejlepších nabídek na AliExpress.\n\n🔍 Hledat produkty\n🔥 TOP nabídky\n❤️ Uložit oblíbené",
-    chooseCountry: "🌍 Vyber svou zemi pro doručení:",
-    chooseLang: "🌐 Vyber jazyk:",
-    ready: "✅ Hotovo! Teď můžu hledat produkty pro tebe.",
-    search: "🔍 <b>Hledat produkty</b>\n\nŘekni mi, co hledáš:\n• bluetooth sluchátka\n• pouzdro iPhone 15\n• boty Nike",
-    profile: "👤 <b>Tvůj profil</b>\n\n🌍 Země: <b>{country}</b>\n💰 Měna: <b>{currency}</b>\n🌐 Jazyk: <b>{language}</b>\n👤 Jméno: <b>{name}</b>",
-    support: "💬 <b>Podpora</b>\n\nMáš-li dotazy nebo návrhy, kontaktuj nás:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
-    langChanged: "✅ Jazyk změněn na Češtinu",
-    noFavorites: "❤️ Zatím nemáš oblíbené.\n\nPřidej produkty do oblíbených kliknutím na ❤️ pod produktem.",
+    welcome: "🎉 <b>Ahoj, {name}!</b> 🛍️\n\nJsem <b>BuyWise</b> - tvůj osobní asistent pro hledání nejlepších nabídek na AliExpress! 🌟\n\n🔍 <b>Hledat</b> - najdu nejlepší\n🔥 <b>TOP-10</b> - bestsellery\n❤️ <b>Oblíbené</b> - tvoje nálezy\n🎁 <b>Doporučení</b> - pozvi přátele\n\n<i>Připraven nakupovat?</i> 👇",
+    welcomeBack: "👋 <b>Vítej zpět, {name}!</b> 🌟\n\nRád tě zase vidím! Co hledáme dnes? 🛍️",
+    chooseCountry: "🌍 <b>Vyber svou zemi</b>\n\nTo pomůže zobrazit správné ceny a dopravu:",
+    chooseLang: "🌐 <b>Vyber jazyk:</b>",
+    ready: "🎊 <b>Skvělé!</b> Teď jsem připraven najít nejlepší nabídky pro tebe! 🛒\n\n<i>Napiš co hledáš nebo klikni na tlačítko</i> 👇",
+    search: "🔍 <b>Hledat produkty</b>\n\n✨ Řekni mi, co hledáš:\n• bluetooth sluchátka 🎧\n• pouzdro iPhone 15 📱\n• boty Nike 👟",
+    profile: "👤 <b>Tvůj profil</b>\n\n🌍 Země: <b>{country}</b>\n💰 Měna: <b>{currency}</b>\n🌐 Jazyk: <b>{language}</b>\n👤 Jméno: <b>{name}</b>\n🎁 Doporučení: <b>{referrals}</b>",
+    support: "💬 <b>Podpora</b>\n\n❓ Otázky nebo návrhy?\n🐛 Našel jsi chybu?\n💡 Máš nápad?\n\n👇 <b>Kontaktuj našeho admina:</b>",
+    langChanged: "✅ Jazyk změněn na Češtinu 🇨🇿",
+    noFavorites: "❤️ Zatím nemáš oblíbené.\n\n<i>Přidej produkty do oblíbených kliknutím na</i> ❤️ <i>pod produktem.</i>",
+    referral: "🎁 <b>Program doporučení</b>\n\n📎 Tvůj unikátní odkaz:\n<code>{link}</code>\n\n👥 Pozvaní přátelé: <b>{count}</b>\n\n<i>Sdílej tento odkaz s přáteli!</i>",
+    referralStats: "📊 <b>Tvá statistika</b>\n\n👥 Pozvaní přátelé: <b>{count}</b>\n🔗 Tvůj kód: <code>{code}</code>",
   },
   ro: {
-    welcome: "👋 <b>Bună!</b> Sunt BuyWise - asistentul tău pentru a găsi cele mai bune oferte pe AliExpress.\n\n🔍 Caută produse\n🔥 TOP oferte\n❤️ Salvează favorite",
-    chooseCountry: "🌍 Alege țara ta de livrare:",
-    chooseLang: "🌐 Alege limba:",
-    ready: "✅ Gata! Acum pot căuta produse pentru tine.",
-    search: "🔍 <b>Caută produse</b>\n\nSpune-mi ce cauți:\n• căști bluetooth\n• husă iPhone 15\n• pantofi Nike",
-    profile: "👤 <b>Profilul tău</b>\n\n🌍 Țară: <b>{country}</b>\n💰 Monedă: <b>{currency}</b>\n🌐 Limbă: <b>{language}</b>\n👤 Nume: <b>{name}</b>",
-    support: "💬 <b>Suport</b>\n\nDacă ai întrebări sau sugestii, contactează-ne:\n\n📧 Email: support@buywise.bot\n💬 Telegram: @buywisesupport",
-    langChanged: "✅ Limba schimbată în Română",
-    noFavorites: "❤️ Nu ai încă favorite.\n\nAdaugă produse la favorite atingând ❤️ sub un produs.",
+    welcome: "🎉 <b>Bună, {name}!</b> 🛍️\n\nSunt <b>BuyWise</b> - asistentul tău personal pentru a găsi cele mai bune oferte pe AliExpress! 🌟\n\n🔍 <b>Caută</b> - găsesc cel mai bun\n🔥 <b>TOP-10</b> - bestsellere\n❤️ <b>Favorite</b> - descoperirile tale\n🎁 <b>Referral</b> - invită prieteni\n\n<i>Gata de shopping?</i> 👇",
+    welcomeBack: "👋 <b>Bine ai revenit, {name}!</b> 🌟\n\nMă bucur să te văd din nou! Ce căutăm azi? 🛍️",
+    chooseCountry: "🌍 <b>Alege țara ta</b>\n\nAcest lucru ajută la afișarea prețurilor și livrării corecte:",
+    chooseLang: "🌐 <b>Alege limba:</b>",
+    ready: "🎊 <b>Minunat!</b> Acum sunt gata să găsesc cele mai bune oferte pentru tine! 🛒\n\n<i>Scrie ce cauți sau apasă un buton</i> 👇",
+    search: "🔍 <b>Caută produse</b>\n\n✨ Spune-mi ce cauți:\n• căști bluetooth 🎧\n• husă iPhone 15 📱\n• pantofi Nike 👟",
+    profile: "👤 <b>Profilul tău</b>\n\n🌍 Țară: <b>{country}</b>\n💰 Monedă: <b>{currency}</b>\n🌐 Limbă: <b>{language}</b>\n👤 Nume: <b>{name}</b>\n🎁 Referral-uri: <b>{referrals}</b>",
+    support: "💬 <b>Suport</b>\n\n❓ Întrebări sau sugestii?\n🐛 Ai găsit un bug?\n💡 Ai o idee?\n\n👇 <b>Contactează adminul nostru:</b>",
+    langChanged: "✅ Limba schimbată în Română 🇷🇴",
+    noFavorites: "❤️ Nu ai încă favorite.\n\n<i>Adaugă produse la favorite atingând</i> ❤️ <i>sub un produs.</i>",
+    referral: "🎁 <b>Program referral</b>\n\n📎 Link-ul tău unic:\n<code>{link}</code>\n\n👥 Prieteni invitați: <b>{count}</b>\n\n<i>Partajează acest link cu prietenii!</i>",
+    referralStats: "📊 <b>Statisticile tale</b>\n\n👥 Prieteni invitați: <b>{count}</b>\n🔗 Codul tău: <code>{code}</code>",
   },
 };
 
@@ -305,18 +341,50 @@ const processWithAgentStep = createStep({
               return { response: "📱 <b>Головне меню</b>\n\nОберіть дію:", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
             case "profile":
               if (existingUser) {
+                const refCountResult = await db.select({ count: sql<number>`count(*)` })
+                  .from(referrals)
+                  .where(eq(referrals.referrerId, existingUser.id));
+                const refCount = Number(refCountResult[0]?.count || 0);
                 const profileText = texts.profile
                   .replace("{country}", existingUser.country || "-")
                   .replace("{currency}", existingUser.currency)
                   .replace("{language}", LANG_NAMES[existingUser.language] || LANG_NAMES.en || existingUser.language)
-                  .replace("{name}", existingUser.userName || inputData.userName || "-");
+                  .replace("{name}", existingUser.userName || existingUser.firstName || inputData.userName || "-")
+                  .replace("{referrals}", String(refCount));
                 return { response: profileText, chatId: inputData.chatId, success: true, keyboard: "profile", telegramId: inputData.telegramId };
               }
               return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
             case "language":
               return { response: texts.chooseLang, chatId: inputData.chatId, success: true, keyboard: "language", telegramId: inputData.telegramId };
+            case "referral":
+              if (!existingUser) {
+                return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+              }
+              const refResult = await getReferralLinkTool.execute({
+                context: { telegramId: inputData.telegramId, botUsername: "BuyWiseBot" },
+                mastra,
+                runtimeContext: {} as any,
+              });
+              if (refResult.success) {
+                const refText = texts.referral
+                  .replace("{link}", refResult.referralLink || "")
+                  .replace("{count}", String(refResult.referralCount || 0));
+                return { response: refText, chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId };
+              }
+              return { response: "❌ Помилка отримання реферального посилання", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
             case "support":
-              return { response: texts.support, chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId };
+              const supportResult = await getSupportInfoTool.execute({
+                context: { language: lang, userName: existingUser?.userName || existingUser?.firstName || inputData.userName },
+                mastra,
+                runtimeContext: {} as any,
+              });
+              return { 
+                response: texts.support, 
+                chatId: inputData.chatId, 
+                success: true, 
+                keyboard: "support",
+                telegramId: inputData.telegramId 
+              };
             case "favorites":
               if (!existingUser) {
                 return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
@@ -462,18 +530,54 @@ const processWithAgentStep = createStep({
       const message = inputData.message || "";
       const texts2 = existingUser ? getTexts(existingUser.language) : getTexts(userLang);
       
-      if (message === "/start") {
+      if (message.startsWith("/start")) {
+        const userName = inputData.userName || existingUser?.firstName || existingUser?.userName || "";
+        const displayName = userName || "друже";
+        
+        const parts = message.split(" ");
+        const referralCode = parts.length > 1 ? parts[1] : null;
+        
         if (!existingUser) {
+          const welcomeText = texts2.welcome.replace("{name}", displayName);
+          
+          await db.insert(users).values({
+            telegramId: inputData.telegramId,
+            userName: inputData.userName || null,
+            firstName: displayName,
+            language: userLang,
+            country: "",
+            currency: "USD",
+            dailyTopEnabled: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }).onConflictDoNothing();
+          
+          if (referralCode) {
+            setTimeout(async () => {
+              try {
+                await processReferralTool.execute({
+                  context: { newUserTelegramId: inputData.telegramId, referralCode },
+                  mastra,
+                  runtimeContext: {} as any,
+                });
+              } catch (e) {
+                logger?.error("Referral processing failed:", e);
+              }
+            }, 1000);
+          }
+          
           return {
-            response: `${texts2.welcome}\n\n${texts2.chooseCountry}`,
+            response: `${welcomeText}\n\n${texts2.chooseCountry}`,
             chatId: inputData.chatId,
             success: true,
             keyboard: "country",
             telegramId: inputData.telegramId,
           };
         }
+        
+        const welcomeBackText = texts2.welcomeBack.replace("{name}", displayName);
         return {
-          response: texts2.welcome,
+          response: welcomeBackText,
           chatId: inputData.chatId,
           success: true,
           keyboard: "main",
@@ -487,14 +591,37 @@ const processWithAgentStep = createStep({
       
       if (message === "/profile") {
         if (existingUser) {
+          const refCountResult2 = await db.select({ count: sql<number>`count(*)` })
+            .from(referrals)
+            .where(eq(referrals.referrerId, existingUser.id));
+          const refCount2 = Number(refCountResult2[0]?.count || 0);
           const profileText = texts2.profile
             .replace("{country}", existingUser.country || "-")
             .replace("{currency}", existingUser.currency)
             .replace("{language}", LANG_NAMES[existingUser.language] || LANG_NAMES.en || existingUser.language)
-            .replace("{name}", existingUser.userName || inputData.userName || "-");
+            .replace("{name}", existingUser.userName || existingUser.firstName || inputData.userName || "-")
+            .replace("{referrals}", String(refCount2));
           return { response: profileText, chatId: inputData.chatId, success: true, keyboard: "profile", telegramId: inputData.telegramId };
         }
         return { response: texts2.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+      }
+      
+      if (message === "/referral" || message === "/ref") {
+        if (!existingUser) {
+          return { response: texts2.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+        }
+        const refResult2 = await getReferralLinkTool.execute({
+          context: { telegramId: inputData.telegramId, botUsername: "BuyWiseBot" },
+          mastra,
+          runtimeContext: {} as any,
+        });
+        if (refResult2.success) {
+          const refText2 = texts2.referral
+            .replace("{link}", refResult2.referralLink || "")
+            .replace("{count}", String(refResult2.referralCount || 0));
+          return { response: refText2, chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId };
+        }
+        return { response: "Error getting referral link", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
       }
       
       if (message === "/lang" || message === "/language") {
@@ -730,12 +857,17 @@ const sendToTelegramStep = createStep({
     
     try {
       let inlineKeyboard = null;
+      const SUPPORT_BUTTONS = [
+        [{ text: "✍️ Написати адміну", url: "https://t.me/SYNTRAM" }],
+        [{ text: "🔙 Меню", callback_data: "action:menu" }],
+      ];
       switch (inputData.keyboard) {
         case "country": inlineKeyboard = COUNTRY_BUTTONS; break;
         case "main": inlineKeyboard = MAIN_MENU_BUTTONS; break;
         case "profile": inlineKeyboard = PROFILE_BUTTONS; break;
         case "language": inlineKeyboard = LANGUAGE_BUTTONS; break;
         case "back": inlineKeyboard = BACK_BUTTON; break;
+        case "support": inlineKeyboard = SUPPORT_BUTTONS; break;
       }
       
       if (inputData.products && inputData.products.length > 0) {

@@ -5,12 +5,14 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   telegramId: text("telegram_id").notNull().unique(),
   userName: text("user_name"),
+  firstName: text("first_name"),
   language: text("language").notNull().default("en"),
   country: text("country").notNull().default(""),
   currency: text("currency").notNull().default("USD"),
   timezone: text("timezone"),
   dailyTopEnabled: boolean("daily_top_enabled").notNull().default(true),
   referralCode: text("referral_code"),
+  referredBy: integer("referred_by"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
@@ -44,9 +46,33 @@ export const translationCache = pgTable("translation_cache", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
+export const referrals = pgTable("referrals", {
+  id: serial("id").primaryKey(),
+  referrerId: integer("referrer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  referredId: integer("referred_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bonusAwarded: boolean("bonus_awarded").notNull().default(false),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const broadcasts = pgTable("broadcasts", {
+  id: serial("id").primaryKey(),
+  adminId: text("admin_id").notNull(),
+  message: text("message"),
+  targetCountry: text("target_country"),
+  targetLanguage: text("target_language"),
+  sentCount: integer("sent_count").notNull().default(0),
+  scheduledAt: timestamp("scheduled_at"),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Favorite = typeof favorites.$inferSelect;
 export type InsertFavorite = typeof favorites.$inferInsert;
 export type SearchHistory = typeof searchHistory.$inferSelect;
 export type TranslationCache = typeof translationCache.$inferSelect;
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = typeof referrals.$inferInsert;
+export type Broadcast = typeof broadcasts.$inferSelect;
+export type InsertBroadcast = typeof broadcasts.$inferInsert;
