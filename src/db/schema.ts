@@ -66,6 +66,18 @@ export const broadcasts = pgTable("broadcasts", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
+export const coupons = pgTable("coupons", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  code: text("code").notNull().unique(),
+  discountPercent: integer("discount_percent").notNull().default(5),
+  isUsed: boolean("is_used").notNull().default(false),
+  earnedForReferrals: integer("earned_for_referrals").notNull().default(5),
+  expiresAt: timestamp("expires_at"),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Favorite = typeof favorites.$inferSelect;
@@ -76,3 +88,5 @@ export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = typeof referrals.$inferInsert;
 export type Broadcast = typeof broadcasts.$inferSelect;
 export type InsertBroadcast = typeof broadcasts.$inferInsert;
+export type Coupon = typeof coupons.$inferSelect;
+export type InsertCoupon = typeof coupons.$inferInsert;

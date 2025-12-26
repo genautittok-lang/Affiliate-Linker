@@ -2,7 +2,8 @@ import { createStep, createWorkflow } from "../inngest";
 import { z } from "zod";
 import { buyWiseAgent } from "../agents/buyWiseAgent";
 import { db } from "../../db";
-import { users, favorites, referrals } from "../../db/schema";
+import { users, favorites, referrals, searchHistory, coupons } from "../../db/schema";
+import { desc } from "drizzle-orm";
 import { eq, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 import { getReferralLinkTool, processReferralTool } from "../tools/referralTool";
@@ -21,6 +22,7 @@ const COUNTRY_BUTTONS = [
 
 const MAIN_MENU_BUTTONS = [
   [{ text: "🔍 Пошук", callback_data: "action:search" }, { text: "🔥 ТОП-10", callback_data: "action:top10" }],
+  [{ text: "📂 Категорії", callback_data: "action:categories" }, { text: "🕐 Історія", callback_data: "action:history" }],
   [{ text: "❤️ Обране", callback_data: "action:favorites" }, { text: "👤 Профіль", callback_data: "action:profile" }],
   [{ text: "🎁 Рефералка", callback_data: "action:referral" }, { text: "🌐 Мова", callback_data: "action:language" }],
   [{ text: "💬 Підтримка", callback_data: "action:support" }],
@@ -68,6 +70,19 @@ interface LangTexts {
   changeCountry: string;
   changeLang: string;
   backMenu: string;
+  categories: string;
+  catElectronics: string;
+  catClothing: string;
+  catHome: string;
+  catBeauty: string;
+  catGadgets: string;
+  catGifts: string;
+  catUnder10: string;
+  recentSearches: string;
+  noSearchHistory: string;
+  couponEarned: string;
+  couponProgress: string;
+  yourCoupon: string;
 }
 
 const LANG_TEXTS: Record<string, LangTexts> = {
@@ -93,6 +108,19 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     changeCountry: "🌍 Змінити країну",
     changeLang: "🌐 Змінити мову",
     backMenu: "🔙 Меню",
+    categories: "📂 <b>Оберіть категорію:</b>",
+    catElectronics: "📱 Електроніка",
+    catClothing: "👕 Одяг",
+    catHome: "🏠 Дім і сад",
+    catBeauty: "💄 Краса",
+    catGadgets: "🔧 Гаджети",
+    catGifts: "🎁 Подарунки",
+    catUnder10: "💰 До $10",
+    recentSearches: "🕐 <b>Останні пошуки:</b>",
+    noSearchHistory: "📭 Історії пошуку поки немає",
+    couponEarned: "🎉 <b>Вітаємо!</b> Ви отримали купон на знижку 5%!\n\n🎫 Код: <code>{code}</code>\n\n<i>Використовуйте при замовленні на AliExpress</i>",
+    couponProgress: "👥 Запросіть ще <b>{remaining}</b> друзів для отримання купону на знижку!",
+    yourCoupon: "🎫 Ваш купон: <code>{code}</code> (-5%)",
   },
   ru: {
     welcome: "🎉 <b>Привет, {name}!</b> 🛍️\n\nЯ <b>BuyWise</b> - твой персональный помощник для поиска лучших товаров на AliExpress! 🌟\n\n🔍 <b>Поиск</b> - найду лучшее\n🔥 <b>ТОП-10</b> - хиты продаж\n❤️ <b>Избранное</b> - твои находки\n🎁 <b>Реферал</b> - приглашай друзей\n\n<i>Готов к шопингу?</i> 👇",
@@ -116,6 +144,19 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     changeCountry: "🌍 Изменить страну",
     changeLang: "🌐 Изменить язык",
     backMenu: "🔙 Меню",
+    categories: "📂 <b>Выберите категорию:</b>",
+    catElectronics: "📱 Электроника",
+    catClothing: "👕 Одежда",
+    catHome: "🏠 Дом и сад",
+    catBeauty: "💄 Красота",
+    catGadgets: "🔧 Гаджеты",
+    catGifts: "🎁 Подарки",
+    catUnder10: "💰 До $10",
+    recentSearches: "🕐 <b>Последние поиски:</b>",
+    noSearchHistory: "📭 Истории поиска пока нет",
+    couponEarned: "🎉 <b>Поздравляем!</b> Вы получили купон на скидку 5%!\n\n🎫 Код: <code>{code}</code>\n\n<i>Используйте при заказе на AliExpress</i>",
+    couponProgress: "👥 Пригласите ещё <b>{remaining}</b> друзей для получения купона!",
+    yourCoupon: "🎫 Ваш купон: <code>{code}</code> (-5%)",
   },
   en: {
     welcome: "🎉 <b>Hello, {name}!</b> 🛍️\n\nI'm <b>BuyWise</b> - your personal assistant for finding the best deals on AliExpress! 🌟\n\n🔍 <b>Search</b> - I'll find the best\n🔥 <b>TOP-10</b> - bestsellers\n❤️ <b>Favorites</b> - your finds\n🎁 <b>Referral</b> - invite friends\n\n<i>Ready to shop?</i> 👇",
@@ -139,6 +180,19 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     changeCountry: "🌍 Change country",
     changeLang: "🌐 Change language",
     backMenu: "🔙 Menu",
+    categories: "📂 <b>Choose a category:</b>",
+    catElectronics: "📱 Electronics",
+    catClothing: "👕 Clothing",
+    catHome: "🏠 Home & Garden",
+    catBeauty: "💄 Beauty",
+    catGadgets: "🔧 Gadgets",
+    catGifts: "🎁 Gifts",
+    catUnder10: "💰 Under $10",
+    recentSearches: "🕐 <b>Recent searches:</b>",
+    noSearchHistory: "📭 No search history yet",
+    couponEarned: "🎉 <b>Congratulations!</b> You earned a 5% discount coupon!\n\n🎫 Code: <code>{code}</code>\n\n<i>Use it when ordering on AliExpress</i>",
+    couponProgress: "👥 Invite <b>{remaining}</b> more friends to get a discount coupon!",
+    yourCoupon: "🎫 Your coupon: <code>{code}</code> (-5%)",
   },
   de: {
     welcome: "🎉 <b>Hallo, {name}!</b> 🛍️\n\nIch bin <b>BuyWise</b> - dein persönlicher Assistent für die besten Angebote auf AliExpress! 🌟\n\n🔍 <b>Suche</b> - finde das Beste\n🔥 <b>TOP-10</b> - Bestseller\n❤️ <b>Favoriten</b> - deine Funde\n🎁 <b>Empfehlung</b> - lade Freunde ein\n\n<i>Bereit zum Shoppen?</i> 👇",
@@ -162,6 +216,19 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     changeCountry: "🌍 Land ändern",
     changeLang: "🌐 Sprache ändern",
     backMenu: "🔙 Menü",
+    categories: "📂 <b>Kategorie wählen:</b>",
+    catElectronics: "📱 Elektronik",
+    catClothing: "👕 Kleidung",
+    catHome: "🏠 Haus & Garten",
+    catBeauty: "💄 Schönheit",
+    catGadgets: "🔧 Gadgets",
+    catGifts: "🎁 Geschenke",
+    catUnder10: "💰 Unter $10",
+    recentSearches: "🕐 <b>Letzte Suchen:</b>",
+    noSearchHistory: "📭 Noch kein Suchverlauf",
+    couponEarned: "🎉 <b>Glückwunsch!</b> Du hast einen 5% Rabatt-Gutschein erhalten!\n\n🎫 Code: <code>{code}</code>\n\n<i>Verwende ihn bei AliExpress</i>",
+    couponProgress: "👥 Lade noch <b>{remaining}</b> Freunde ein für einen Rabatt-Gutschein!",
+    yourCoupon: "🎫 Dein Gutschein: <code>{code}</code> (-5%)",
   },
   pl: {
     welcome: "🎉 <b>Cześć, {name}!</b> 🛍️\n\nJestem <b>BuyWise</b> - Twój osobisty asystent do znajdowania najlepszych ofert na AliExpress! 🌟\n\n🔍 <b>Szukaj</b> - znajdę najlepsze\n🔥 <b>TOP-10</b> - bestsellery\n❤️ <b>Ulubione</b> - Twoje znaleziska\n🎁 <b>Polecenia</b> - zaproś znajomych\n\n<i>Gotowy na zakupy?</i> 👇",
@@ -185,6 +252,19 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     changeCountry: "🌍 Zmień kraj",
     changeLang: "🌐 Zmień język",
     backMenu: "🔙 Menu",
+    categories: "📂 <b>Wybierz kategorię:</b>",
+    catElectronics: "📱 Elektronika",
+    catClothing: "👕 Odzież",
+    catHome: "🏠 Dom i ogród",
+    catBeauty: "💄 Uroda",
+    catGadgets: "🔧 Gadżety",
+    catGifts: "🎁 Prezenty",
+    catUnder10: "💰 Do $10",
+    recentSearches: "🕐 <b>Ostatnie wyszukiwania:</b>",
+    noSearchHistory: "📭 Brak historii wyszukiwania",
+    couponEarned: "🎉 <b>Gratulacje!</b> Otrzymałeś kupon rabatowy 5%!\n\n🎫 Kod: <code>{code}</code>\n\n<i>Użyj przy zamówieniu na AliExpress</i>",
+    couponProgress: "👥 Zaproś jeszcze <b>{remaining}</b> znajomych, aby otrzymać kupon!",
+    yourCoupon: "🎫 Twój kupon: <code>{code}</code> (-5%)",
   },
   fr: {
     welcome: "🎉 <b>Bonjour, {name}!</b> 🛍️\n\nJe suis <b>BuyWise</b> - votre assistant personnel pour trouver les meilleures offres sur AliExpress! 🌟\n\n🔍 <b>Recherche</b> - je trouve le meilleur\n🔥 <b>TOP-10</b> - best-sellers\n❤️ <b>Favoris</b> - vos trouvailles\n🎁 <b>Parrainage</b> - invitez des amis\n\n<i>Prêt à faire du shopping?</i> 👇",
@@ -208,6 +288,19 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     changeCountry: "🌍 Changer de pays",
     changeLang: "🌐 Changer de langue",
     backMenu: "🔙 Menu",
+    categories: "📂 <b>Choisir une catégorie:</b>",
+    catElectronics: "📱 Électronique",
+    catClothing: "👕 Vêtements",
+    catHome: "🏠 Maison & Jardin",
+    catBeauty: "💄 Beauté",
+    catGadgets: "🔧 Gadgets",
+    catGifts: "🎁 Cadeaux",
+    catUnder10: "💰 Moins de $10",
+    recentSearches: "🕐 <b>Recherches récentes:</b>",
+    noSearchHistory: "📭 Pas encore d'historique",
+    couponEarned: "🎉 <b>Félicitations!</b> Vous avez reçu un coupon de 5%!\n\n🎫 Code: <code>{code}</code>\n\n<i>Utilisez-le sur AliExpress</i>",
+    couponProgress: "👥 Invitez encore <b>{remaining}</b> amis pour obtenir un coupon!",
+    yourCoupon: "🎫 Votre coupon: <code>{code}</code> (-5%)",
   },
   es: {
     welcome: "🎉 <b>¡Hola, {name}!</b> 🛍️\n\nSoy <b>BuyWise</b> - tu asistente personal para encontrar las mejores ofertas en AliExpress! 🌟\n\n🔍 <b>Buscar</b> - encuentro lo mejor\n🔥 <b>TOP-10</b> - más vendidos\n❤️ <b>Favoritos</b> - tus hallazgos\n🎁 <b>Referidos</b> - invita amigos\n\n<i>¿Listo para comprar?</i> 👇",
@@ -231,6 +324,19 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     changeCountry: "🌍 Cambiar país",
     changeLang: "🌐 Cambiar idioma",
     backMenu: "🔙 Menú",
+    categories: "📂 <b>Elige categoría:</b>",
+    catElectronics: "📱 Electrónica",
+    catClothing: "👕 Ropa",
+    catHome: "🏠 Hogar y jardín",
+    catBeauty: "💄 Belleza",
+    catGadgets: "🔧 Gadgets",
+    catGifts: "🎁 Regalos",
+    catUnder10: "💰 Menos de $10",
+    recentSearches: "🕐 <b>Búsquedas recientes:</b>",
+    noSearchHistory: "📭 Sin historial de búsqueda",
+    couponEarned: "🎉 <b>¡Felicidades!</b> ¡Has ganado un cupón de 5%!\n\n🎫 Código: <code>{code}</code>\n\n<i>Úsalo en AliExpress</i>",
+    couponProgress: "👥 ¡Invita a <b>{remaining}</b> amigos más para obtener un cupón!",
+    yourCoupon: "🎫 Tu cupón: <code>{code}</code> (-5%)",
   },
   it: {
     welcome: "🎉 <b>Ciao, {name}!</b> 🛍️\n\nSono <b>BuyWise</b> - il tuo assistente personale per trovare le migliori offerte su AliExpress! 🌟\n\n🔍 <b>Cerca</b> - trovo il meglio\n🔥 <b>TOP-10</b> - bestseller\n❤️ <b>Preferiti</b> - le tue scoperte\n🎁 <b>Referral</b> - invita amici\n\n<i>Pronto per lo shopping?</i> 👇",
@@ -254,6 +360,19 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     changeCountry: "🌍 Cambia paese",
     changeLang: "🌐 Cambia lingua",
     backMenu: "🔙 Menu",
+    categories: "📂 <b>Scegli categoria:</b>",
+    catElectronics: "📱 Elettronica",
+    catClothing: "👕 Abbigliamento",
+    catHome: "🏠 Casa e giardino",
+    catBeauty: "💄 Bellezza",
+    catGadgets: "🔧 Gadget",
+    catGifts: "🎁 Regali",
+    catUnder10: "💰 Sotto $10",
+    recentSearches: "🕐 <b>Ricerche recenti:</b>",
+    noSearchHistory: "📭 Nessuno storico ricerche",
+    couponEarned: "🎉 <b>Congratulazioni!</b> Hai guadagnato un coupon del 5%!\n\n🎫 Codice: <code>{code}</code>\n\n<i>Usalo su AliExpress</i>",
+    couponProgress: "👥 Invita ancora <b>{remaining}</b> amici per ottenere un coupon!",
+    yourCoupon: "🎫 Il tuo coupon: <code>{code}</code> (-5%)",
   },
   cs: {
     welcome: "🎉 <b>Ahoj, {name}!</b> 🛍️\n\nJsem <b>BuyWise</b> - tvůj osobní asistent pro hledání nejlepších nabídek na AliExpress! 🌟\n\n🔍 <b>Hledat</b> - najdu nejlepší\n🔥 <b>TOP-10</b> - bestsellery\n❤️ <b>Oblíbené</b> - tvoje nálezy\n🎁 <b>Doporučení</b> - pozvi přátele\n\n<i>Připraven nakupovat?</i> 👇",
@@ -277,6 +396,19 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     changeCountry: "🌍 Změnit zemi",
     changeLang: "🌐 Změnit jazyk",
     backMenu: "🔙 Menu",
+    categories: "📂 <b>Vyber kategorii:</b>",
+    catElectronics: "📱 Elektronika",
+    catClothing: "👕 Oblečení",
+    catHome: "🏠 Dům a zahrada",
+    catBeauty: "💄 Krása",
+    catGadgets: "🔧 Gadgety",
+    catGifts: "🎁 Dárky",
+    catUnder10: "💰 Do $10",
+    recentSearches: "🕐 <b>Poslední hledání:</b>",
+    noSearchHistory: "📭 Zatím žádná historie",
+    couponEarned: "🎉 <b>Gratulujeme!</b> Získal jsi 5% slevový kupón!\n\n🎫 Kód: <code>{code}</code>\n\n<i>Použij ho na AliExpress</i>",
+    couponProgress: "👥 Pozvi ještě <b>{remaining}</b> přátel pro získání kupónu!",
+    yourCoupon: "🎫 Tvůj kupón: <code>{code}</code> (-5%)",
   },
   ro: {
     welcome: "🎉 <b>Bună, {name}!</b> 🛍️\n\nSunt <b>BuyWise</b> - asistentul tău personal pentru a găsi cele mai bune oferte pe AliExpress! 🌟\n\n🔍 <b>Caută</b> - găsesc cel mai bun\n🔥 <b>TOP-10</b> - bestsellere\n❤️ <b>Favorite</b> - descoperirile tale\n🎁 <b>Referral</b> - invită prieteni\n\n<i>Gata de shopping?</i> 👇",
@@ -300,6 +432,19 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     changeCountry: "🌍 Schimbă țara",
     changeLang: "🌐 Schimbă limba",
     backMenu: "🔙 Meniu",
+    categories: "📂 <b>Alege categoria:</b>",
+    catElectronics: "📱 Electronică",
+    catClothing: "👕 Îmbrăcăminte",
+    catHome: "🏠 Casă și grădină",
+    catBeauty: "💄 Frumusețe",
+    catGadgets: "🔧 Gadgeturi",
+    catGifts: "🎁 Cadouri",
+    catUnder10: "💰 Sub $10",
+    recentSearches: "🕐 <b>Căutări recente:</b>",
+    noSearchHistory: "📭 Niciun istoric de căutare",
+    couponEarned: "🎉 <b>Felicitări!</b> Ai primit un cupon de 5%!\n\n🎫 Cod: <code>{code}</code>\n\n<i>Folosește-l pe AliExpress</i>",
+    couponProgress: "👥 Invită încă <b>{remaining}</b> prieteni pentru a obține un cupon!",
+    yourCoupon: "🎫 Cuponul tău: <code>{code}</code> (-5%)",
   },
 };
 
@@ -479,9 +624,34 @@ const processWithAgentStep = createStep({
                 runtimeContext: {} as any,
               });
               if (refResult.success) {
-                const refText = texts.referral
+                const refCount = refResult.referralCount || 0;
+                let refText = texts.referral
                   .replace("{link}", refResult.referralLink || "")
-                  .replace("{count}", String(refResult.referralCount || 0));
+                  .replace("{count}", String(refCount));
+                
+                const [existingCoupon] = await db
+                  .select()
+                  .from(coupons)
+                  .where(eq(coupons.userId, existingUser.id));
+                
+                if (refCount >= 5 && !existingCoupon) {
+                  const couponCode = `BW5-${existingUser.id}-${Date.now().toString(36).toUpperCase()}`;
+                  await db.insert(coupons).values({
+                    userId: existingUser.id,
+                    code: couponCode,
+                    discountPercent: 5,
+                    earnedForReferrals: 5,
+                    createdAt: new Date(),
+                  });
+                  logger?.info("🎫 [Coupon] Generated for user:", { userId: existingUser.id, code: couponCode });
+                  refText += "\n\n" + texts.couponEarned.replace("{code}", couponCode);
+                } else if (existingCoupon) {
+                  refText += "\n\n" + texts.yourCoupon.replace("{code}", existingCoupon.code);
+                } else {
+                  const remaining = 5 - refCount;
+                  refText += "\n\n" + texts.couponProgress.replace("{remaining}", String(remaining));
+                }
+                
                 return { response: refText, chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId, languageCode };
               }
               return { response: "❌ Помилка отримання реферального посилання", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
@@ -533,9 +703,128 @@ const processWithAgentStep = createStep({
                 products: favProds,
                 telegramId: inputData.telegramId,
               };
+            case "categories":
+              return { response: texts.categories, chatId: inputData.chatId, success: true, keyboard: "categories", telegramId: inputData.telegramId, languageCode };
+            case "history":
+              if (!existingUser) {
+                return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
+              }
+              const historyItems = await db
+                .select()
+                .from(searchHistory)
+                .where(eq(searchHistory.userId, existingUser.id))
+                .orderBy(desc(searchHistory.createdAt))
+                .limit(5);
+              
+              if (historyItems.length === 0) {
+                return { response: texts.noSearchHistory, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+              }
+              
+              const historyText = texts.recentSearches + "\n\n" + historyItems.map((h, i) => `${i + 1}. ${h.query}`).join("\n");
+              return { response: historyText, chatId: inputData.chatId, success: true, keyboard: "history", telegramId: inputData.telegramId, languageCode };
             case "top10":
               break;
           }
+        }
+        
+        if (type === "cat") {
+          if (!existingUser) {
+            return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
+          }
+          
+          const CATEGORY_QUERIES: Record<string, string> = {
+            electronics: "electronics smartphone headphones",
+            clothing: "fashion clothing dress shirt",
+            home: "home garden kitchen tools",
+            beauty: "beauty cosmetics makeup skincare",
+            gadgets: "gadgets accessories tech",
+            gifts: "gift present surprise",
+            under10: "cheap under 10 dollar",
+          };
+          
+          const searchQuery = CATEGORY_QUERIES[value] || value;
+          logger?.info("🔍 [Step 1] Category search:", { category: value, query: searchQuery });
+          
+          const catResult = await searchProductsTool.execute({
+            context: {
+              query: searchQuery,
+              country: existingUser.country,
+              currency: existingUser.currency,
+              quality: "default",
+              maxPrice: value === "under10" ? 10 : 0,
+              freeShipping: false,
+              onlyDiscount: false,
+              preferCheaper: value === "under10",
+            },
+            mastra,
+            runtimeContext: {} as any,
+          });
+          
+          if (catResult.success && catResult.products.length > 0) {
+            const products = catResult.products.slice(0, 5);
+            searchCache.set(inputData.telegramId, { query: searchQuery, page: 0, isTop: false });
+            return {
+              response: `📂 <b>${value.charAt(0).toUpperCase() + value.slice(1)}:</b>`,
+              chatId: inputData.chatId,
+              success: true,
+              keyboard: "none",
+              products,
+              hasMore: catResult.products.length > 5,
+              telegramId: inputData.telegramId,
+            };
+          }
+          
+          return { response: "😔 Товарів не знайдено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+        }
+        
+        if (type === "repeat") {
+          if (!existingUser) {
+            return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
+          }
+          
+          const historyIndex = parseInt(value) - 1;
+          const historyItems2 = await db
+            .select()
+            .from(searchHistory)
+            .where(eq(searchHistory.userId, existingUser.id))
+            .orderBy(desc(searchHistory.createdAt))
+            .limit(5);
+          
+          if (historyItems2[historyIndex]) {
+            const repeatQuery = historyItems2[historyIndex].query;
+            logger?.info("🔍 [Step 1] Repeat search:", repeatQuery);
+            
+            const repeatResult = await searchProductsTool.execute({
+              context: {
+                query: repeatQuery,
+                country: existingUser.country,
+                currency: existingUser.currency,
+                quality: "default",
+                maxPrice: 0,
+                freeShipping: false,
+                onlyDiscount: false,
+                preferCheaper: false,
+              },
+              mastra,
+              runtimeContext: {} as any,
+            });
+            
+            if (repeatResult.success && repeatResult.products.length > 0) {
+              const products = repeatResult.products.slice(0, 5);
+              searchCache.set(inputData.telegramId, { query: repeatQuery, page: 0, isTop: false });
+              return {
+                response: `🔍 <b>${repeatQuery}:</b>`,
+                chatId: inputData.chatId,
+                success: true,
+                keyboard: "none",
+                products,
+                hasMore: repeatResult.products.length > 5,
+                telegramId: inputData.telegramId,
+              };
+            }
+          }
+          
+          return { response: "😔 Пошук не знайдено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
         }
         
         if (type === "settings" && value === "country") {
@@ -861,6 +1150,16 @@ const processWithAgentStep = createStep({
         
         if (products.length > 0) {
           searchCache.set(inputData.telegramId, { query: message, page: 0, isTop });
+          
+          if (!isTop && existingUser) {
+            await db.insert(searchHistory).values({
+              userId: existingUser.id,
+              query: message.substring(0, 200),
+              createdAt: new Date(),
+            });
+            logger?.info("📝 [Step 1] Search saved to history:", message.substring(0, 30));
+          }
+          
           const hasMore = totalProducts > 5;
           const title = isTop ? `🔥 <b>ТОП-${products.length} товарів:</b>` : `🔍 <b>Знайдено ${products.length} товарів:</b>`;
           return {
@@ -1014,6 +1313,20 @@ const sendToTelegramStep = createStep({
         [{ text: texts.enableNotif, callback_data: "toggle:daily_on" }],
         [{ text: texts.backMenu, callback_data: "action:menu" }],
       ];
+      const CATEGORY_BUTTONS_LOCALIZED = [
+        [{ text: texts.catElectronics, callback_data: "cat:electronics" }, { text: texts.catClothing, callback_data: "cat:clothing" }],
+        [{ text: texts.catHome, callback_data: "cat:home" }, { text: texts.catBeauty, callback_data: "cat:beauty" }],
+        [{ text: texts.catGadgets, callback_data: "cat:gadgets" }, { text: texts.catGifts, callback_data: "cat:gifts" }],
+        [{ text: texts.catUnder10, callback_data: "cat:under10" }],
+        [{ text: texts.backMenu, callback_data: "action:menu" }],
+      ];
+      
+      const HISTORY_BUTTONS = [
+        [{ text: "1️⃣", callback_data: "repeat:1" }, { text: "2️⃣", callback_data: "repeat:2" }, { text: "3️⃣", callback_data: "repeat:3" }],
+        [{ text: "4️⃣", callback_data: "repeat:4" }, { text: "5️⃣", callback_data: "repeat:5" }],
+        [{ text: texts.backMenu, callback_data: "action:menu" }],
+      ];
+      
       switch (inputData.keyboard) {
         case "country": inlineKeyboard = COUNTRY_BUTTONS; break;
         case "main": inlineKeyboard = MAIN_MENU_BUTTONS; break;
@@ -1023,6 +1336,8 @@ const sendToTelegramStep = createStep({
         case "language": inlineKeyboard = LANGUAGE_BUTTONS; break;
         case "back": inlineKeyboard = BACK_BUTTON; break;
         case "support": inlineKeyboard = SUPPORT_BUTTONS; break;
+        case "categories": inlineKeyboard = CATEGORY_BUTTONS_LOCALIZED; break;
+        case "history": inlineKeyboard = HISTORY_BUTTONS; break;
       }
       
       if (inputData.products && inputData.products.length > 0) {
