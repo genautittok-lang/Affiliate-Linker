@@ -28,6 +28,13 @@ Preferred communication style: Simple, everyday language.
 - `welcomeBack` messages for returning users
 - All 10 languages updated with vibrant, emoji-rich messages
 
+### Fully Localized Profile & Notification Toggle
+- Profile buttons dynamically localized in all 10 languages
+- LangTexts interface extended with: notifEnabled, notifDisabled, enableNotif, disableNotif, notifOn, notifOff, changeCountry, changeLang, backMenu
+- Notification status shown in profile using localized text
+- Toggle buttons show Enable/Disable based on user's current dailyTopEnabled status
+- languageCode passed through workflow for dynamic button localization
+
 ### Scheduled Daily Broadcasts
 - Cron function runs at 10:00 AM daily via Inngest
 - Fetches real TOP-10 products per country using AliExpress API
