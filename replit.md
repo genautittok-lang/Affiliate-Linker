@@ -42,6 +42,30 @@ Preferred communication style: Simple, everyday language.
 - Users can disable notifications via `toggle:daily_off` callback
 - Notification settings toggle available in profile
 
+### Category Browsing
+- 7 categories: Electronics, Clothing, Home, Beauty, Gadgets, Gifts, Under $10
+- Full localization in all 10 languages (catElectronics, catClothing, etc.)
+- Categories button in main menu, callback handler "cat:electronics" etc.
+- Under $10 uses maxPrice filter for budget-friendly items
+
+### Search History
+- Auto-saves searches to searchHistory table
+- Displays last 5 searches with numbered buttons (1️⃣-5️⃣)
+- Repeat callback handler triggers same search again
+- LangTexts: recentSearches, noSearchHistory
+
+### Referral Coupon System
+- Generates coupon code (BW5-userId-timestamp) when user reaches 5 referrals
+- Coupons table: userId, code, discountPercent, earnedForReferrals, isUsed, expiresAt
+- Shows coupon in referral section or progress tracker (3/5)
+- LangTexts: couponEarned, couponProgress, yourCoupon
+
+### Price Drop Notifications
+- Cron at 18:00 checks all favorites for price changes
+- Notifies users if price dropped 5%+ with localized message
+- Updates currentPrice in favorites table for tracking
+- Localized in all 10 languages (title, dropped, viewBtn)
+
 ## System Architecture
 
 ### Core Framework
@@ -67,11 +91,12 @@ Preferred communication style: Simple, everyday language.
 - **PostgreSQL** with Drizzle ORM for data persistence
 - **Schema** (`src/db/schema.ts`): 
   - Users table (telegram ID, firstName, language, country, currency, dailyTopEnabled, referralCode, referredBy)
-  - Favorites table (product tracking)
+  - Favorites table (product tracking with currentPrice/originalPrice for price drop detection)
   - Search history table
   - Translation cache table
   - Referrals table (referrer/referred relationships)
   - Broadcasts table (admin broadcast logs)
+  - Coupons table (referral reward coupons)
 - Shared storage instance for Mastra workflows and memory
 
 ### Entry Point
