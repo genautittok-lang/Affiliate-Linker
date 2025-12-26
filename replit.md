@@ -10,6 +10,31 @@ The application uses Mastra's agent and workflow system with Inngest for durable
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (December 2025)
+
+### Referral Program
+- Database: `referrals` table tracks referrer/referred relationships
+- Users table: Added `referralCode`, `referredBy`, `firstName` fields
+- Tools: `getReferralLinkTool` generates unique invite links, `processReferralTool` handles referral tracking
+- Users can share `t.me/BuyWiseBot?start=CODE` links and see referral stats in profile
+
+### Admin Panel & Support
+- Admin ID: 8210587392 (username @SYNTRAM)
+- Tools: `isAdmin` checks admin status, `getSupportInfoTool` provides localized support templates
+- Support button links directly to admin with pre-filled message templates
+
+### Personalized Greetings
+- Welcome messages use `{name}` placeholder for personalization
+- `welcomeBack` messages for returning users
+- All 10 languages updated with vibrant, emoji-rich messages
+
+### Scheduled Daily Broadcasts
+- Cron function runs at 10:00 AM daily via Inngest
+- Fetches real TOP-10 products per country using AliExpress API
+- Sends localized messages with product photos and affiliate links
+- Users can disable notifications via `toggle:daily_off` callback
+- Notification settings toggle available in profile
+
 ## System Architecture
 
 ### Core Framework
@@ -28,12 +53,18 @@ Preferred communication style: Simple, everyday language.
 
 ### Trigger System
 - **Telegram Triggers** (`src/triggers/telegramTriggers.ts`): Webhook-based message handling for incoming Telegram messages and callbacks
-- **Cron Triggers** (`src/triggers/cronTriggers.ts`): Time-based automation for daily product recommendations
+- **Daily Broadcast Cron** (`src/mastra/inngest/index.ts`): Inngest cron function for 10 AM broadcasts
 - Triggers register API routes through the Inngest integration layer
 
 ### Database Layer
 - **PostgreSQL** with Drizzle ORM for data persistence
-- **Schema** (`src/db/schema.ts`): Users table (telegram ID, language, country, currency, preferences), favorites, search history, translation cache
+- **Schema** (`src/db/schema.ts`): 
+  - Users table (telegram ID, firstName, language, country, currency, dailyTopEnabled, referralCode, referredBy)
+  - Favorites table (product tracking)
+  - Search history table
+  - Translation cache table
+  - Referrals table (referrer/referred relationships)
+  - Broadcasts table (admin broadcast logs)
 - Shared storage instance for Mastra workflows and memory
 
 ### Entry Point
@@ -61,4 +92,4 @@ Preferred communication style: Simple, everyday language.
 ### Required Environment Variables
 - `TELEGRAM_BOT_TOKEN`: Telegram bot authentication
 - `DATABASE_URL`: PostgreSQL connection string
-- `OPENAI_API_KEY`: OpenAI API access
+- `ALIEXPRESS_APP_KEY`, `ALIEXPRESS_APP_SECRET`, `ALIEXPRESS_TRACKING_ID`: AliExpress API credentials

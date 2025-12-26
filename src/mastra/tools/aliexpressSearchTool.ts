@@ -31,7 +31,7 @@ interface Product {
   seller: string;
 }
 
-function calculateScore(product: Product, preferCheaper: boolean = false): number {
+export function calculateScore(product: Product, preferCheaper: boolean = false): number {
   const priceWeight = preferCheaper ? 0.15 : 0.05;
   const ratingWeight = 0.35;
   const ordersWeight = 0.30;
@@ -53,7 +53,7 @@ function calculateScore(product: Product, preferCheaper: boolean = false): numbe
   return Math.round(score * 1000) / 1000;
 }
 
-async function searchAliExpressAPI(
+export async function searchAliExpressAPI(
   query: string,
   country: string,
   currency: string,
