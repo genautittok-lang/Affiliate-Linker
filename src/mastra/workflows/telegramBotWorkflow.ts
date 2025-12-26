@@ -923,12 +923,22 @@ const processWithAgentStep = createStep({
             
             const favCount = await db.select({ count: sql<number>`count(*)` }).from(favorites);
             const refCount = await db.select({ count: sql<number>`count(*)` }).from(referrals);
+            const searchCount = await db.select({ count: sql<number>`count(*)` }).from(searchHistory);
+            const couponCount = await db.select({ count: sql<number>`count(*)` }).from(coupons);
+            
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayUsers = await db.select({ count: sql<number>`count(*)` })
+              .from(users).where(sql`${users.createdAt} >= ${todayStart}`);
             
             let statsText = `📊 <b>Статистика BuyWise</b>\n\n`;
             statsText += `👥 <b>Всього користувачів:</b> ${totalUsers[0]?.count || 0}\n`;
+            statsText += `📈 <b>Нових сьогодні:</b> ${todayUsers[0]?.count || 0}\n`;
             statsText += `🔔 <b>Підписані на розсилку:</b> ${enabledCount[0]?.count || 0}\n`;
             statsText += `❤️ <b>Товарів в обраному:</b> ${favCount[0]?.count || 0}\n`;
-            statsText += `👫 <b>Рефералів:</b> ${refCount[0]?.count || 0}\n\n`;
+            statsText += `🔍 <b>Всього пошуків:</b> ${searchCount[0]?.count || 0}\n`;
+            statsText += `👫 <b>Рефералів:</b> ${refCount[0]?.count || 0}\n`;
+            statsText += `🎫 <b>Виданих купонів:</b> ${couponCount[0]?.count || 0}\n\n`;
             
             statsText += `🌍 <b>По країнах:</b>\n`;
             countryStats.slice(0, 10).forEach(s => {
@@ -942,6 +952,67 @@ const processWithAgentStep = createStep({
             
             return { 
               response: statsText, 
+              chatId: inputData.chatId, 
+              success: true, 
+              keyboard: "admin_stats", 
+              telegramId: inputData.telegramId, 
+              languageCode 
+            };
+          }
+          
+          if (value === "users") {
+            logger?.info("👥 [Admin] Getting users list");
+            const recentUsers = await db.select({
+              id: users.id,
+              telegramId: users.telegramId,
+              firstName: users.firstName,
+              userName: users.userName,
+              country: users.country,
+              language: users.language,
+              dailyTopEnabled: users.dailyTopEnabled,
+              createdAt: users.createdAt,
+            }).from(users).orderBy(desc(users.createdAt)).limit(15);
+            
+            let usersText = `👥 <b>Останні 15 користувачів:</b>\n\n`;
+            recentUsers.forEach((u, i) => {
+              const name = u.firstName || u.userName || "—";
+              const notif = u.dailyTopEnabled ? "🔔" : "🔕";
+              const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString("uk") : "—";
+              usersText += `${i+1}. <b>${name}</b> ${notif}\n`;
+              usersText += `   🌍 ${u.country || "—"} | 🗣 ${u.language || "—"}\n`;
+              usersText += `   📅 ${date} | ID: <code>${u.telegramId}</code>\n\n`;
+            });
+            
+            return { 
+              response: usersText, 
+              chatId: inputData.chatId, 
+              success: true, 
+              keyboard: "admin_users", 
+              telegramId: inputData.telegramId, 
+              languageCode 
+            };
+          }
+          
+          if (value === "broadcast_history") {
+            logger?.info("📜 [Admin] Getting broadcast history");
+            const recentBroadcasts = await db.select().from(broadcasts)
+              .orderBy(desc(broadcasts.sentAt)).limit(10);
+            
+            let historyText = `📜 <b>Історія розсилок:</b>\n\n`;
+            if (recentBroadcasts.length === 0) {
+              historyText += `<i>Розсилок ще не було</i>`;
+            } else {
+              recentBroadcasts.forEach((b, i) => {
+                const date = b.sentAt ? new Date(b.sentAt).toLocaleString("uk") : "—";
+                const msg = (b.message || "").slice(0, 50);
+                historyText += `${i+1}. 📅 ${date}\n`;
+                historyText += `   📨 Надіслано: ${b.sentCount}\n`;
+                historyText += `   💬 ${msg}${msg.length >= 50 ? "..." : ""}\n\n`;
+              });
+            }
+            
+            return { 
+              response: historyText, 
               chatId: inputData.chatId, 
               success: true, 
               keyboard: "admin_menu", 
@@ -962,19 +1033,27 @@ const processWithAgentStep = createStep({
             };
           }
           
-          if (value === "send_all") {
-            logger?.info("📤 [Admin] Starting broadcast to all users");
-            const allActiveUsers = await db.select({ telegramId: users.telegramId })
-              .from(users)
-              .where(eq(users.dailyTopEnabled, true));
+          if (value === "send_all" || value === "send_ua" || value === "send_pl") {
+            const countryFilter = value === "send_ua" ? "Ukraine" : value === "send_pl" ? "Poland" : null;
+            const filterLabel = countryFilter || "всіх";
+            logger?.info(`📤 [Admin] Starting broadcast to ${filterLabel}`);
+            
+            let query = db.select({ telegramId: users.telegramId }).from(users);
+            let targetUsers;
+            if (countryFilter) {
+              targetUsers = await query.where(and(eq(users.dailyTopEnabled, true), eq(users.country, countryFilter)));
+            } else {
+              targetUsers = await query.where(eq(users.dailyTopEnabled, true));
+            }
             
             const botToken = process.env.TELEGRAM_BOT_TOKEN;
             let sentCount = 0;
+            let failCount = 0;
             const broadcastText = inputData.message || "📢 Повідомлення від адміністратора";
             
-            for (const u of allActiveUsers) {
+            for (const u of targetUsers) {
               try {
-                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
@@ -983,9 +1062,16 @@ const processWithAgentStep = createStep({
                     parse_mode: "HTML",
                   }),
                 });
-                sentCount++;
+                const json = await res.json();
+                if (json.ok) {
+                  sentCount++;
+                } else {
+                  failCount++;
+                  logger?.warn("Telegram error:", json.description);
+                }
                 await new Promise(r => setTimeout(r, 50));
               } catch (e) {
+                failCount++;
                 logger?.warn("Failed to send to:", u.telegramId);
               }
             }
@@ -993,12 +1079,18 @@ const processWithAgentStep = createStep({
             await db.insert(broadcasts).values({
               adminId: inputData.telegramId,
               message: broadcastText,
+              targetCountry: countryFilter,
               sentCount,
               sentAt: new Date(),
             });
             
+            let resultText = `✅ <b>Розсилка завершена!</b>\n\n`;
+            resultText += `🎯 Аудиторія: <b>${filterLabel}</b>\n`;
+            resultText += `📨 Надіслано: ${sentCount}/${targetUsers.length}\n`;
+            if (failCount > 0) resultText += `❌ Помилок: ${failCount}`;
+            
             return { 
-              response: `✅ <b>Розсилка завершена!</b>\n\n📨 Надіслано: ${sentCount}/${allActiveUsers.length} користувачів`, 
+              response: resultText, 
               chatId: inputData.chatId, 
               success: true, 
               keyboard: "admin_menu", 
@@ -1463,13 +1555,25 @@ const sendToTelegramStep = createStep({
       ];
       
       const ADMIN_MENU_BUTTONS = [
-        [{ text: "📊 Статистика", callback_data: "admin:stats" }],
-        [{ text: "📢 Розсилка", callback_data: "admin:broadcast" }],
+        [{ text: "📊 Статистика", callback_data: "admin:stats" }, { text: "👥 Користувачі", callback_data: "admin:users" }],
+        [{ text: "📢 Розсилка", callback_data: "admin:broadcast" }, { text: "📜 Історія", callback_data: "admin:broadcast_history" }],
         [{ text: "🔙 Головне меню", callback_data: "action:menu" }],
       ];
       
+      const ADMIN_STATS_BUTTONS = [
+        [{ text: "👥 Користувачі", callback_data: "admin:users" }],
+        [{ text: "🔙 Адмін-панель", callback_data: "admin:panel" }],
+      ];
+      
+      const ADMIN_USERS_BUTTONS = [
+        [{ text: "📊 Статистика", callback_data: "admin:stats" }],
+        [{ text: "🔙 Адмін-панель", callback_data: "admin:panel" }],
+      ];
+      
       const ADMIN_BROADCAST_BUTTONS = [
-        [{ text: "📤 Надіслати всім", callback_data: "admin:send_all" }],
+        [{ text: "📤 Надіслати ВСІМ", callback_data: "admin:send_all" }],
+        [{ text: "🇺🇦 Тільки Україна", callback_data: "admin:send_ua" }],
+        [{ text: "🇵🇱 Тільки Польща", callback_data: "admin:send_pl" }],
         [{ text: "🔙 Адмін-панель", callback_data: "admin:panel" }],
       ];
       
@@ -1485,6 +1589,8 @@ const sendToTelegramStep = createStep({
         case "categories": inlineKeyboard = CATEGORY_BUTTONS_LOCALIZED; break;
         case "history": inlineKeyboard = HISTORY_BUTTONS; break;
         case "admin_menu": inlineKeyboard = ADMIN_MENU_BUTTONS; break;
+        case "admin_stats": inlineKeyboard = ADMIN_STATS_BUTTONS; break;
+        case "admin_users": inlineKeyboard = ADMIN_USERS_BUTTONS; break;
         case "admin_broadcast": inlineKeyboard = ADMIN_BROADCAST_BUTTONS; break;
       }
       
