@@ -2,7 +2,7 @@ import { createStep, createWorkflow } from "../inngest";
 import { z } from "zod";
 import { buyWiseAgent } from "../agents/buyWiseAgent";
 import { db } from "../../db";
-import { users, favorites, referrals, searchHistory, coupons } from "../../db/schema";
+import { users, favorites, referrals, searchHistory, coupons, broadcasts } from "../../db/schema";
 import { desc } from "drizzle-orm";
 import { eq, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
@@ -888,6 +888,126 @@ const processWithAgentStep = createStep({
           }
         }
         
+        if (type === "admin") {
+          if (!isAdmin(inputData.telegramId)) {
+            return { response: "⛔ Доступ заборонено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+          }
+          
+          if (value === "panel") {
+            logger?.info("👑 [Admin] Opening admin panel for:", inputData.telegramId);
+            return { 
+              response: "👑 <b>Адмін-панель</b>\n\nОберіть дію:", 
+              chatId: inputData.chatId, 
+              success: true, 
+              keyboard: "admin_menu", 
+              telegramId: inputData.telegramId, 
+              languageCode 
+            };
+          }
+          
+          if (value === "stats") {
+            logger?.info("📊 [Admin] Getting stats");
+            const totalUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
+            const countryStats = await db.select({
+              country: users.country,
+              count: sql<number>`count(*)`,
+            }).from(users).groupBy(users.country);
+            
+            const langStats = await db.select({
+              language: users.language,
+              count: sql<number>`count(*)`,
+            }).from(users).groupBy(users.language);
+            
+            const enabledCount = await db.select({ count: sql<number>`count(*)` })
+              .from(users).where(eq(users.dailyTopEnabled, true));
+            
+            const favCount = await db.select({ count: sql<number>`count(*)` }).from(favorites);
+            const refCount = await db.select({ count: sql<number>`count(*)` }).from(referrals);
+            
+            let statsText = `📊 <b>Статистика BuyWise</b>\n\n`;
+            statsText += `👥 <b>Всього користувачів:</b> ${totalUsers[0]?.count || 0}\n`;
+            statsText += `🔔 <b>Підписані на розсилку:</b> ${enabledCount[0]?.count || 0}\n`;
+            statsText += `❤️ <b>Товарів в обраному:</b> ${favCount[0]?.count || 0}\n`;
+            statsText += `👫 <b>Рефералів:</b> ${refCount[0]?.count || 0}\n\n`;
+            
+            statsText += `🌍 <b>По країнах:</b>\n`;
+            countryStats.slice(0, 10).forEach(s => {
+              if (s.country) statsText += `  • ${s.country}: ${s.count}\n`;
+            });
+            
+            statsText += `\n🗣 <b>По мовах:</b>\n`;
+            langStats.slice(0, 10).forEach(s => {
+              if (s.language) statsText += `  • ${s.language}: ${s.count}\n`;
+            });
+            
+            return { 
+              response: statsText, 
+              chatId: inputData.chatId, 
+              success: true, 
+              keyboard: "admin_menu", 
+              telegramId: inputData.telegramId, 
+              languageCode 
+            };
+          }
+          
+          if (value === "broadcast") {
+            logger?.info("📢 [Admin] Broadcast mode");
+            return { 
+              response: "📢 <b>Розсилка</b>\n\nВідправте текст повідомлення для всіх користувачів.\n\n💡 <i>Використовуйте HTML-теги для форматування:</i>\n<code>&lt;b&gt;жирний&lt;/b&gt;</code>\n<code>&lt;i&gt;курсив&lt;/i&gt;</code>", 
+              chatId: inputData.chatId, 
+              success: true, 
+              keyboard: "admin_broadcast", 
+              telegramId: inputData.telegramId, 
+              languageCode 
+            };
+          }
+          
+          if (value === "send_all") {
+            logger?.info("📤 [Admin] Starting broadcast to all users");
+            const allActiveUsers = await db.select({ telegramId: users.telegramId })
+              .from(users)
+              .where(eq(users.dailyTopEnabled, true));
+            
+            const botToken = process.env.TELEGRAM_BOT_TOKEN;
+            let sentCount = 0;
+            const broadcastText = inputData.message || "📢 Повідомлення від адміністратора";
+            
+            for (const u of allActiveUsers) {
+              try {
+                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    chat_id: u.telegramId,
+                    text: broadcastText,
+                    parse_mode: "HTML",
+                  }),
+                });
+                sentCount++;
+                await new Promise(r => setTimeout(r, 50));
+              } catch (e) {
+                logger?.warn("Failed to send to:", u.telegramId);
+              }
+            }
+            
+            await db.insert(broadcasts).values({
+              adminId: inputData.telegramId,
+              message: broadcastText,
+              sentCount,
+              sentAt: new Date(),
+            });
+            
+            return { 
+              response: `✅ <b>Розсилка завершена!</b>\n\n📨 Надіслано: ${sentCount}/${allActiveUsers.length} користувачів`, 
+              chatId: inputData.chatId, 
+              success: true, 
+              keyboard: "admin_menu", 
+              telegramId: inputData.telegramId, 
+              languageCode 
+            };
+          }
+        }
+        
         if (type === "more") {
           if (!existingUser) {
             return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
@@ -1031,6 +1151,21 @@ const processWithAgentStep = createStep({
           return { response: profileText, chatId: inputData.chatId, success: true, keyboard: existingUser.dailyTopEnabled ? "profile_notif_on" : "profile_notif_off", telegramId: inputData.telegramId, languageCode };
         }
         return { response: texts2.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
+      }
+      
+      if (message === "/admin") {
+        if (isAdmin(inputData.telegramId)) {
+          logger?.info("👑 [Admin] Admin panel accessed by:", inputData.telegramId);
+          return { 
+            response: "👑 <b>Адмін-панель BuyWise</b>\n\n📊 Переглядайте статистику\n📢 Відправляйте розсилки\n\nОберіть дію:", 
+            chatId: inputData.chatId, 
+            success: true, 
+            keyboard: "admin_menu", 
+            telegramId: inputData.telegramId, 
+            languageCode 
+          };
+        }
+        return { response: "⛔ Доступ заборонено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
       }
       
       if (message === "/referral" || message === "/ref") {
@@ -1327,6 +1462,17 @@ const sendToTelegramStep = createStep({
         [{ text: texts.backMenu, callback_data: "action:menu" }],
       ];
       
+      const ADMIN_MENU_BUTTONS = [
+        [{ text: "📊 Статистика", callback_data: "admin:stats" }],
+        [{ text: "📢 Розсилка", callback_data: "admin:broadcast" }],
+        [{ text: "🔙 Головне меню", callback_data: "action:menu" }],
+      ];
+      
+      const ADMIN_BROADCAST_BUTTONS = [
+        [{ text: "📤 Надіслати всім", callback_data: "admin:send_all" }],
+        [{ text: "🔙 Адмін-панель", callback_data: "admin:panel" }],
+      ];
+      
       switch (inputData.keyboard) {
         case "country": inlineKeyboard = COUNTRY_BUTTONS; break;
         case "main": inlineKeyboard = MAIN_MENU_BUTTONS; break;
@@ -1338,6 +1484,8 @@ const sendToTelegramStep = createStep({
         case "support": inlineKeyboard = SUPPORT_BUTTONS; break;
         case "categories": inlineKeyboard = CATEGORY_BUTTONS_LOCALIZED; break;
         case "history": inlineKeyboard = HISTORY_BUTTONS; break;
+        case "admin_menu": inlineKeyboard = ADMIN_MENU_BUTTONS; break;
+        case "admin_broadcast": inlineKeyboard = ADMIN_BROADCAST_BUTTONS; break;
       }
       
       if (inputData.products && inputData.products.length > 0) {
