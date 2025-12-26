@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
 const productCache = new Map<string, { title: string; url: string; img: string; price: number }>();
+const searchCache = new Map<string, { query: string; page: number; isTop: boolean }>();
 
 const COUNTRY_BUTTONS = [
   [{ text: "🇺🇦 Україна", callback_data: "country:Ukraine" }, { text: "🇩🇪 Deutschland", callback_data: "country:Germany" }],
@@ -216,6 +217,7 @@ const processWithAgentStep = createStep({
       affiliateUrl: z.string(),
       freeShipping: z.boolean(),
     })).optional(),
+    hasMore: z.boolean().optional(),
     telegramId: z.string().optional(),
   }),
   
@@ -392,6 +394,69 @@ const processWithAgentStep = createStep({
             return { response: "❤️ Додано до обраного!", chatId: inputData.chatId, success: true, keyboard: "none", telegramId: inputData.telegramId };
           }
         }
+        
+        if (type === "more") {
+          if (!existingUser) {
+            return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId };
+          }
+          
+          const cached = searchCache.get(inputData.telegramId);
+          if (cached) {
+            const nextPage = cached.page + 1;
+            let products: any[] = [];
+            
+            if (cached.isTop) {
+              const result = await getTopProductsTool.execute({
+                context: {
+                  country: existingUser.country,
+                  currency: existingUser.currency,
+                  category: "",
+                },
+                mastra,
+                runtimeContext: {} as any,
+              });
+              if (result.success) {
+                const start = nextPage * 5;
+                products = result.products.slice(start, start + 5);
+              }
+            } else {
+              const result = await searchProductsTool.execute({
+                context: {
+                  query: cached.query,
+                  country: existingUser.country,
+                  currency: existingUser.currency,
+                  quality: "default",
+                  maxPrice: 0,
+                  freeShipping: false,
+                  onlyDiscount: false,
+                  preferCheaper: false,
+                },
+                mastra,
+                runtimeContext: {} as any,
+              });
+              if (result.success) {
+                const start = nextPage * 5;
+                products = result.products.slice(start, start + 5);
+              }
+            }
+            
+            if (products.length > 0) {
+              searchCache.set(inputData.telegramId, { ...cached, page: nextPage });
+              return {
+                response: `📦 <b>Ще ${products.length} товарів:</b>`,
+                chatId: inputData.chatId,
+                success: true,
+                keyboard: "none",
+                products,
+                hasMore: products.length >= 5,
+                telegramId: inputData.telegramId,
+              };
+            } else {
+              return { response: "😔 Більше товарів не знайдено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
+            }
+          }
+          return { response: "🔍 Введіть новий пошуковий запит", chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId };
+        }
       }
       
       const message = inputData.message || "";
@@ -483,13 +548,14 @@ const processWithAgentStep = createStep({
         };
       }
       
-      const isTop = message === "/top" || (inputData.isCallback && inputData.callbackData === "action:top10");
+      const isTop = message === "/top" || (inputData.isCallback === true && inputData.callbackData === "action:top10");
       const isSearch = message.length > 1 && !message.startsWith("/");
       
       if (isTop || isSearch) {
         logger?.info("🔍 [Step 1] Direct product search", { isTop, query: message });
         
         let products: any[] = [];
+        let totalProducts = 0;
         
         if (isTop) {
           const result = await getTopProductsTool.execute({
@@ -502,6 +568,7 @@ const processWithAgentStep = createStep({
             runtimeContext: {} as any,
           });
           if (result.success) {
+            totalProducts = result.products.length;
             products = result.products.slice(0, 5);
           }
         } else {
@@ -520,13 +587,16 @@ const processWithAgentStep = createStep({
             runtimeContext: {} as any,
           });
           if (result.success) {
+            totalProducts = result.products.length;
             products = result.products.slice(0, 5);
           }
         }
         
-        logger?.info("✅ [Step 1] Products found", { count: products.length });
+        logger?.info("✅ [Step 1] Products found", { count: products.length, total: totalProducts });
         
         if (products.length > 0) {
+          searchCache.set(inputData.telegramId, { query: message, page: 0, isTop });
+          const hasMore = totalProducts > 5;
           const title = isTop ? `🔥 <b>ТОП-${products.length} товарів:</b>` : `🔍 <b>Знайдено ${products.length} товарів:</b>`;
           return {
             response: title,
@@ -534,6 +604,7 @@ const processWithAgentStep = createStep({
             success: true,
             keyboard: "none",
             products,
+            hasMore,
             telegramId: inputData.telegramId,
           };
         }
@@ -600,6 +671,7 @@ const sendToTelegramStep = createStep({
       affiliateUrl: z.string(),
       freeShipping: z.boolean(),
     })).optional(),
+    hasMore: z.boolean().optional(),
     telegramId: z.string().optional(),
   }),
   
@@ -704,7 +776,16 @@ const sendToTelegramStep = createStep({
           await new Promise(r => setTimeout(r, 100));
         }
         
-        await sendMessage("📱 Головне меню:", MAIN_MENU_BUTTONS);
+        if (inputData.hasMore) {
+          const moreButtons = [
+            [{ text: "➡️ Показати ще", callback_data: "more:next" }],
+            [{ text: "🔙 Меню", callback_data: "action:menu" }],
+          ];
+          await sendMessage("⬇️ Натисніть щоб побачити більше товарів:", moreButtons);
+        } else {
+          await sendMessage("📱 Головне меню:", MAIN_MENU_BUTTONS);
+        }
+        
         logger?.info("✅ [Step 2] Products sent");
         return { sent: true };
       }
