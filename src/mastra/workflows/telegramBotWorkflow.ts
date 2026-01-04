@@ -1547,8 +1547,100 @@ const sendToTelegramStep = createStep({
         [{ text: texts.catUnder10, callback_data: "cat:under10" }],
         [{ text: texts.backMenu, callback_data: "action:menu" }],
       ];
-      
-      const HISTORY_BUTTONS = [
+
+      const ADMIN_MENU_BUTTONS = [
+        [{ text: "📊 Статистика", callback_data: "admin:stats" }],
+        [{ text: "👥 Користувачі", callback_data: "admin:users" }],
+        [{ text: "📢 Розсилка", callback_data: "admin:broadcast" }],
+        [{ text: "📜 Історія розсилок", callback_data: "admin:broadcast_history" }],
+        [{ text: texts.backMenu, callback_data: "action:menu" }],
+      ];
+
+      const ADMIN_BROADCAST_BUTTONS = [
+        [{ text: "🌍 Всім", callback_data: "admin:send_all" }],
+        [{ text: "🇺🇦 Україна", callback_data: "admin:send_ua" }, { text: "🇵🇱 Польща", callback_data: "admin:send_pl" }],
+        [{ text: "🔙 Назад", callback_data: "admin:menu" }],
+      ];
+
+      if (inputData.keyboard === "country") {
+        inlineKeyboard = COUNTRY_BUTTONS;
+      } else if (inputData.keyboard === "main") {
+        inlineKeyboard = createMainMenuKeyboard(inputData.languageCode || "uk").inline_keyboard;
+      } else if (inputData.keyboard === "language") {
+        inlineKeyboard = LANGUAGE_BUTTONS;
+      } else if (inputData.keyboard === "profile_notif_on") {
+        inlineKeyboard = PROFILE_BUTTONS_NOTIF_ON;
+      } else if (inputData.keyboard === "profile_notif_off") {
+        inlineKeyboard = PROFILE_BUTTONS_NOTIF_OFF;
+      } else if (inputData.keyboard === "categories") {
+        inlineKeyboard = CATEGORY_BUTTONS_LOCALIZED;
+      } else if (inputData.keyboard === "support") {
+        inlineKeyboard = SUPPORT_BUTTONS;
+      } else if (inputData.keyboard === "admin_menu") {
+        inlineKeyboard = ADMIN_MENU_BUTTONS;
+      } else if (inputData.keyboard === "admin_broadcast") {
+        inlineKeyboard = ADMIN_BROADCAST_BUTTONS;
+      } else if (inputData.keyboard === "back") {
+        inlineKeyboard = BACK_BUTTON;
+      }
+
+      if (inputData.products && inputData.products.length > 0) {
+        for (let i = 0; i < inputData.products.length; i++) {
+          const p = inputData.products[i];
+          const productData = {
+            id: p.id,
+            title: p.title,
+            price: p.price,
+            originalPrice: p.originalPrice,
+            currency: p.currency,
+            discount: p.discount,
+            rating: p.rating,
+            orders: p.orders,
+            imageUrl: p.imageUrl,
+            affiliateUrl: p.affiliateUrl,
+          };
+          
+          const caption = formatProductCard(productData, inputData.languageCode || "uk");
+          const keyboard = createProductKeyboard(productData, inputData.languageCode || "uk", i, inputData.products.length);
+          
+          await sendPhoto(p.imageUrl, caption, keyboard.inline_keyboard);
+          // Small delay to avoid hitting Telegram rate limits and ensure order
+          await new Promise(r => setTimeout(r, 100));
+        }
+        
+        if (inputData.hasMore) {
+          await sendMessage("👇 Отримати більше результатів:", [[{ text: "🔄 Показати ще", callback_data: "action:more" }]]);
+        }
+        
+        return { sent: true };
+      }
+
+      const res = await sendMessage(inputData.response, inlineKeyboard);
+      return { sent: true, messageId: res.result?.message_id };
+    } catch (error) {
+      logger?.error("❌ [Step 2] Error:", error);
+      return { sent: false, error: String(error) };
+    }
+  },
+});
+
+const telegramBotWorkflow = createWorkflow({
+  id: "telegram-bot-workflow",
+  triggerSchema: z.object({
+    telegramId: z.string(),
+    userName: z.string().optional(),
+    message: z.string().optional(),
+    chatId: z.string(),
+    languageCode: z.string().optional(),
+    isCallback: z.boolean().optional(),
+    callbackData: z.string().optional(),
+  }),
+})
+  .step(processMessageStep)
+  .then(sendToTelegramStep as any)
+  .commit();
+
+export { telegramBotWorkflow };
         [{ text: "1️⃣", callback_data: "repeat:1" }, { text: "2️⃣", callback_data: "repeat:2" }, { text: "3️⃣", callback_data: "repeat:3" }],
         [{ text: "4️⃣", callback_data: "repeat:4" }, { text: "5️⃣", callback_data: "repeat:5" }],
         [{ text: texts.backMenu, callback_data: "action:menu" }],
