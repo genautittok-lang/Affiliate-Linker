@@ -17,7 +17,7 @@ const {
 
 export function createWorkflow(
   params: Parameters<typeof originalCreateWorkflow>[0],
-): ReturnType<typeof originalCreateWorkflow> {
+): any {
   return originalCreateWorkflow({
     ...params,
     retryConfig: {

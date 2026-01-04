@@ -8,6 +8,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 import { getReferralLinkTool, processReferralTool } from "../tools/referralTool";
 import { isAdmin, getSupportInfoTool } from "../tools/adminTool";
+import { formatProductCard, createProductKeyboard, createMainMenuKeyboard } from "../tools/telegramHelpers";
 
 const productCache = new Map<string, { title: string; url: string; img: string; price: number }>();
 const searchCache = new Map<string, { query: string; page: number; isTop: boolean }>();
@@ -1626,7 +1627,7 @@ const sendToTelegramStep = createStep({
 
 const telegramBotWorkflow = createWorkflow({
   id: "telegram-bot-workflow",
-  triggerSchema: z.object({
+  inputSchema: z.object({
     telegramId: z.string(),
     userName: z.string().optional(),
     message: z.string().optional(),
@@ -1635,148 +1636,14 @@ const telegramBotWorkflow = createWorkflow({
     isCallback: z.boolean().optional(),
     callbackData: z.string().optional(),
   }),
-})
-  .step(processMessageStep)
-  .then(sendToTelegramStep as any)
-  .commit();
-
-export { telegramBotWorkflow };
-        [{ text: "1️⃣", callback_data: "repeat:1" }, { text: "2️⃣", callback_data: "repeat:2" }, { text: "3️⃣", callback_data: "repeat:3" }],
-        [{ text: "4️⃣", callback_data: "repeat:4" }, { text: "5️⃣", callback_data: "repeat:5" }],
-        [{ text: texts.backMenu, callback_data: "action:menu" }],
-      ];
-      
-      const ADMIN_MENU_BUTTONS = [
-        [{ text: "📊 Статистика", callback_data: "admin:stats" }, { text: "👥 Користувачі", callback_data: "admin:users" }],
-        [{ text: "📢 Розсилка", callback_data: "admin:broadcast" }, { text: "📜 Історія", callback_data: "admin:broadcast_history" }],
-        [{ text: "🔙 Головне меню", callback_data: "action:menu" }],
-      ];
-      
-      const ADMIN_STATS_BUTTONS = [
-        [{ text: "👥 Користувачі", callback_data: "admin:users" }],
-        [{ text: "🔙 Адмін-панель", callback_data: "admin:panel" }],
-      ];
-      
-      const ADMIN_USERS_BUTTONS = [
-        [{ text: "📊 Статистика", callback_data: "admin:stats" }],
-        [{ text: "🔙 Адмін-панель", callback_data: "admin:panel" }],
-      ];
-      
-      const ADMIN_BROADCAST_BUTTONS = [
-        [{ text: "📤 Надіслати ВСІМ", callback_data: "admin:send_all" }],
-        [{ text: "🇺🇦 Тільки Україна", callback_data: "admin:send_ua" }],
-        [{ text: "🇵🇱 Тільки Польща", callback_data: "admin:send_pl" }],
-        [{ text: "🔙 Адмін-панель", callback_data: "admin:panel" }],
-      ];
-      
-      switch (inputData.keyboard) {
-        case "country": inlineKeyboard = COUNTRY_BUTTONS; break;
-        case "main": inlineKeyboard = MAIN_MENU_BUTTONS; break;
-        case "profile": inlineKeyboard = PROFILE_BUTTONS; break;
-        case "profile_notif_on": inlineKeyboard = PROFILE_BUTTONS_NOTIF_ON; break;
-        case "profile_notif_off": inlineKeyboard = PROFILE_BUTTONS_NOTIF_OFF; break;
-        case "language": inlineKeyboard = LANGUAGE_BUTTONS; break;
-        case "back": inlineKeyboard = BACK_BUTTON; break;
-        case "support": inlineKeyboard = SUPPORT_BUTTONS; break;
-        case "categories": inlineKeyboard = CATEGORY_BUTTONS_LOCALIZED; break;
-        case "history": inlineKeyboard = HISTORY_BUTTONS; break;
-        case "admin_menu": inlineKeyboard = ADMIN_MENU_BUTTONS; break;
-        case "admin_stats": inlineKeyboard = ADMIN_STATS_BUTTONS; break;
-        case "admin_users": inlineKeyboard = ADMIN_USERS_BUTTONS; break;
-        case "admin_broadcast": inlineKeyboard = ADMIN_BROADCAST_BUTTONS; break;
-      }
-      
-      if (inputData.products && inputData.products.length > 0) {
-        await sendMessage(inputData.response);
-        
-        for (const product of inputData.products) {
-          const discount = product.discount > 0 ? ` <s>${product.originalPrice}</s> -${product.discount}%` : "";
-          const shipping = product.freeShipping ? "🚚 Free" : "";
-          const rating = product.rating > 0 ? `⭐ ${product.rating.toFixed(1)}` : "";
-          const orders = product.orders > 0 ? `🛒 ${product.orders >= 1000 ? (product.orders / 1000).toFixed(1) + "K" : product.orders}` : "";
-          
-          const caption = `📦 <b>${product.title.slice(0, 100)}</b>\n\n💰 <b>${product.price} ${product.currency}</b>${discount}\n${[rating, orders, shipping].filter(Boolean).join(" | ")}`;
-          
-          productCache.set(product.id, {
-            title: product.title.slice(0, 100),
-            url: product.affiliateUrl,
-            img: product.imageUrl,
-            price: product.price,
-          });
-          
-          const productButtons = [
-            [
-              { text: "🛒 Купити", url: product.affiliateUrl },
-              { text: "❤️", callback_data: `like:${product.id.slice(0, 50)}` },
-            ],
-          ];
-          
-          if (product.imageUrl && !product.imageUrl.includes("placeholder")) {
-            const photoResult = await sendPhoto(product.imageUrl, caption, productButtons);
-            if (!photoResult.ok) {
-              logger?.warn("⚠️ Photo failed, sending text", { error: photoResult.description });
-              await sendMessage(caption, productButtons);
-            }
-          } else {
-            await sendMessage(caption, productButtons);
-          }
-          
-          await new Promise(r => setTimeout(r, 100));
-        }
-        
-        if (inputData.hasMore) {
-          const moreButtons = [
-            [{ text: "➡️ Показати ще", callback_data: "more:next" }],
-            [{ text: "🔙 Меню", callback_data: "action:menu" }],
-          ];
-          await sendMessage("⬇️ Натисніть щоб побачити більше товарів:", moreButtons);
-        } else {
-          await sendMessage("📱 Головне меню:", MAIN_MENU_BUTTONS);
-        }
-        
-        logger?.info("✅ [Step 2] Products sent");
-        return { sent: true };
-      }
-      
-      const result = await sendMessage(inputData.response, inlineKeyboard);
-      
-      if (result.ok) {
-        logger?.info("✅ [Step 2] Sent successfully");
-        return { sent: true, messageId: result.result?.message_id };
-      } else {
-        const plainResult = await sendMessage(inputData.response.replace(/<[^>]*>/g, ""), inlineKeyboard);
-        if (plainResult.ok) {
-          return { sent: true, messageId: plainResult.result?.message_id };
-        }
-        logger?.error("❌ [Step 2] Telegram error:", result);
-        return { sent: false, error: result.description };
-      }
-    } catch (error) {
-      logger?.error("❌ [Step 2] Error:", error);
-      return { sent: false, error: String(error) };
-    }
-  },
-});
-
-export const telegramBotWorkflow = createWorkflow({
-  id: "telegram-bot-workflow",
-  
-  inputSchema: z.object({
-    telegramId: z.string(),
-    userName: z.string().optional(),
-    message: z.string(),
-    chatId: z.string(),
-    languageCode: z.string().optional(),
-    isCallback: z.boolean().optional(),
-    callbackData: z.string().optional(),
-  }) as any,
-  
   outputSchema: z.object({
     sent: z.boolean(),
     messageId: z.number().optional(),
     error: z.string().optional(),
   }),
 })
-  .then(processWithAgentStep as any)
+  .then(processWithAgentStep)
   .then(sendToTelegramStep as any)
   .commit();
+
+export { telegramBotWorkflow };
