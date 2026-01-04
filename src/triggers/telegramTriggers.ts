@@ -30,12 +30,14 @@ export function registerTelegramTrigger({
   return [
     registerApiRoute("/webhooks/telegram/action", {
       method: "POST",
-      handler: async (c) => {
+      handler: async (c: any) => {
         const mastra = c.get("mastra");
         const logger = mastra.getLogger();
+        console.log("📥 [Telegram] Webhook hit at", new Date().toISOString());
         
         try {
           const payload = await c.req.json();
+          console.log("📦 [Telegram] Payload:", JSON.stringify(payload).substring(0, 500));
           logger?.info("📥 [Telegram] Webhook received", { payload: JSON.stringify(payload).substring(0, 200) });
 
           if (payload.callback_query) {
