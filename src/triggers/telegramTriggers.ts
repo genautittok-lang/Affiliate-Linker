@@ -36,7 +36,7 @@ export function registerTelegramTrigger({
         
         try {
           const payload = await c.req.json();
-          logger?.info("📥 [Telegram] Webhook received");
+          logger?.info("📥 [Telegram] Webhook received", { payload: JSON.stringify(payload).substring(0, 200) });
 
           if (payload.callback_query) {
             const cb = payload.callback_query;
