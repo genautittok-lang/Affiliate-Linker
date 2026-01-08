@@ -668,6 +668,23 @@ const processWithAgentStep = createStep({
               const statsRefs = await db.select({ count: sql<number>`count(*)` }).from(referrals);
               return { response: `📊 <b>Статистика:</b>\n\nКористувачів: ${statsUsers[0].count}\nОбране: ${statsFavs[0].count}\nРеферали: ${statsRefs[0].count}`, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
             case "admin:broadcast":
+               const broadcastMsg = inputData.message;
+               if (broadcastMsg && broadcastMsg !== "/start" && !inputData.isCallback) {
+                  const allUsers = await db.select({ chatId: users.telegramId }).from(users);
+                  let sentCount = 0;
+                  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+                  for (const user of allUsers) {
+                    try {
+                      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ chat_id: user.chatId, text: broadcastMsg, parse_mode: "HTML" }),
+                      });
+                      sentCount++;
+                    } catch (e) {}
+                  }
+                  return { response: `✅ Розсилка завершена! Відправлено: ${sentCount}`, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
+               }
                return { response: "📢 <b>Розсилка:</b>\n\nНапишіть повідомлення для розсилки:", chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId, languageCode };
             case "support":
               const supportResult = await getSupportInfoTool.execute({
