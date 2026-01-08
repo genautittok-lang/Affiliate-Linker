@@ -3,6 +3,6 @@
   "out": "./drizzle",
   "dialect": "postgresql",
   "dbCredentials": {
-    "url": "postgres://postgres:postgres@localhost:5432/postgres"
+    "url": "DATABASE_URL"
   }
 }
