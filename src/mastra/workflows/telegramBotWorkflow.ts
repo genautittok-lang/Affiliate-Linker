@@ -516,9 +516,19 @@ const processWithAgentStep = createStep({
     
     try {
       const [existingUser] = await db
-        .select()
+        .select({
+          id: users.id,
+          telegramId: users.telegramId,
+          language: users.language,
+          country: users.country,
+          currency: users.currency,
+          dailyTopEnabled: users.dailyTopEnabled,
+          userName: users.userName,
+          firstName: users.firstName,
+        })
         .from(users)
-        .where(eq(users.telegramId, inputData.telegramId));
+        .where(eq(users.telegramId, inputData.telegramId))
+        .limit(1);
       
       const lang = existingUser?.language || userLang;
       const languageCode = lang;
