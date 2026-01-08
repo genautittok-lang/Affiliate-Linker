@@ -20,4 +20,4 @@ RUN npm run build
 EXPOSE 5000
 
 # Start command
-CMD ["npm", "start"]
+CMD ["npx", "mastra", "start"]
