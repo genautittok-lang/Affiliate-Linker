@@ -663,10 +663,27 @@ const processWithAgentStep = createStep({
               return { response: adminText, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
             case "admin:stats":
               if (!isAdmin(inputData.telegramId)) return { response: "⛔️", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+              
               const statsUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
               const statsFavs = await db.select({ count: sql<number>`count(*)` }).from(favorites);
               const statsRefs = await db.select({ count: sql<number>`count(*)` }).from(referrals);
-              return { response: `📊 <b>Статистика:</b>\n\nКористувачів: ${statsUsers[0].count}\nОбране: ${statsFavs[0].count}\nРеферали: ${statsRefs[0].count}`, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
+              
+              const countryStats = await db.select({ 
+                country: users.country, 
+                count: sql<number>`count(*)` 
+              }).from(users).groupBy(users.country).orderBy(desc(sql`count(*)`)).limit(5);
+              
+              let statsText = `📊 <b>Детальна статистика:</b>\n\n`;
+              statsText += `👥 Користувачів: <b>${statsUsers[0].count}</b>\n`;
+              statsText += `❤️ В обраному: <b>${statsFavs[0].count}</b>\n`;
+              statsText += `🎁 Рефералів: <b>${statsRefs[0].count}</b>\n\n`;
+              statsText += `🌍 <b>Топ країн:</b>\n`;
+              
+              countryStats.forEach(s => {
+                if (s.country) statsText += `  • ${s.country}: ${s.count}\n`;
+              });
+              
+              return { response: statsText, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
             case "admin:broadcast":
                const broadcastMsg = inputData.message;
                if (broadcastMsg && broadcastMsg !== "/start" && !inputData.isCallback) {
@@ -1551,26 +1568,64 @@ const sendToTelegramStep = createStep({
       return res.json();
     };
     
+    const getInlineKeyboard = (keyboardType: string) => {
+      switch (keyboardType) {
+        case "main":
+          return MAIN_MENU_BUTTONS;
+        case "profile_notif_on":
+          return [
+            [{ text: "🌍 Змінити країну", callback_data: "settings:country" }],
+            [{ text: "🌐 Змінити мову", callback_data: "action:language" }],
+            [{ text: "🔕 Вимкнути ТОП-10", callback_data: "toggle:daily_off" }],
+            [{ text: "🔙 Меню", callback_data: "action:menu" }],
+          ];
+        case "profile_notif_off":
+          return [
+            [{ text: "🌍 Змінити країну", callback_data: "settings:country" }],
+            [{ text: "🌐 Змінити мову", callback_data: "action:language" }],
+            [{ text: "🔔 Увімкнути ТОП-10", callback_data: "toggle:daily_on" }],
+            [{ text: "🔙 Меню", callback_data: "action:menu" }],
+          ];
+        case "country":
+          return COUNTRY_BUTTONS;
+        case "language":
+          return LANGUAGE_BUTTONS;
+        case "admin_menu":
+          return [
+            [{ text: "📊 Статистика", callback_data: "admin:stats" }],
+            [{ text: "📢 Розсилка", callback_data: "admin:broadcast" }],
+            [{ text: "🔙 Меню", callback_data: "action:menu" }],
+          ];
+        case "back":
+          return BACK_BUTTON;
+        default:
+          return MAIN_MENU_BUTTONS;
+      }
+    };
+
     try {
-      let inlineKeyboard = null;
+      let inlineKeyboard = getInlineKeyboard(inputData.keyboard);
       const texts = getTexts(inputData.languageCode || "en");
-      
+
       const SUPPORT_BUTTONS = [
         [{ text: "✍️ Support", url: "https://t.me/SYNTRAM" }],
         [{ text: texts.backMenu, callback_data: "action:menu" }],
       ];
+
       const PROFILE_BUTTONS_NOTIF_ON = [
         [{ text: texts.changeCountry, callback_data: "settings:country" }],
         [{ text: texts.changeLang, callback_data: "action:language" }],
         [{ text: texts.disableNotif, callback_data: "toggle:daily_off" }],
         [{ text: texts.backMenu, callback_data: "action:menu" }],
       ];
+
       const PROFILE_BUTTONS_NOTIF_OFF = [
         [{ text: texts.changeCountry, callback_data: "settings:country" }],
         [{ text: texts.changeLang, callback_data: "action:language" }],
         [{ text: texts.enableNotif, callback_data: "toggle:daily_on" }],
         [{ text: texts.backMenu, callback_data: "action:menu" }],
       ];
+
       const CATEGORY_BUTTONS_LOCALIZED = [
         [{ text: texts.catElectronics, callback_data: "cat:electronics" }, { text: texts.catClothing, callback_data: "cat:clothing" }],
         [{ text: texts.catHome, callback_data: "cat:home" }, { text: texts.catBeauty, callback_data: "cat:beauty" }],
