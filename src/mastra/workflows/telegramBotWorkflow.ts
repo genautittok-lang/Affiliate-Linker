@@ -644,7 +644,7 @@ const processWithAgentStep = createStep({
                 .where(and(eq(coupons.userId, existingUser.id), eq(coupons.isUsed, false)))
                 .limit(1);
 
-              let refText = texts.referral.replace("{link}", refResult.link).replace("{count}", String(referralsCount[0].count));
+              let refText = texts.referral.replace("{link}", refResult.referralLink || "").replace("{count}", String(referralsCount[0].count));
               
               if (couponResult.length > 0) {
                 refText += `\n\n${texts.yourCoupon.replace("{code}", couponResult[0].code)}`;
@@ -660,39 +660,7 @@ const processWithAgentStep = createStep({
               const totalUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
               const totalFavs = await db.select({ count: sql<number>`count(*)` }).from(favorites);
               const adminText = `🔧 <b>Адмін-панель</b>\n\n👥 Всього користувачів: <b>${totalUsers[0].count}</b>\n❤️ Всього в обраному: <b>${totalFavs[0].count}</b>\n\nОберіть дію:`;
-              return { response: adminText, chatId: inputData.chatId, success: true, keyboard: "admin", telegramId: inputData.telegramId, languageCode };
-              if (refResult.success) {
-                const refCount = refResult.referralCount || 0;
-                let refText = texts.referral
-                  .replace("{link}", refResult.referralLink || "")
-                  .replace("{count}", String(refCount));
-                
-                const [existingCoupon] = await db
-                  .select()
-                  .from(coupons)
-                  .where(eq(coupons.userId, existingUser.id));
-                
-                if (refCount >= 5 && !existingCoupon) {
-                  const couponCode = `BW5-${existingUser.id}-${Date.now().toString(36).toUpperCase()}`;
-                  await db.insert(coupons).values({
-                    userId: existingUser.id,
-                    code: couponCode,
-                    discountPercent: 5,
-                    earnedForReferrals: 5,
-                    createdAt: new Date(),
-                  });
-                  logger?.info("🎫 [Coupon] Generated for user:", { userId: existingUser.id, code: couponCode });
-                  refText += "\n\n" + texts.couponEarned.replace("{code}", couponCode);
-                } else if (existingCoupon) {
-                  refText += "\n\n" + texts.yourCoupon.replace("{code}", existingCoupon.code);
-                } else {
-                  const remaining = 5 - refCount;
-                  refText += "\n\n" + texts.couponProgress.replace("{remaining}", String(remaining));
-                }
-                
-                return { response: refText, chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId, languageCode };
-              }
-              return { response: "❌ Помилка отримання реферального посилання", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+              return { response: adminText, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
             case "support":
               const supportResult = await getSupportInfoTool.execute({
                 context: { language: lang, userName: existingUser?.userName || existingUser?.firstName || inputData.userName },
