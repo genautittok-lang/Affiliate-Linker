@@ -661,6 +661,14 @@ const processWithAgentStep = createStep({
               const totalFavs = await db.select({ count: sql<number>`count(*)` }).from(favorites);
               const adminText = `🔧 <b>Адмін-панель</b>\n\n👥 Всього користувачів: <b>${totalUsers[0].count}</b>\n❤️ Всього в обраному: <b>${totalFavs[0].count}</b>\n\nОберіть дію:`;
               return { response: adminText, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
+            case "admin:stats":
+              if (!isAdmin(inputData.telegramId)) return { response: "⛔️", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+              const statsUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
+              const statsFavs = await db.select({ count: sql<number>`count(*)` }).from(favorites);
+              const statsRefs = await db.select({ count: sql<number>`count(*)` }).from(referrals);
+              return { response: `📊 <b>Статистика:</b>\n\nКористувачів: ${statsUsers[0].count}\nОбране: ${statsFavs[0].count}\nРеферали: ${statsRefs[0].count}`, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
+            case "admin:broadcast":
+               return { response: "📢 <b>Розсилка:</b>\n\nНапишіть повідомлення для розсилки:", chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId, languageCode };
             case "support":
               const supportResult = await getSupportInfoTool.execute({
                 context: { language: lang, userName: existingUser?.userName || existingUser?.firstName || inputData.userName },
