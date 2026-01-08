@@ -634,6 +634,33 @@ const processWithAgentStep = createStep({
                 mastra,
                 runtimeContext: {} as any,
               });
+              
+              const referralsCount = await db.select({ count: sql<number>`count(*)` })
+                .from(referrals)
+                .where(eq(referrals.referrerId, existingUser.id));
+              
+              const couponResult = await db.select()
+                .from(coupons)
+                .where(and(eq(coupons.userId, existingUser.id), eq(coupons.isUsed, false)))
+                .limit(1);
+
+              let refText = texts.referral.replace("{link}", refResult.link).replace("{count}", String(referralsCount[0].count));
+              
+              if (couponResult.length > 0) {
+                refText += `\n\n${texts.yourCoupon.replace("{code}", couponResult[0].code)}`;
+              } else if (Number(referralsCount[0].count) < 5) {
+                refText += `\n\n${texts.couponProgress.replace("{remaining}", String(5 - Number(referralsCount[0].count)))}`;
+              }
+
+              return { response: refText, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+            case "admin":
+              if (!isAdmin(inputData.telegramId)) {
+                return { response: "⛔️ Доступ заборонено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+              }
+              const totalUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
+              const totalFavs = await db.select({ count: sql<number>`count(*)` }).from(favorites);
+              const adminText = `🔧 <b>Адмін-панель</b>\n\n👥 Всього користувачів: <b>${totalUsers[0].count}</b>\n❤️ Всього в обраному: <b>${totalFavs[0].count}</b>\n\nОберіть дію:`;
+              return { response: adminText, chatId: inputData.chatId, success: true, keyboard: "admin", telegramId: inputData.telegramId, languageCode };
               if (refResult.success) {
                 const refCount = refResult.referralCount || 0;
                 let refText = texts.referral
