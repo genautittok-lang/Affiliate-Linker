@@ -123,354 +123,25 @@ const LANG_TEXTS: Record<string, LangTexts> = {
     couponProgress: "👥 Запросіть ще <b>{remaining}</b> друзів для отримання купону на знижку!",
     yourCoupon: "🎫 Ваш купон: <code>{code}</code> (-5%)",
   },
-  ru: {
-    welcome: "🎉 <b>Привет, {name}!</b> 🛍️\n\nЯ <b>BuyWise</b> - твой персональный помощник для поиска лучших товаров на AliExpress! 🌟\n\n🔍 <b>Поиск</b> - найду лучшее\n🔥 <b>ТОП-10</b> - хиты продаж\n❤️ <b>Избранное</b> - твои находки\n🎁 <b>Реферал</b> - приглашай друзей\n\n<i>Готов к шопингу?</i> 👇",
-    welcomeBack: "👋 <b>С возвращением, {name}!</b> 🌟\n\nРад тебя видеть снова! Что ищем сегодня? 🛍️",
-    chooseCountry: "🌍 <b>Выберите вашу страну</b>\n\nЭто поможет показывать правильные цены и доставку:",
-    chooseLang: "🌐 <b>Выберите язык:</b>",
-    ready: "🎊 <b>Отлично!</b> Теперь я готов искать лучшие предложения для тебя! 🛒\n\n<i>Напиши что ищешь или нажми кнопку ниже</i> 👇",
-    search: "🔍 <b>Поиск товаров</b>\n\n✨ Напишите что ищете:\n• наушники bluetooth 🎧\n• чехол iPhone 15 📱\n• кроссовки Nike 👟",
-    profile: "👤 <b>Ваш профиль</b>\n\n🌍 Страна: <b>{country}</b>\n💰 Валюта: <b>{currency}</b>\n🌐 Язык: <b>{language}</b>\n👤 Имя: <b>{name}</b>\n🎁 Рефералов: <b>{referrals}</b>",
-    support: "💬 <b>Поддержка</b>\n\n❓ Есть вопросы или предложения?\n🐛 Нашли ошибку?\n💡 Есть идея?\n\n👇 <b>Напишите нашему админу:</b>",
-    langChanged: "✅ Язык изменен на Русский 🇷🇺",
-    noFavorites: "❤️ У вас пока нет избранных товаров.\n\n<i>Добавьте товары в избранное нажав</i> ❤️ <i>под товаром.</i>",
-    referral: "🎁 <b>Реферальная программа</b>\n\n📎 Твоя уникальная ссылка:\n<code>{link}</code>\n\n👥 Приглашено друзей: <b>{count}</b>\n\n<i>Поделись ссылкой с друзьями!</i>",
-    referralStats: "📊 <b>Твоя статистика</b>\n\n👥 Приглашено друзей: <b>{count}</b>\n🔗 Твой код: <code>{code}</code>",
-    notifEnabled: "🔔 Уведомления включены",
-    notifDisabled: "🔕 Уведомления отключены",
-    enableNotif: "🔔 Включить ТОП-10",
-    disableNotif: "🔕 Отключить ТОП-10",
-    notifOn: "🔔 Ежедневные уведомления включены!\n\nВы будете получать TOP-10 товаров в 10:00.",
-    notifOff: "🔕 Ежедневные уведомления отключены.\n\nВы можете включить их снова в профиле.",
-    changeCountry: "🌍 Изменить страну",
-    changeLang: "🌐 Изменить язык",
-    backMenu: "🔙 Меню",
-    categories: "📂 <b>Выберите категорию:</b>",
-    catElectronics: "📱 Электроника",
-    catClothing: "👕 Одежда",
-    catHome: "🏠 Дом и сад",
-    catBeauty: "💄 Красота",
-    catGadgets: "🔧 Гаджеты",
-    catGifts: "🎁 Подарки",
-    catUnder10: "💰 До $10",
-    recentSearches: "🕐 <b>Последние поиски:</b>",
-    noSearchHistory: "📭 Истории поиска пока нет",
-    couponEarned: "🎉 <b>Поздравляем!</b> Вы получили купон на скидку 5%!\n\n🎫 Код: <code>{code}</code>\n\n<i>Используйте при заказе на AliExpress</i>",
-    couponProgress: "👥 Пригласите ещё <b>{remaining}</b> друзей для получения купона!",
-    yourCoupon: "🎫 Ваш купон: <code>{code}</code> (-5%)",
-  },
-  en: {
-    welcome: "🎉 <b>Hello, {name}!</b> 🛍️\n\nI'm <b>BuyWise</b> - your personal assistant for finding the best deals on AliExpress! 🌟\n\n🔍 <b>Search</b> - I'll find the best\n🔥 <b>TOP-10</b> - bestsellers\n❤️ <b>Favorites</b> - your finds\n🎁 <b>Referral</b> - invite friends\n\n<i>Ready to shop?</i> 👇",
-    welcomeBack: "👋 <b>Welcome back, {name}!</b> 🌟\n\nGreat to see you again! What are we looking for today? 🛍️",
-    chooseCountry: "🌍 <b>Choose your country</b>\n\nThis helps show correct prices and shipping:",
-    chooseLang: "🌐 <b>Choose your language:</b>",
-    ready: "🎊 <b>Awesome!</b> Now I'm ready to find the best deals for you! 🛒\n\n<i>Type what you're looking for or tap a button below</i> 👇",
-    search: "🔍 <b>Product Search</b>\n\n✨ Tell me what you're looking for:\n• bluetooth headphones 🎧\n• iPhone 15 case 📱\n• Nike sneakers 👟",
-    profile: "👤 <b>Your Profile</b>\n\n🌍 Country: <b>{country}</b>\n💰 Currency: <b>{currency}</b>\n🌐 Language: <b>{language}</b>\n👤 Name: <b>{name}</b>\n🎁 Referrals: <b>{referrals}</b>",
-    support: "💬 <b>Support</b>\n\n❓ Questions or suggestions?\n🐛 Found a bug?\n💡 Got an idea?\n\n👇 <b>Contact our admin:</b>",
-    langChanged: "✅ Language changed to English 🇬🇧",
-    noFavorites: "❤️ You don't have any favorites yet.\n\n<i>Add products to favorites by tapping</i> ❤️ <i>below a product.</i>",
-    referral: "🎁 <b>Referral Program</b>\n\n📎 Your unique link:\n<code>{link}</code>\n\n👥 Friends invited: <b>{count}</b>\n\n<i>Share this link with friends!</i>",
-    referralStats: "📊 <b>Your Stats</b>\n\n👥 Friends invited: <b>{count}</b>\n🔗 Your code: <code>{code}</code>",
-    notifEnabled: "🔔 Notifications enabled",
-    notifDisabled: "🔕 Notifications disabled",
-    enableNotif: "🔔 Enable TOP-10",
-    disableNotif: "🔕 Disable TOP-10",
-    notifOn: "🔔 Daily notifications enabled!\n\nYou'll receive TOP-10 products at 10:00 AM.",
-    notifOff: "🔕 Daily notifications disabled.\n\nYou can enable them again in your profile.",
-    changeCountry: "🌍 Change country",
-    changeLang: "🌐 Change language",
-    backMenu: "🔙 Menu",
-    categories: "📂 <b>Choose a category:</b>",
-    catElectronics: "📱 Electronics",
-    catClothing: "👕 Clothing",
-    catHome: "🏠 Home & Garden",
-    catBeauty: "💄 Beauty",
-    catGadgets: "🔧 Gadgets",
-    catGifts: "🎁 Gifts",
-    catUnder10: "💰 Under $10",
-    recentSearches: "🕐 <b>Recent searches:</b>",
-    noSearchHistory: "📭 No search history yet",
-    couponEarned: "🎉 <b>Congratulations!</b> You earned a 5% discount coupon!\n\n🎫 Code: <code>{code}</code>\n\n<i>Use it when ordering on AliExpress</i>",
-    couponProgress: "👥 Invite <b>{remaining}</b> more friends to get a discount coupon!",
-    yourCoupon: "🎫 Your coupon: <code>{code}</code> (-5%)",
-  },
-  de: {
-    welcome: "🎉 <b>Hallo, {name}!</b> 🛍️\n\nIch bin <b>BuyWise</b> - dein persönlicher Assistent für die besten Angebote auf AliExpress! 🌟\n\n🔍 <b>Suche</b> - finde das Beste\n🔥 <b>TOP-10</b> - Bestseller\n❤️ <b>Favoriten</b> - deine Funde\n🎁 <b>Empfehlung</b> - lade Freunde ein\n\n<i>Bereit zum Shoppen?</i> 👇",
-    welcomeBack: "👋 <b>Willkommen zurück, {name}!</b> 🌟\n\nSchön dich wiederzusehen! Was suchen wir heute? 🛍️",
-    chooseCountry: "🌍 <b>Wähle dein Land</b>\n\nDas hilft, korrekte Preise und Versand anzuzeigen:",
-    chooseLang: "🌐 <b>Sprache wählen:</b>",
-    ready: "🎊 <b>Super!</b> Jetzt bin ich bereit, die besten Angebote für dich zu finden! 🛒\n\n<i>Schreib was du suchst oder tippe auf einen Button</i> 👇",
-    search: "🔍 <b>Produktsuche</b>\n\n✨ Schreib was du suchst:\n• Bluetooth Kopfhörer 🎧\n• iPhone 15 Hülle 📱\n• Nike Schuhe 👟",
-    profile: "👤 <b>Dein Profil</b>\n\n🌍 Land: <b>{country}</b>\n💰 Währung: <b>{currency}</b>\n🌐 Sprache: <b>{language}</b>\n👤 Name: <b>{name}</b>\n🎁 Empfehlungen: <b>{referrals}</b>",
-    support: "💬 <b>Support</b>\n\n❓ Fragen oder Vorschläge?\n🐛 Fehler gefunden?\n💡 Idee?\n\n👇 <b>Kontaktiere unseren Admin:</b>",
-    langChanged: "✅ Sprache auf Deutsch geändert 🇩🇪",
-    noFavorites: "❤️ Du hast noch keine Favoriten.\n\n<i>Füge Produkte zu Favoriten hinzu, indem du</i> ❤️ <i>unter einem Produkt tippst.</i>",
-    referral: "🎁 <b>Empfehlungsprogramm</b>\n\n📎 Dein einzigartiger Link:\n<code>{link}</code>\n\n👥 Eingeladene Freunde: <b>{count}</b>\n\n<i>Teile diesen Link mit Freunden!</i>",
-    referralStats: "📊 <b>Deine Statistik</b>\n\n👥 Eingeladene Freunde: <b>{count}</b>\n🔗 Dein Code: <code>{code}</code>",
-    notifEnabled: "🔔 Benachrichtigungen aktiviert",
-    notifDisabled: "🔕 Benachrichtigungen deaktiviert",
-    enableNotif: "🔔 TOP-10 aktivieren",
-    disableNotif: "🔕 TOP-10 deaktivieren",
-    notifOn: "🔔 Tägliche Benachrichtigungen aktiviert!\n\nDu erhältst TOP-10 Produkte um 10:00 Uhr.",
-    notifOff: "🔕 Tägliche Benachrichtigungen deaktiviert.\n\nDu kannst sie im Profil wieder aktivieren.",
-    changeCountry: "🌍 Land ändern",
-    changeLang: "🌐 Sprache ändern",
-    backMenu: "🔙 Menü",
-    categories: "📂 <b>Kategorie wählen:</b>",
-    catElectronics: "📱 Elektronik",
-    catClothing: "👕 Kleidung",
-    catHome: "🏠 Haus & Garten",
-    catBeauty: "💄 Schönheit",
-    catGadgets: "🔧 Gadgets",
-    catGifts: "🎁 Geschenke",
-    catUnder10: "💰 Unter $10",
-    recentSearches: "🕐 <b>Letzte Suchen:</b>",
-    noSearchHistory: "📭 Noch kein Suchverlauf",
-    couponEarned: "🎉 <b>Glückwunsch!</b> Du hast einen 5% Rabatt-Gutschein erhalten!\n\n🎫 Code: <code>{code}</code>\n\n<i>Verwende ihn bei AliExpress</i>",
-    couponProgress: "👥 Lade noch <b>{remaining}</b> Freunde ein für einen Rabatt-Gutschein!",
-    yourCoupon: "🎫 Dein Gutschein: <code>{code}</code> (-5%)",
-  },
-  pl: {
-    welcome: "🎉 <b>Cześć, {name}!</b> 🛍️\n\nJestem <b>BuyWise</b> - Twój osobisty asystent do znajdowania najlepszych ofert na AliExpress! 🌟\n\n🔍 <b>Szukaj</b> - znajdę najlepsze\n🔥 <b>TOP-10</b> - bestsellery\n❤️ <b>Ulubione</b> - Twoje znaleziska\n🎁 <b>Polecenia</b> - zaproś znajomych\n\n<i>Gotowy na zakupy?</i> 👇",
-    welcomeBack: "👋 <b>Witaj ponownie, {name}!</b> 🌟\n\nMiło Cię znowu widzieć! Czego szukamy dziś? 🛍️",
-    chooseCountry: "🌍 <b>Wybierz swój kraj</b>\n\nTo pomoże pokazać prawidłowe ceny i dostawę:",
-    chooseLang: "🌐 <b>Wybierz język:</b>",
-    ready: "🎊 <b>Świetnie!</b> Teraz jestem gotowy, aby znaleźć najlepsze oferty dla Ciebie! 🛒\n\n<i>Napisz czego szukasz lub kliknij przycisk poniżej</i> 👇",
-    search: "🔍 <b>Szukaj produktów</b>\n\n✨ Napisz czego szukasz:\n• słuchawki bluetooth 🎧\n• etui iPhone 15 📱\n• buty Nike 👟",
-    profile: "👤 <b>Twój profil</b>\n\n🌍 Kraj: <b>{country}</b>\n💰 Waluta: <b>{currency}</b>\n🌐 Język: <b>{language}</b>\n👤 Imię: <b>{name}</b>\n🎁 Poleceni: <b>{referrals}</b>",
-    support: "💬 <b>Wsparcie</b>\n\n❓ Pytania lub sugestie?\n🐛 Znalazłeś błąd?\n💡 Masz pomysł?\n\n👇 <b>Skontaktuj się z naszym adminem:</b>",
-    langChanged: "✅ Język zmieniony na Polski 🇵🇱",
-    noFavorites: "❤️ Nie masz jeszcze ulubionych.\n\n<i>Dodaj produkty do ulubionych, klikając</i> ❤️ <i>pod produktem.</i>",
-    referral: "🎁 <b>Program poleceń</b>\n\n📎 Twój unikalny link:\n<code>{link}</code>\n\n👥 Zaproszeni znajomi: <b>{count}</b>\n\n<i>Podziel się tym linkiem ze znajomymi!</i>",
-    referralStats: "📊 <b>Twoja statystyka</b>\n\n👥 Zaproszeni znajomi: <b>{count}</b>\n🔗 Twój kod: <code>{code}</code>",
-    notifEnabled: "🔔 Powiadomienia włączone",
-    notifDisabled: "🔕 Powiadomienia wyłączone",
-    enableNotif: "🔔 Włącz TOP-10",
-    disableNotif: "🔕 Wyłącz TOP-10",
-    notifOn: "🔔 Codzienne powiadomienia włączone!\n\nOtrzymasz TOP-10 produktów o 10:00.",
-    notifOff: "🔕 Codzienne powiadomienia wyłączone.\n\nMożesz je włączyć ponownie w profilu.",
-    changeCountry: "🌍 Zmień kraj",
-    changeLang: "🌐 Zmień język",
-    backMenu: "🔙 Menu",
-    categories: "📂 <b>Wybierz kategorię:</b>",
-    catElectronics: "📱 Elektronika",
-    catClothing: "👕 Odzież",
-    catHome: "🏠 Dom i ogród",
-    catBeauty: "💄 Uroda",
-    catGadgets: "🔧 Gadżety",
-    catGifts: "🎁 Prezenty",
-    catUnder10: "💰 Do $10",
-    recentSearches: "🕐 <b>Ostatnie wyszukiwania:</b>",
-    noSearchHistory: "📭 Brak historii wyszukiwania",
-    couponEarned: "🎉 <b>Gratulacje!</b> Otrzymałeś kupon rabatowy 5%!\n\n🎫 Kod: <code>{code}</code>\n\n<i>Użyj przy zamówieniu na AliExpress</i>",
-    couponProgress: "👥 Zaproś jeszcze <b>{remaining}</b> znajomych, aby otrzymać kupon!",
-    yourCoupon: "🎫 Twój kupon: <code>{code}</code> (-5%)",
-  },
-  fr: {
-    welcome: "🎉 <b>Bonjour, {name}!</b> 🛍️\n\nJe suis <b>BuyWise</b> - votre assistant personnel pour trouver les meilleures offres sur AliExpress! 🌟\n\n🔍 <b>Recherche</b> - je trouve le meilleur\n🔥 <b>TOP-10</b> - best-sellers\n❤️ <b>Favoris</b> - vos trouvailles\n🎁 <b>Parrainage</b> - invitez des amis\n\n<i>Prêt à faire du shopping?</i> 👇",
-    welcomeBack: "👋 <b>Bon retour, {name}!</b> 🌟\n\nRavi de vous revoir! Que cherchons-nous aujourd'hui? 🛍️",
-    chooseCountry: "🌍 <b>Choisissez votre pays</b>\n\nCela aide à afficher les bons prix et la livraison:",
-    chooseLang: "🌐 <b>Choisissez votre langue:</b>",
-    ready: "🎊 <b>Génial!</b> Maintenant je suis prêt à trouver les meilleures offres pour vous! 🛒\n\n<i>Écrivez ce que vous cherchez ou appuyez sur un bouton</i> 👇",
-    search: "🔍 <b>Recherche de produits</b>\n\n✨ Dites-moi ce que vous cherchez:\n• écouteurs bluetooth 🎧\n• coque iPhone 15 📱\n• baskets Nike 👟",
-    profile: "👤 <b>Votre profil</b>\n\n🌍 Pays: <b>{country}</b>\n💰 Devise: <b>{currency}</b>\n🌐 Langue: <b>{language}</b>\n👤 Nom: <b>{name}</b>\n🎁 Parrainages: <b>{referrals}</b>",
-    support: "💬 <b>Support</b>\n\n❓ Questions ou suggestions?\n🐛 Bug trouvé?\n💡 Une idée?\n\n👇 <b>Contactez notre admin:</b>",
-    langChanged: "✅ Langue changée en Français 🇫🇷",
-    noFavorites: "❤️ Vous n'avez pas encore de favoris.\n\n<i>Ajoutez des produits aux favoris en appuyant sur</i> ❤️ <i>sous un produit.</i>",
-    referral: "🎁 <b>Programme de parrainage</b>\n\n📎 Votre lien unique:\n<code>{link}</code>\n\n👥 Amis invités: <b>{count}</b>\n\n<i>Partagez ce lien avec vos amis!</i>",
-    referralStats: "📊 <b>Vos statistiques</b>\n\n👥 Amis invités: <b>{count}</b>\n🔗 Votre code: <code>{code}</code>",
-    notifEnabled: "🔔 Notifications activées",
-    notifDisabled: "🔕 Notifications désactivées",
-    enableNotif: "🔔 Activer TOP-10",
-    disableNotif: "🔕 Désactiver TOP-10",
-    notifOn: "🔔 Notifications quotidiennes activées!\n\nVous recevrez le TOP-10 des produits à 10h00.",
-    notifOff: "🔕 Notifications quotidiennes désactivées.\n\nVous pouvez les réactiver dans votre profil.",
-    changeCountry: "🌍 Changer de pays",
-    changeLang: "🌐 Changer de langue",
-    backMenu: "🔙 Menu",
-    categories: "📂 <b>Choisir une catégorie:</b>",
-    catElectronics: "📱 Électronique",
-    catClothing: "👕 Vêtements",
-    catHome: "🏠 Maison & Jardin",
-    catBeauty: "💄 Beauté",
-    catGadgets: "🔧 Gadgets",
-    catGifts: "🎁 Cadeaux",
-    catUnder10: "💰 Moins de $10",
-    recentSearches: "🕐 <b>Recherches récentes:</b>",
-    noSearchHistory: "📭 Pas encore d'historique",
-    couponEarned: "🎉 <b>Félicitations!</b> Vous avez reçu un coupon de 5%!\n\n🎫 Code: <code>{code}</code>\n\n<i>Utilisez-le sur AliExpress</i>",
-    couponProgress: "👥 Invitez encore <b>{remaining}</b> amis pour obtenir un coupon!",
-    yourCoupon: "🎫 Votre coupon: <code>{code}</code> (-5%)",
-  },
-  es: {
-    welcome: "🎉 <b>¡Hola, {name}!</b> 🛍️\n\nSoy <b>BuyWise</b> - tu asistente personal para encontrar las mejores ofertas en AliExpress! 🌟\n\n🔍 <b>Buscar</b> - encuentro lo mejor\n🔥 <b>TOP-10</b> - más vendidos\n❤️ <b>Favoritos</b> - tus hallazgos\n🎁 <b>Referidos</b> - invita amigos\n\n<i>¿Listo para comprar?</i> 👇",
-    welcomeBack: "👋 <b>¡Bienvenido de nuevo, {name}!</b> 🌟\n\n¡Qué alegría verte! ¿Qué buscamos hoy? 🛍️",
-    chooseCountry: "🌍 <b>Elige tu país</b>\n\nEsto ayuda a mostrar precios y envío correctos:",
-    chooseLang: "🌐 <b>Elige tu idioma:</b>",
-    ready: "🎊 <b>¡Genial!</b> ¡Ahora estoy listo para encontrar las mejores ofertas para ti! 🛒\n\n<i>Escribe qué buscas o toca un botón</i> 👇",
-    search: "🔍 <b>Buscar productos</b>\n\n✨ Dime qué buscas:\n• auriculares bluetooth 🎧\n• funda iPhone 15 📱\n• zapatillas Nike 👟",
-    profile: "👤 <b>Tu perfil</b>\n\n🌍 País: <b>{country}</b>\n💰 Moneda: <b>{currency}</b>\n🌐 Idioma: <b>{language}</b>\n👤 Nombre: <b>{name}</b>\n🎁 Referidos: <b>{referrals}</b>",
-    support: "💬 <b>Soporte</b>\n\n❓ ¿Preguntas o sugerencias?\n🐛 ¿Encontraste un error?\n💡 ¿Tienes una idea?\n\n👇 <b>Contacta a nuestro admin:</b>",
-    langChanged: "✅ Idioma cambiado a Español 🇪🇸",
-    noFavorites: "❤️ Aún no tienes favoritos.\n\n<i>Añade productos a favoritos tocando</i> ❤️ <i>debajo de un producto.</i>",
-    referral: "🎁 <b>Programa de referidos</b>\n\n📎 Tu enlace único:\n<code>{link}</code>\n\n👥 Amigos invitados: <b>{count}</b>\n\n<i>¡Comparte este enlace con amigos!</i>",
-    referralStats: "📊 <b>Tus estadísticas</b>\n\n👥 Amigos invitados: <b>{count}</b>\n🔗 Tu código: <code>{code}</code>",
-    notifEnabled: "🔔 Notificaciones activadas",
-    notifDisabled: "🔕 Notificaciones desactivadas",
-    enableNotif: "🔔 Activar TOP-10",
-    disableNotif: "🔕 Desactivar TOP-10",
-    notifOn: "🔔 ¡Notificaciones diarias activadas!\n\nRecibirás TOP-10 productos a las 10:00.",
-    notifOff: "🔕 Notificaciones diarias desactivadas.\n\nPuedes activarlas de nuevo en tu perfil.",
-    changeCountry: "🌍 Cambiar país",
-    changeLang: "🌐 Cambiar idioma",
-    backMenu: "🔙 Menú",
-    categories: "📂 <b>Elige categoría:</b>",
-    catElectronics: "📱 Electrónica",
-    catClothing: "👕 Ropa",
-    catHome: "🏠 Hogar y jardín",
-    catBeauty: "💄 Belleza",
-    catGadgets: "🔧 Gadgets",
-    catGifts: "🎁 Regalos",
-    catUnder10: "💰 Menos de $10",
-    recentSearches: "🕐 <b>Búsquedas recientes:</b>",
-    noSearchHistory: "📭 Sin historial de búsqueda",
-    couponEarned: "🎉 <b>¡Felicidades!</b> ¡Has ganado un cupón de 5%!\n\n🎫 Código: <code>{code}</code>\n\n<i>Úsalo en AliExpress</i>",
-    couponProgress: "👥 ¡Invita a <b>{remaining}</b> amigos más para obtener un cupón!",
-    yourCoupon: "🎫 Tu cupón: <code>{code}</code> (-5%)",
-  },
-  it: {
-    welcome: "🎉 <b>Ciao, {name}!</b> 🛍️\n\nSono <b>BuyWise</b> - il tuo assistente personale per trovare le migliori offerte su AliExpress! 🌟\n\n🔍 <b>Cerca</b> - trovo il meglio\n🔥 <b>TOP-10</b> - bestseller\n❤️ <b>Preferiti</b> - le tue scoperte\n🎁 <b>Referral</b> - invita amici\n\n<i>Pronto per lo shopping?</i> 👇",
-    welcomeBack: "👋 <b>Bentornato, {name}!</b> 🌟\n\nFelice di rivederti! Cosa cerchiamo oggi? 🛍️",
-    chooseCountry: "🌍 <b>Scegli il tuo paese</b>\n\nQuesto aiuta a mostrare prezzi e spedizione corretti:",
-    chooseLang: "🌐 <b>Scegli la lingua:</b>",
-    ready: "🎊 <b>Fantastico!</b> Ora sono pronto a trovare le migliori offerte per te! 🛒\n\n<i>Scrivi cosa cerchi o tocca un pulsante</i> 👇",
-    search: "🔍 <b>Cerca prodotti</b>\n\n✨ Dimmi cosa cerchi:\n• cuffie bluetooth 🎧\n• custodia iPhone 15 📱\n• scarpe Nike 👟",
-    profile: "👤 <b>Il tuo profilo</b>\n\n🌍 Paese: <b>{country}</b>\n💰 Valuta: <b>{currency}</b>\n🌐 Lingua: <b>{language}</b>\n👤 Nome: <b>{name}</b>\n🎁 Referral: <b>{referrals}</b>",
-    support: "💬 <b>Supporto</b>\n\n❓ Domande o suggerimenti?\n🐛 Bug trovato?\n💡 Un'idea?\n\n👇 <b>Contatta il nostro admin:</b>",
-    langChanged: "✅ Lingua cambiata in Italiano 🇮🇹",
-    noFavorites: "❤️ Non hai ancora preferiti.\n\n<i>Aggiungi prodotti ai preferiti toccando</i> ❤️ <i>sotto un prodotto.</i>",
-    referral: "🎁 <b>Programma referral</b>\n\n📎 Il tuo link unico:\n<code>{link}</code>\n\n👥 Amici invitati: <b>{count}</b>\n\n<i>Condividi questo link con gli amici!</i>",
-    referralStats: "📊 <b>Le tue statistiche</b>\n\n👥 Amici invitati: <b>{count}</b>\n🔗 Il tuo codice: <code>{code}</code>",
-    notifEnabled: "🔔 Notifiche attivate",
-    notifDisabled: "🔕 Notifiche disattivate",
-    enableNotif: "🔔 Attiva TOP-10",
-    disableNotif: "🔕 Disattiva TOP-10",
-    notifOn: "🔔 Notifiche giornaliere attivate!\n\nRiceverai i TOP-10 prodotti alle 10:00.",
-    notifOff: "🔕 Notifiche giornaliere disattivate.\n\nPuoi riattivarle nel profilo.",
-    changeCountry: "🌍 Cambia paese",
-    changeLang: "🌐 Cambia lingua",
-    backMenu: "🔙 Menu",
-    categories: "📂 <b>Scegli categoria:</b>",
-    catElectronics: "📱 Elettronica",
-    catClothing: "👕 Abbigliamento",
-    catHome: "🏠 Casa e giardino",
-    catBeauty: "💄 Bellezza",
-    catGadgets: "🔧 Gadget",
-    catGifts: "🎁 Regali",
-    catUnder10: "💰 Sotto $10",
-    recentSearches: "🕐 <b>Ricerche recenti:</b>",
-    noSearchHistory: "📭 Nessuno storico ricerche",
-    couponEarned: "🎉 <b>Congratulazioni!</b> Hai guadagnato un coupon del 5%!\n\n🎫 Codice: <code>{code}</code>\n\n<i>Usalo su AliExpress</i>",
-    couponProgress: "👥 Invita ancora <b>{remaining}</b> amici per ottenere un coupon!",
-    yourCoupon: "🎫 Il tuo coupon: <code>{code}</code> (-5%)",
-  },
-  cs: {
-    welcome: "🎉 <b>Ahoj, {name}!</b> 🛍️\n\nJsem <b>BuyWise</b> - tvůj osobní asistent pro hledání nejlepších nabídek na AliExpress! 🌟\n\n🔍 <b>Hledat</b> - najdu nejlepší\n🔥 <b>TOP-10</b> - bestsellery\n❤️ <b>Oblíbené</b> - tvoje nálezy\n🎁 <b>Doporučení</b> - pozvi přátele\n\n<i>Připraven nakupovat?</i> 👇",
-    welcomeBack: "👋 <b>Vítej zpět, {name}!</b> 🌟\n\nRád tě zase vidím! Co hledáme dnes? 🛍️",
-    chooseCountry: "🌍 <b>Vyber svou zemi</b>\n\nTo pomůže zobrazit správné ceny a dopravu:",
-    chooseLang: "🌐 <b>Vyber jazyk:</b>",
-    ready: "🎊 <b>Skvělé!</b> Teď jsem připraven najít nejlepší nabídky pro tebe! 🛒\n\n<i>Napiš co hledáš nebo klikni na tlačítko</i> 👇",
-    search: "🔍 <b>Hledat produkty</b>\n\n✨ Řekni mi, co hledáš:\n• bluetooth sluchátka 🎧\n• pouzdro iPhone 15 📱\n• boty Nike 👟",
-    profile: "👤 <b>Tvůj profil</b>\n\n🌍 Země: <b>{country}</b>\n💰 Měna: <b>{currency}</b>\n🌐 Jazyk: <b>{language}</b>\n👤 Jméno: <b>{name}</b>\n🎁 Doporučení: <b>{referrals}</b>",
-    support: "💬 <b>Podpora</b>\n\n❓ Otázky nebo návrhy?\n🐛 Našel jsi chybu?\n💡 Máš nápad?\n\n👇 <b>Kontaktuj našeho admina:</b>",
-    langChanged: "✅ Jazyk změněn na Češtinu 🇨🇿",
-    noFavorites: "❤️ Zatím nemáš oblíbené.\n\n<i>Přidej produkty do oblíbených kliknutím na</i> ❤️ <i>pod produktem.</i>",
-    referral: "🎁 <b>Program doporučení</b>\n\n📎 Tvůj unikátní odkaz:\n<code>{link}</code>\n\n👥 Pozvaní přátelé: <b>{count}</b>\n\n<i>Sdílej tento odkaz s přáteli!</i>",
-    referralStats: "📊 <b>Tvá statistika</b>\n\n👥 Pozvaní přátelé: <b>{count}</b>\n🔗 Tvůj kód: <code>{code}</code>",
-    notifEnabled: "🔔 Upozornění zapnuta",
-    notifDisabled: "🔕 Upozornění vypnuta",
-    enableNotif: "🔔 Zapnout TOP-10",
-    disableNotif: "🔕 Vypnout TOP-10",
-    notifOn: "🔔 Denní upozornění zapnuta!\n\nBudeš dostávat TOP-10 produktů v 10:00.",
-    notifOff: "🔕 Denní upozornění vypnuta.\n\nMůžeš je zapnout v profilu.",
-    changeCountry: "🌍 Změnit zemi",
-    changeLang: "🌐 Změnit jazyk",
-    backMenu: "🔙 Menu",
-    categories: "📂 <b>Vyber kategorii:</b>",
-    catElectronics: "📱 Elektronika",
-    catClothing: "👕 Oblečení",
-    catHome: "🏠 Dům a zahrada",
-    catBeauty: "💄 Krása",
-    catGadgets: "🔧 Gadgety",
-    catGifts: "🎁 Dárky",
-    catUnder10: "💰 Do $10",
-    recentSearches: "🕐 <b>Poslední hledání:</b>",
-    noSearchHistory: "📭 Zatím žádná historie",
-    couponEarned: "🎉 <b>Gratulujeme!</b> Získal jsi 5% slevový kupón!\n\n🎫 Kód: <code>{code}</code>\n\n<i>Použij ho na AliExpress</i>",
-    couponProgress: "👥 Pozvi ještě <b>{remaining}</b> přátel pro získání kupónu!",
-    yourCoupon: "🎫 Tvůj kupón: <code>{code}</code> (-5%)",
-  },
-  ro: {
-    welcome: "🎉 <b>Bună, {name}!</b> 🛍️\n\nSunt <b>BuyWise</b> - asistentul tău personal pentru a găsi cele mai bune oferte pe AliExpress! 🌟\n\n🔍 <b>Caută</b> - găsesc cel mai bun\n🔥 <b>TOP-10</b> - bestsellere\n❤️ <b>Favorite</b> - descoperirile tale\n🎁 <b>Referral</b> - invită prieteni\n\n<i>Gata de shopping?</i> 👇",
-    welcomeBack: "👋 <b>Bine ai revenit, {name}!</b> 🌟\n\nMă bucur să te văd din nou! Ce căutăm azi? 🛍️",
-    chooseCountry: "🌍 <b>Alege țara ta</b>\n\nAcest lucru ajută la afișarea prețurilor și livrării corecte:",
-    chooseLang: "🌐 <b>Alege limba:</b>",
-    ready: "🎊 <b>Minunat!</b> Acum sunt gata să găsesc cele mai bune oferte pentru tine! 🛒\n\n<i>Scrie ce cauți sau apasă un buton</i> 👇",
-    search: "🔍 <b>Caută produse</b>\n\n✨ Spune-mi ce cauți:\n• căști bluetooth 🎧\n• husă iPhone 15 📱\n• pantofi Nike 👟",
-    profile: "👤 <b>Profilul tău</b>\n\n🌍 Țară: <b>{country}</b>\n💰 Monedă: <b>{currency}</b>\n🌐 Limbă: <b>{language}</b>\n👤 Nume: <b>{name}</b>\n🎁 Referral-uri: <b>{referrals}</b>",
-    support: "💬 <b>Suport</b>\n\n❓ Întrebări sau sugestii?\n🐛 Ai găsit un bug?\n💡 Ai o idee?\n\n👇 <b>Contactează adminul nostru:</b>",
-    langChanged: "✅ Limba schimbată în Română 🇷🇴",
-    noFavorites: "❤️ Nu ai încă favorite.\n\n<i>Adaugă produse la favorite atingând</i> ❤️ <i>sub un produs.</i>",
-    referral: "🎁 <b>Program referral</b>\n\n📎 Link-ul tău unic:\n<code>{link}</code>\n\n👥 Prieteni invitați: <b>{count}</b>\n\n<i>Partajează acest link cu prietenii!</i>",
-    referralStats: "📊 <b>Statisticile tale</b>\n\n👥 Prieteni invitați: <b>{count}</b>\n🔗 Codul tău: <code>{code}</code>",
-    notifEnabled: "🔔 Notificări activate",
-    notifDisabled: "🔕 Notificări dezactivate",
-    enableNotif: "🔔 Activează TOP-10",
-    disableNotif: "🔕 Dezactivează TOP-10",
-    notifOn: "🔔 Notificări zilnice activate!\n\nVei primi TOP-10 produse la ora 10:00.",
-    notifOff: "🔕 Notificări zilnice dezactivate.\n\nLe poți reactiva în profil.",
-    changeCountry: "🌍 Schimbă țara",
-    changeLang: "🌐 Schimbă limba",
-    backMenu: "🔙 Meniu",
-    categories: "📂 <b>Alege categoria:</b>",
-    catElectronics: "📱 Electronică",
-    catClothing: "👕 Îmbrăcăminte",
-    catHome: "🏠 Casă și grădină",
-    catBeauty: "💄 Frumusețe",
-    catGadgets: "🔧 Gadgeturi",
-    catGifts: "🎁 Cadouri",
-    catUnder10: "💰 Sub $10",
-    recentSearches: "🕐 <b>Căutări recente:</b>",
-    noSearchHistory: "📭 Niciun istoric de căutare",
-    couponEarned: "🎉 <b>Felicitări!</b> Ai primit un cupon de 5%!\n\n🎫 Cod: <code>{code}</code>\n\n<i>Folosește-l pe AliExpress</i>",
-    couponProgress: "👥 Invită încă <b>{remaining}</b> prieteni pentru a obține un cupon!",
-    yourCoupon: "🎫 Cuponul tău: <code>{code}</code> (-5%)",
-  },
 };
 
-const LANG_NAMES: Record<string, string> = {
-  uk: "Українська",
-  ru: "Русский", 
-  en: "English",
-  de: "Deutsch",
-  pl: "Polski",
-  fr: "Français",
-  es: "Español",
-  it: "Italiano",
-  cs: "Čeština",
-  ro: "Română",
-};
-
-function getTexts(code: string): LangTexts {
-  const lang = code?.toLowerCase().slice(0, 2) || "en";
-  return LANG_TEXTS[lang] || LANG_TEXTS.en;
+function getTexts(lang: string = "uk"): LangTexts {
+  return LANG_TEXTS[lang] || LANG_TEXTS.uk;
 }
 
-const processWithAgentStep = createStep({
-  id: "process-with-agent",
-  description: "Processes the incoming Telegram message using the BuyWise agent",
-  
+const LANG_NAMES: Record<string, string> = {
+  uk: "Українська 🇺🇦", ru: "Русский 🇷🇺", en: "English 🇬🇧", de: "Deutsch 🇩🇪", pl: "Polski 🇵🇱",
+  fr: "Français 🇫🇷", es: "Español 🇪🇸", it: "Italiano 🇮🇹", cs: "Čeština 🇨🇿", ro: "Română 🇷🇴"
+};
+
+const COUNTRY_TO_CURRENCY: Record<string, string> = {
+  Ukraine: "UAH", Germany: "EUR", Poland: "PLN", Czechia: "CZK",
+  Romania: "RON", France: "EUR", Spain: "EUR", Italy: "EUR", UK: "GBP", USA: "USD"
+};
+
+const processMessageStep = createStep({
+  id: "process-message",
+  description: "Processes incoming Telegram message or callback",
   inputSchema: z.object({
     telegramId: z.string(),
     userName: z.string().optional(),
@@ -480,1273 +151,152 @@ const processWithAgentStep = createStep({
     isCallback: z.boolean().optional(),
     callbackData: z.string().optional(),
   }),
-  
-  outputSchema: z.object({
-    response: z.string(),
-    chatId: z.string(),
-    success: z.boolean(),
-    keyboard: z.string(),
-    customKeyboard: z.array(z.array(z.object({
-      text: z.string(),
-      callback_data: z.string().optional(),
-      url: z.string().optional(),
-    }))).optional(),
-    languageCode: z.string().optional(),
-    products: z.array(z.object({
-      id: z.string(),
-      title: z.string(),
-      price: z.number(),
-      originalPrice: z.number(),
-      currency: z.string(),
-      discount: z.number(),
-      rating: z.number(),
-      orders: z.number(),
-      imageUrl: z.string(),
-      affiliateUrl: z.string(),
-      freeShipping: z.boolean(),
-    })).optional(),
-    hasMore: z.boolean().optional(),
-    telegramId: z.string().optional(),
-  }),
-  
-  execute: async ({ inputData, mastra }) => {
+  outputSchema: z.any(),
+  execute: async ({ context, mastra }) => {
     const logger = mastra?.getLogger();
-    logger?.info("🚀 [Step 1] Processing", {
-      telegramId: inputData.telegramId,
-      message: inputData.message?.substring(0, 30),
-      isCallback: inputData.isCallback,
-    });
-    
+    const inputData = context.getStepResult<{ telegramId: string; userName?: string; message: string; chatId: string; languageCode?: string; isCallback?: boolean; callbackData?: string }>("process-message") || context.inputData as any;
     const userLang = inputData.languageCode?.slice(0, 2) || "uk";
     
     try {
-      const [existingUser] = await db
-        .select({
-          id: users.id,
-          telegramId: users.telegramId,
-          language: users.language,
-          country: users.country,
-          currency: users.currency,
-          dailyTopEnabled: users.dailyTopEnabled,
-          userName: users.userName,
-          firstName: users.firstName,
-        })
-        .from(users)
-        .where(eq(users.telegramId, inputData.telegramId))
-        .limit(1);
-      
+      const [existingUser] = await db.select().from(users).where(eq(users.telegramId, inputData.telegramId)).limit(1);
       const lang = existingUser?.language || userLang;
-      const languageCode = lang;
       const texts = getTexts(lang);
-      
-      if (inputData.isCallback && inputData.callbackData) {
-        const [type, value] = inputData.callbackData.split(":");
-        
-        if (type === "country") {
-          const COUNTRY_CURRENCY: Record<string, string> = {
-            Ukraine: "UAH", Germany: "EUR", Poland: "PLN", Czechia: "CZK",
-            Romania: "RON", France: "EUR", Spain: "EUR", Italy: "EUR", UK: "GBP", USA: "USD",
-          };
-          const currency = COUNTRY_CURRENCY[value] || "USD";
-          
-          if (existingUser) {
-            await db.update(users).set({ 
-              country: value, 
-              currency, 
-              updatedAt: new Date() 
-            }).where(eq(users.telegramId, inputData.telegramId));
-          } else {
-            await db.insert(users).values({
-              telegramId: inputData.telegramId,
-              userName: inputData.userName || null,
-              language: lang,
-              country: value,
-              currency,
-              dailyTopEnabled: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            });
-          }
-          
-          logger?.info("✅ [Step 1] Country saved:", value);
-          return {
-            response: texts.ready,
-            chatId: inputData.chatId,
-            success: true,
-            keyboard: "main",
-            telegramId: inputData.telegramId,
-            languageCode,
-          };
+      const message = inputData.message;
+
+      if (message === "/start") {
+        if (!existingUser) {
+          return { response: texts.welcome.replace("{name}", inputData.userName || "Друже") + "\n\n" + texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode: lang };
         }
-        
+        return { response: texts.welcomeBack.replace("{name}", existingUser.firstName || inputData.userName || "Друже"), chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode: lang };
+      }
+
+      if (inputData.isCallback && inputData.callbackData) {
+        const cbData = inputData.callbackData;
+        const [type, value] = cbData.split(":");
+        logger?.info("🔘 [Step 1] Callback detected:", { type, value, full: cbData });
+
+        if (type === "country") {
+          const currency = COUNTRY_TO_CURRENCY[value] || "USD";
+          if (existingUser) {
+            await db.update(users).set({ country: value, currency, updatedAt: new Date() }).where(eq(users.telegramId, inputData.telegramId));
+          } else {
+            const refCode = `BW${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+            await db.insert(users).values({ telegramId: inputData.telegramId, firstName: inputData.userName, language: lang, country: value, currency, dailyTopEnabled: true, referralCode: refCode, createdAt: new Date() });
+          }
+          return { response: texts.ready, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode: lang };
+        }
+
         if (type === "lang") {
           if (existingUser) {
-            await db.update(users).set({ 
-              language: value, 
-              updatedAt: new Date() 
-            }).where(eq(users.telegramId, inputData.telegramId));
+            await db.update(users).set({ language: value, updatedAt: new Date() }).where(eq(users.telegramId, inputData.telegramId));
           }
           const newTexts = getTexts(value);
-          logger?.info("✅ [Step 1] Language changed:", value);
-          return {
-            response: newTexts.langChanged,
-            chatId: inputData.chatId,
-            success: true,
-            keyboard: "main",
-            telegramId: inputData.telegramId,
-            languageCode: value,
-          };
+          return { response: newTexts.langChanged, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode: value };
         }
-        
+
         if (type === "action") {
           switch (value) {
-            case "search":
-              return { response: texts.search, chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId, languageCode };
             case "menu":
-              return { response: "📱 <b>Головне меню</b>\n\nОберіть дію:", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-            case "profile":
-              if (existingUser) {
-                const refCountResult = await db.select({ count: sql<number>`count(*)` })
-                  .from(referrals)
-                  .where(eq(referrals.referrerId, existingUser.id));
-                const refCount = Number(refCountResult[0]?.count || 0);
-                const notifStatusText = existingUser.dailyTopEnabled ? texts.notifEnabled : texts.notifDisabled;
-                const profileText = texts.profile
-                  .replace("{country}", existingUser.country || "-")
-                  .replace("{currency}", existingUser.currency)
-                  .replace("{language}", LANG_NAMES[existingUser.language] || LANG_NAMES.en || existingUser.language)
-                  .replace("{name}", existingUser.userName || existingUser.firstName || inputData.userName || "-")
-                  .replace("{referrals}", String(refCount))
-                  + `\n${notifStatusText}`;
-                return { 
-                  response: profileText, 
-                  chatId: inputData.chatId, 
-                  success: true, 
-                  keyboard: existingUser.dailyTopEnabled ? "profile_notif_on" : "profile_notif_off", 
-                  telegramId: inputData.telegramId,
-                  languageCode,
-                };
+              return { response: "📱 <b>Головне меню</b>\n\nОберіть дію:", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode: lang };
+            case "search":
+              return { response: texts.search, chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId, languageCode: lang };
+            case "top10":
+              if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode: lang };
+              const topResult = await getTopProductsTool.execute({ context: { country: existingUser.country, currency: existingUser.currency, category: "" }, mastra, runtimeContext: {} as any });
+              if (topResult.success) {
+                return { response: "🔥 <b>ТОП-10 товарів дня:</b>", chatId: inputData.chatId, success: true, keyboard: "none", products: topResult.products.slice(0, 5), hasMore: true, telegramId: inputData.telegramId, languageCode: lang };
               }
-              return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-            case "language":
-              return { response: texts.chooseLang, chatId: inputData.chatId, success: true, keyboard: "language", telegramId: inputData.telegramId, languageCode };
-            case "referral":
-              if (!existingUser) {
-                return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-              }
-              const refResult = await getReferralLinkTool.execute({
-                context: { telegramId: inputData.telegramId, botUsername: "BuyWiseBot" },
-                mastra,
-                runtimeContext: {} as any,
-              });
-              
-              const referralsCount = await db.select({ count: sql<number>`count(*)` })
-                .from(referrals)
-                .where(eq(referrals.referrerId, existingUser.id));
-              
-              const couponResult = await db.select()
-                .from(coupons)
-                .where(and(eq(coupons.userId, existingUser.id), eq(coupons.isUsed, false)))
-                .limit(1);
-
-              let refText = texts.referral.replace("{link}", refResult.referralLink || "").replace("{count}", String(referralsCount[0].count));
-              
-              if (couponResult.length > 0) {
-                refText += `\n\n${texts.yourCoupon.replace("{code}", couponResult[0].code)}`;
-              } else if (Number(referralsCount[0].count) < 5) {
-                refText += `\n\n${texts.couponProgress.replace("{remaining}", String(5 - Number(referralsCount[0].count)))}`;
-              }
-
-              return { response: refText, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-            case "admin":
-              if (!isAdmin(inputData.telegramId)) {
-                return { response: "⛔️ Доступ заборонено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-              }
-              const totalUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
-              const totalFavs = await db.select({ count: sql<number>`count(*)` }).from(favorites);
-              const adminText = `🔧 <b>Адмін-панель</b>\n\n👥 Всього користувачів: <b>${totalUsers[0].count}</b>\n❤️ Всього в обраному: <b>${totalFavs[0].count}</b>\n\nОберіть дію:`;
-              return { response: adminText, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
-            case "admin:stats":
-              if (!isAdmin(inputData.telegramId)) return { response: "⛔️", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-              
-              const statsUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
-              const statsFavs = await db.select({ count: sql<number>`count(*)` }).from(favorites);
-              const statsRefs = await db.select({ count: sql<number>`count(*)` }).from(referrals);
-              
-              const countryStats = await db.select({ 
-                country: users.country, 
-                count: sql<number>`count(*)` 
-              }).from(users).groupBy(users.country).orderBy(desc(sql`count(*)`)).limit(5);
-              
-              let statsText = `📊 <b>Детальна статистика:</b>\n\n`;
-              statsText += `👥 Користувачів: <b>${statsUsers[0].count}</b>\n`;
-              statsText += `❤️ В обраному: <b>${statsFavs[0].count}</b>\n`;
-              statsText += `🎁 Рефералів: <b>${statsRefs[0].count}</b>\n\n`;
-              statsText += `🌍 <b>Топ країн:</b>\n`;
-              
-              countryStats.forEach(s => {
-                if (s.country) statsText += `  • ${s.country}: ${s.count}\n`;
-              });
-              
-              return { response: statsText, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
-            case "admin:broadcast":
-               const broadcastMsg = inputData.message;
-               if (broadcastMsg && broadcastMsg !== "/start" && !inputData.isCallback) {
-                  const allUsers = await db.select({ chatId: users.telegramId }).from(users);
-                  let sentCount = 0;
-                  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-                  for (const user of allUsers) {
-                    try {
-                      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ chat_id: user.chatId, text: broadcastMsg, parse_mode: "HTML" }),
-                      });
-                      sentCount++;
-                    } catch (e) {}
-                  }
-                  return { response: `✅ Розсилка завершена! Відправлено: ${sentCount}`, chatId: inputData.chatId, success: true, keyboard: "admin_menu", telegramId: inputData.telegramId, languageCode };
-               }
-               return { response: "📢 <b>Розсилка:</b>\n\nНапишіть повідомлення для розсилки:", chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId, languageCode };
-            case "support":
-              const supportResult = await getSupportInfoTool.execute({
-                context: { language: lang, userName: existingUser?.userName || existingUser?.firstName || inputData.userName },
-                mastra,
-                runtimeContext: {} as any,
-              });
-              return { 
-                response: texts.support, 
-                chatId: inputData.chatId, 
-                success: true, 
-                keyboard: "support",
-                telegramId: inputData.telegramId 
-              };
-            case "favorites":
-              if (!existingUser) {
-                return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-              }
-              const userFavs = await db
-                .select()
-                .from(favorites)
-                .where(eq(favorites.userId, existingUser.id));
-              
-              if (userFavs.length === 0) {
-                return { response: texts.noFavorites, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-              }
-              
-              const favProds = userFavs.map(f => ({
-                id: f.productId,
-                title: f.productTitle,
-                price: f.currentPrice || 0,
-                originalPrice: f.currentPrice || 0,
-                currency: f.currency,
-                discount: 0,
-                rating: 0,
-                orders: 0,
-                imageUrl: f.productImage || "",
-                affiliateUrl: f.productUrl,
-                freeShipping: false,
-              }));
-              
-              return {
-                response: `❤️ <b>Обране (${favProds.length}):</b>`,
-                chatId: inputData.chatId,
-                success: true,
-                keyboard: "main",
-                products: favProds,
-                telegramId: inputData.telegramId,
-              };
+              return { response: "😔 Не вдалося отримати ТОП-10", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode: lang };
             case "categories":
-              return { response: texts.categories, chatId: inputData.chatId, success: true, keyboard: "categories", telegramId: inputData.telegramId, languageCode };
+              return { response: texts.categories, chatId: inputData.chatId, success: true, keyboard: "categories", telegramId: inputData.telegramId, languageCode: lang };
             case "history":
-              if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
+              if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode: lang };
               const history = await db.select().from(searchHistory).where(eq(searchHistory.userId, existingUser.id)).orderBy(desc(searchHistory.createdAt)).limit(5);
-              if (history.length === 0) return { response: texts.noSearchHistory, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+              if (history.length === 0) return { response: texts.noSearchHistory, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode: lang };
               let histText = texts.recentSearches + "\n\n";
               history.forEach((h, i) => { histText += `${i+1}. ${h.query}\n`; });
-              return { response: histText, chatId: inputData.chatId, success: true, keyboard: "history", telegramId: inputData.telegramId, languageCode };
-            case "action:top10":
-            case "top10":
-              if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-              const topResult = await getTopProductsTool.execute({
-                context: { country: existingUser.country, currency: existingUser.currency, category: "" },
-                mastra, runtimeContext: {} as any,
-              });
-              if (topResult.success) {
-                searchCache.set(inputData.telegramId, { query: "top10", page: 0, isTop: true });
-                return { response: "🔥 <b>ТОП-10 товарів дня:</b>", chatId: inputData.chatId, success: true, keyboard: "none", products: topResult.products.slice(0, 5), hasMore: true, telegramId: inputData.telegramId, languageCode };
-              }
-              return { response: "😔 Не вдалося отримати ТОП-10", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+              return { response: histText, chatId: inputData.chatId, success: true, keyboard: "history", telegramId: inputData.telegramId, languageCode: lang };
+            case "favorites":
+              if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode: lang };
+              const userFavs = await db.select().from(favorites).where(eq(favorites.userId, existingUser.id));
+              if (userFavs.length === 0) return { response: texts.noFavorites, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode: lang };
+              const favProds = userFavs.map(f => ({ id: f.productId, title: f.productTitle, price: f.currentPrice || 0, originalPrice: f.currentPrice || 0, currency: f.currency, discount: 0, rating: 0, orders: 0, imageUrl: f.productImage || "", affiliateUrl: f.productUrl, freeShipping: false }));
+              return { response: `❤️ <b>Обране (${favProds.length}):</b>`, chatId: inputData.chatId, success: true, keyboard: "main", products: favProds, telegramId: inputData.telegramId };
+            case "profile":
+              if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode: lang };
+              const refCountResult = await db.select({ count: sql<number>`count(*)` }).from(referrals).where(eq(referrals.referrerId, existingUser.id));
+              const profileText = texts.profile.replace("{country}", existingUser.country || "-").replace("{currency}", existingUser.currency).replace("{language}", existingUser.language).replace("{name}", existingUser.firstName || inputData.userName || "-").replace("{referrals}", String(refCountResult[0]?.count || 0));
+              return { response: profileText, chatId: inputData.chatId, success: true, keyboard: existingUser.dailyTopEnabled ? "profile_notif_on" : "profile_notif_off", telegramId: inputData.telegramId, languageCode: lang };
+            case "referral":
+              if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode: lang };
+              const refLink = `https://t.me/BuyWiseBot?start=${existingUser.referralCode}`;
+              const refCount2 = await db.select({ count: sql<number>`count(*)` }).from(referrals).where(eq(referrals.referrerId, existingUser.id));
+              return { response: texts.referral.replace("{link}", refLink).replace("{count}", String(refCount2[0].count)), chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode: lang };
+            case "language":
+              return { response: texts.chooseLang, chatId: inputData.chatId, success: true, keyboard: "language", telegramId: inputData.telegramId, languageCode: lang };
+            case "support":
+              return { response: texts.support, chatId: inputData.chatId, success: true, keyboard: "support", telegramId: inputData.telegramId, languageCode: lang };
           }
-        }
-        
-        if (type === "cat") {
-          if (!existingUser) {
-            return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-          }
-          
-          const CATEGORY_QUERIES: Record<string, string> = {
-            electronics: "electronics smartphone headphones",
-            clothing: "fashion clothing dress shirt",
-            home: "home garden kitchen tools",
-            beauty: "beauty cosmetics makeup skincare",
-            gadgets: "gadgets accessories tech",
-            gifts: "gift present surprise",
-            under10: "cheap under 10 dollar",
-          };
-          
-          const searchQuery = CATEGORY_QUERIES[value] || value;
-          logger?.info("🔍 [Step 1] Category search:", { category: value, query: searchQuery });
-          
-          const catResult = await searchProductsTool.execute({
-            context: {
-              query: searchQuery,
-              country: existingUser.country,
-              currency: existingUser.currency,
-              quality: "default",
-              maxPrice: value === "under10" ? 10 : 0,
-              freeShipping: false,
-              onlyDiscount: false,
-              preferCheaper: value === "under10",
-            },
-            mastra,
-            runtimeContext: {} as any,
-          });
-          
-          if (catResult.success && catResult.products.length > 0) {
-            const products = catResult.products.slice(0, 5);
-            searchCache.set(inputData.telegramId, { query: searchQuery, page: 0, isTop: false });
-            return {
-              response: `📂 <b>${value.charAt(0).toUpperCase() + value.slice(1)}:</b>`,
-              chatId: inputData.chatId,
-              success: true,
-              keyboard: "none",
-              products,
-              hasMore: catResult.products.length > 5,
-              telegramId: inputData.telegramId,
-            };
-          }
-          
-          return { response: "😔 Товарів не знайдено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-        }
-        
-        if (type === "repeat") {
-          if (!existingUser) {
-            return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-          }
-          
-          const historyIndex = parseInt(value) - 1;
-          const historyItems2 = await db
-            .select()
-            .from(searchHistory)
-            .where(eq(searchHistory.userId, existingUser.id))
-            .orderBy(desc(searchHistory.createdAt))
-            .limit(5);
-          
-          if (historyItems2[historyIndex]) {
-            const repeatQuery = historyItems2[historyIndex].query;
-            logger?.info("🔍 [Step 1] Repeat search:", repeatQuery);
-            
-            const repeatResult = await searchProductsTool.execute({
-              context: {
-                query: repeatQuery,
-                country: existingUser.country,
-                currency: existingUser.currency,
-                quality: "default",
-                maxPrice: 0,
-                freeShipping: false,
-                onlyDiscount: false,
-                preferCheaper: false,
-              },
-              mastra,
-              runtimeContext: {} as any,
-            });
-            
-            if (repeatResult.success && repeatResult.products.length > 0) {
-              const products = repeatResult.products.slice(0, 5);
-              searchCache.set(inputData.telegramId, { query: repeatQuery, page: 0, isTop: false });
-              return {
-                response: `🔍 <b>${repeatQuery}:</b>`,
-                chatId: inputData.chatId,
-                success: true,
-                keyboard: "none",
-                products,
-                hasMore: repeatResult.products.length > 5,
-                telegramId: inputData.telegramId,
-              };
-            }
-          }
-          
-          return { response: "😔 Пошук не знайдено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-        }
-        
-        if (type === "settings" && value === "country") {
-          return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-        }
-        
-        if (type === "like") {
-          if (!existingUser) {
-            return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-          }
-          
-          const [existingFav] = await db
-            .select()
-            .from(favorites)
-            .where(and(
-              eq(favorites.userId, existingUser.id),
-              eq(favorites.productId, value)
-            ));
-          
-          if (existingFav) {
-            await db.delete(favorites).where(eq(favorites.id, existingFav.id));
-            logger?.info("✅ Removed from favorites:", value);
-            return { response: "❌ Видалено з обраного", chatId: inputData.chatId, success: true, keyboard: "none", telegramId: inputData.telegramId, languageCode };
-          } else {
-            const productInfo = productCache.get(value);
-            await db.insert(favorites).values({
-              userId: existingUser.id,
-              productId: value,
-              productTitle: productInfo?.title || "Product",
-              productUrl: productInfo?.url || "",
-              productImage: productInfo?.img || null,
-              currentPrice: productInfo?.price || 0,
-              currency: existingUser.currency,
-              createdAt: new Date(),
-            });
-            logger?.info("✅ Added to favorites:", value);
-            return { response: "❤️ Додано до обраного!", chatId: inputData.chatId, success: true, keyboard: "none", telegramId: inputData.telegramId, languageCode };
-          }
-        }
-        
-        if (type === "toggle") {
-          if (value === "daily_off") {
-            if (existingUser) {
-              await db.update(users).set({ 
-                dailyTopEnabled: false, 
-                updatedAt: new Date() 
-              }).where(eq(users.telegramId, inputData.telegramId));
-              logger?.info("✅ Daily notifications disabled for:", inputData.telegramId);
-              return { response: texts.notifOff, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-            }
-          }
-          if (value === "daily_on") {
-            if (existingUser) {
-              await db.update(users).set({ 
-                dailyTopEnabled: true, 
-                updatedAt: new Date() 
-              }).where(eq(users.telegramId, inputData.telegramId));
-              logger?.info("✅ Daily notifications enabled for:", inputData.telegramId);
-              return { response: texts.notifOn, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-            }
-          }
-        }
-        
-        if (type === "admin") {
-          if (!isAdmin(inputData.telegramId)) {
-            return { response: "⛔ Доступ заборонено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-          }
-          
-          if (value === "panel") {
-            logger?.info("👑 [Admin] Opening admin panel for:", inputData.telegramId);
-            return { 
-              response: "👑 <b>Адмін-панель</b>\n\nОберіть дію:", 
-              chatId: inputData.chatId, 
-              success: true, 
-              keyboard: "admin_menu", 
-              telegramId: inputData.telegramId, 
-              languageCode 
-            };
-          }
-          
-          if (value === "stats") {
-            logger?.info("📊 [Admin] Getting stats");
-            const totalUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
-            const countryStats = await db.select({
-              country: users.country,
-              count: sql<number>`count(*)`,
-            }).from(users).groupBy(users.country);
-            
-            const langStats = await db.select({
-              language: users.language,
-              count: sql<number>`count(*)`,
-            }).from(users).groupBy(users.language);
-            
-            const enabledCount = await db.select({ count: sql<number>`count(*)` })
-              .from(users).where(eq(users.dailyTopEnabled, true));
-            
-            const favCount = await db.select({ count: sql<number>`count(*)` }).from(favorites);
-            const refCount = await db.select({ count: sql<number>`count(*)` }).from(referrals);
-            const searchCount = await db.select({ count: sql<number>`count(*)` }).from(searchHistory);
-            const couponCount = await db.select({ count: sql<number>`count(*)` }).from(coupons);
-            
-            const todayStart = new Date();
-            todayStart.setHours(0, 0, 0, 0);
-            const todayUsers = await db.select({ count: sql<number>`count(*)` })
-              .from(users).where(sql`${users.createdAt} >= ${todayStart}`);
-            
-            let statsText = `📊 <b>Статистика BuyWise</b>\n\n`;
-            statsText += `👥 <b>Всього користувачів:</b> ${totalUsers[0]?.count || 0}\n`;
-            statsText += `📈 <b>Нових сьогодні:</b> ${todayUsers[0]?.count || 0}\n`;
-            statsText += `🔔 <b>Підписані на розсилку:</b> ${enabledCount[0]?.count || 0}\n`;
-            statsText += `❤️ <b>Товарів в обраному:</b> ${favCount[0]?.count || 0}\n`;
-            statsText += `🔍 <b>Всього пошуків:</b> ${searchCount[0]?.count || 0}\n`;
-            statsText += `👫 <b>Рефералів:</b> ${refCount[0]?.count || 0}\n`;
-            statsText += `🎫 <b>Виданих купонів:</b> ${couponCount[0]?.count || 0}\n\n`;
-            
-            statsText += `🌍 <b>По країнах:</b>\n`;
-            countryStats.slice(0, 10).forEach(s => {
-              if (s.country) statsText += `  • ${s.country}: ${s.count}\n`;
-            });
-            
-            statsText += `\n🗣 <b>По мовах:</b>\n`;
-            langStats.slice(0, 10).forEach(s => {
-              if (s.language) statsText += `  • ${s.language}: ${s.count}\n`;
-            });
-            
-            return { 
-              response: statsText, 
-              chatId: inputData.chatId, 
-              success: true, 
-              keyboard: "admin_stats", 
-              telegramId: inputData.telegramId, 
-              languageCode 
-            };
-          }
-          
-          if (value === "users") {
-            logger?.info("👥 [Admin] Getting users list");
-            const recentUsers = await db.select({
-              id: users.id,
-              telegramId: users.telegramId,
-              firstName: users.firstName,
-              userName: users.userName,
-              country: users.country,
-              language: users.language,
-              dailyTopEnabled: users.dailyTopEnabled,
-              createdAt: users.createdAt,
-            }).from(users).orderBy(desc(users.createdAt)).limit(15);
-            
-            let usersText = `👥 <b>Останні 15 користувачів:</b>\n\n`;
-            recentUsers.forEach((u, i) => {
-              const name = u.firstName || u.userName || "—";
-              const notif = u.dailyTopEnabled ? "🔔" : "🔕";
-              const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString("uk") : "—";
-              usersText += `${i+1}. <b>${name}</b> ${notif}\n`;
-              usersText += `   🌍 ${u.country || "—"} | 🗣 ${u.language || "—"}\n`;
-              usersText += `   📅 ${date} | ID: <code>${u.telegramId}</code>\n\n`;
-            });
-            
-            return { 
-              response: usersText, 
-              chatId: inputData.chatId, 
-              success: true, 
-              keyboard: "admin_users", 
-              telegramId: inputData.telegramId, 
-              languageCode 
-            };
-          }
-          
-          if (value === "broadcast_history") {
-            logger?.info("📜 [Admin] Getting broadcast history");
-            const recentBroadcasts = await db.select().from(broadcasts)
-              .orderBy(desc(broadcasts.sentAt)).limit(10);
-            
-            let historyText = `📜 <b>Історія розсилок:</b>\n\n`;
-            if (recentBroadcasts.length === 0) {
-              historyText += `<i>Розсилок ще не було</i>`;
-            } else {
-              recentBroadcasts.forEach((b, i) => {
-                const date = b.sentAt ? new Date(b.sentAt).toLocaleString("uk") : "—";
-                const msg = (b.message || "").slice(0, 50);
-                historyText += `${i+1}. 📅 ${date}\n`;
-                historyText += `   📨 Надіслано: ${b.sentCount}\n`;
-                historyText += `   💬 ${msg}${msg.length >= 50 ? "..." : ""}\n\n`;
-              });
-            }
-            
-            return { 
-              response: historyText, 
-              chatId: inputData.chatId, 
-              success: true, 
-              keyboard: "admin_menu", 
-              telegramId: inputData.telegramId, 
-              languageCode 
-            };
-          }
-          
-          if (value === "broadcast") {
-            logger?.info("📢 [Admin] Broadcast mode");
-            return { 
-              response: "📢 <b>Розсилка</b>\n\nВідправте текст повідомлення для всіх користувачів.\n\n💡 <i>Використовуйте HTML-теги для форматування:</i>\n<code>&lt;b&gt;жирний&lt;/b&gt;</code>\n<code>&lt;i&gt;курсив&lt;/i&gt;</code>", 
-              chatId: inputData.chatId, 
-              success: true, 
-              keyboard: "admin_broadcast", 
-              telegramId: inputData.telegramId, 
-              languageCode 
-            };
-          }
-          
-          if (value === "send_all" || value === "send_ua" || value === "send_pl") {
-            const countryFilter = value === "send_ua" ? "Ukraine" : value === "send_pl" ? "Poland" : null;
-            const filterLabel = countryFilter || "всіх";
-            logger?.info(`📤 [Admin] Starting broadcast to ${filterLabel}`);
-            
-            let query = db.select({ telegramId: users.telegramId }).from(users);
-            let targetUsers;
-            if (countryFilter) {
-              targetUsers = await query.where(and(eq(users.dailyTopEnabled, true), eq(users.country, countryFilter)));
-            } else {
-              targetUsers = await query.where(eq(users.dailyTopEnabled, true));
-            }
-            
-            const botToken = process.env.TELEGRAM_BOT_TOKEN;
-            let sentCount = 0;
-            let failCount = 0;
-            const broadcastText = inputData.message || "📢 Повідомлення від адміністратора";
-            
-            for (const u of targetUsers) {
-              try {
-                const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    chat_id: u.telegramId,
-                    text: broadcastText,
-                    parse_mode: "HTML",
-                  }),
-                });
-                const json = await res.json();
-                if (json.ok) {
-                  sentCount++;
-                } else {
-                  failCount++;
-                  logger?.warn("Telegram error:", json.description);
-                }
-                await new Promise(r => setTimeout(r, 50));
-              } catch (e) {
-                failCount++;
-                logger?.warn("Failed to send to:", u.telegramId);
-              }
-            }
-            
-            await db.insert(broadcasts).values({
-              adminId: inputData.telegramId,
-              message: broadcastText,
-              targetCountry: countryFilter,
-              sentCount,
-              sentAt: new Date(),
-            });
-            
-            let resultText = `✅ <b>Розсилка завершена!</b>\n\n`;
-            resultText += `🎯 Аудиторія: <b>${filterLabel}</b>\n`;
-            resultText += `📨 Надіслано: ${sentCount}/${targetUsers.length}\n`;
-            if (failCount > 0) resultText += `❌ Помилок: ${failCount}`;
-            
-            return { 
-              response: resultText, 
-              chatId: inputData.chatId, 
-              success: true, 
-              keyboard: "admin_menu", 
-              telegramId: inputData.telegramId, 
-              languageCode 
-            };
-          }
-        }
-        
-        if (type === "more") {
-          if (!existingUser) {
-            return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-          }
-          
-          const cached = searchCache.get(inputData.telegramId);
-          if (cached) {
-            const nextPage = cached.page + 1;
-            let products: any[] = [];
-            
-            if (cached.isTop) {
-              const result = await getTopProductsTool.execute({
-                context: {
-                  country: existingUser.country,
-                  currency: existingUser.currency,
-                  category: "",
-                },
-                mastra,
-                runtimeContext: {} as any,
-              });
-              if (result.success) {
-                const start = nextPage * 5;
-                products = result.products.slice(start, start + 5);
-              }
-            } else {
-              const result = await searchProductsTool.execute({
-                context: {
-                  query: cached.query,
-                  country: existingUser.country,
-                  currency: existingUser.currency,
-                  quality: "default",
-                  maxPrice: 0,
-                  freeShipping: false,
-                  onlyDiscount: false,
-                  preferCheaper: false,
-                },
-                mastra,
-                runtimeContext: {} as any,
-              });
-              if (result.success) {
-                const start = nextPage * 5;
-                products = result.products.slice(start, start + 5);
-              }
-            }
-            
-            if (products.length > 0) {
-              searchCache.set(inputData.telegramId, { ...cached, page: nextPage });
-              return {
-                response: `📦 <b>Ще ${products.length} товарів:</b>`,
-                chatId: inputData.chatId,
-                success: true,
-                keyboard: "none",
-                products,
-                hasMore: products.length >= 5,
-                telegramId: inputData.telegramId,
-              };
-            } else {
-              return { response: "😔 Більше товарів не знайдено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-            }
-          }
-          return { response: "🔍 Введіть новий пошуковий запит", chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId, languageCode };
         }
       }
-      
-      const message = inputData.message || "";
-      const texts2 = existingUser ? getTexts(existingUser.language) : getTexts(userLang);
-      
-      if (message.startsWith("/start")) {
-        const userName = inputData.userName || existingUser?.firstName || existingUser?.userName || "";
-        const displayName = userName || "друже";
-        
-        const parts = message.split(" ");
-        const referralCode = parts.length > 1 ? parts[1] : null;
-        
-        if (!existingUser) {
-          const welcomeText = texts2.welcome.replace("{name}", displayName);
-          
-          await db.insert(users).values({
-            telegramId: inputData.telegramId,
-            userName: inputData.userName || null,
-            firstName: displayName,
-            language: userLang,
-            country: "",
-            currency: "USD",
-            dailyTopEnabled: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }).onConflictDoNothing();
-          
-          if (referralCode) {
-            setTimeout(async () => {
-              try {
-                await processReferralTool.execute({
-                  context: { newUserTelegramId: inputData.telegramId, referralCode },
-                  mastra,
-                  runtimeContext: {} as any,
-                });
-              } catch (e) {
-                logger?.error("Referral processing failed:", e);
-              }
-            }, 1000);
-          }
-          
-          return {
-            response: `${welcomeText}\n\n${texts2.chooseCountry}`,
-            chatId: inputData.chatId,
-            success: true,
-            keyboard: "country",
-            telegramId: inputData.telegramId,
-          };
+
+      if (message && message.length > 1 && !message.startsWith("/")) {
+        if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode: lang };
+        const result = await searchProductsTool.execute({ context: { query: message, country: existingUser.country, currency: existingUser.currency, quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: false, preferCheaper: false }, mastra, runtimeContext: {} as any });
+        if (result.success && result.products.length > 0) {
+          await db.insert(searchHistory).values({ userId: existingUser.id, query: message, createdAt: new Date() });
+          return { response: `🔍 <b>Знайдено ${result.products.length} товарів:</b>`, chatId: inputData.chatId, success: true, keyboard: "none", products: result.products.slice(0, 5), hasMore: result.products.length > 5, telegramId: inputData.telegramId };
         }
-        
-        const welcomeBackText = texts2.welcomeBack.replace("{name}", displayName);
-        return {
-          response: welcomeBackText,
-          chatId: inputData.chatId,
-          success: true,
-          keyboard: "main",
-          telegramId: inputData.telegramId,
-        };
+        return { response: "😔 На жаль, нічого не знайдено.", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId };
       }
-      
-      if (message === "/help") {
-        return { response: texts2.support, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-      }
-      
-      if (message === "/profile") {
-        if (existingUser) {
-          const refCountResult2 = await db.select({ count: sql<number>`count(*)` })
-            .from(referrals)
-            .where(eq(referrals.referrerId, existingUser.id));
-          const refCount2 = Number(refCountResult2[0]?.count || 0);
-          const notifStatusText2 = existingUser.dailyTopEnabled ? texts2.notifEnabled : texts2.notifDisabled;
-          const profileText = texts2.profile
-            .replace("{country}", existingUser.country || "-")
-            .replace("{currency}", existingUser.currency)
-            .replace("{language}", LANG_NAMES[existingUser.language] || LANG_NAMES.en || existingUser.language)
-            .replace("{name}", existingUser.userName || existingUser.firstName || inputData.userName || "-")
-            .replace("{referrals}", String(refCount2))
-            + `\n${notifStatusText2}`;
-          return { response: profileText, chatId: inputData.chatId, success: true, keyboard: existingUser.dailyTopEnabled ? "profile_notif_on" : "profile_notif_off", telegramId: inputData.telegramId, languageCode };
-        }
-        return { response: texts2.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-      }
-      
-      if (message === "/admin") {
-        if (isAdmin(inputData.telegramId)) {
-          logger?.info("👑 [Admin] Admin panel accessed by:", inputData.telegramId);
-          return { 
-            response: "👑 <b>Адмін-панель BuyWise</b>\n\n📊 Переглядайте статистику\n📢 Відправляйте розсилки\n\nОберіть дію:", 
-            chatId: inputData.chatId, 
-            success: true, 
-            keyboard: "admin_menu", 
-            telegramId: inputData.telegramId, 
-            languageCode 
-          };
-        }
-        return { response: "⛔ Доступ заборонено", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-      }
-      
-      if (message === "/referral" || message === "/ref") {
-        if (!existingUser) {
-          return { response: texts2.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-        }
-        const refResult2 = await getReferralLinkTool.execute({
-          context: { telegramId: inputData.telegramId, botUsername: "BuyWiseBot" },
-          mastra,
-          runtimeContext: {} as any,
-        });
-        if (refResult2.success) {
-          const refText2 = texts2.referral
-            .replace("{link}", refResult2.referralLink || "")
-            .replace("{count}", String(refResult2.referralCount || 0));
-          return { response: refText2, chatId: inputData.chatId, success: true, keyboard: "back", telegramId: inputData.telegramId, languageCode };
-        }
-        return { response: "Error getting referral link", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-      }
-      
-      if (message === "/lang" || message === "/language") {
-        return { response: texts2.chooseLang, chatId: inputData.chatId, success: true, keyboard: "language", telegramId: inputData.telegramId, languageCode };
-      }
-      
-      if (message === "/favorites" || message === "/fav") {
-        if (!existingUser) {
-          return { response: texts2.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-        }
-        const userFavorites = await db
-          .select()
-          .from(favorites)
-          .where(eq(favorites.userId, existingUser.id));
-        
-        if (userFavorites.length === 0) {
-          return { response: texts2.noFavorites, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-        }
-        
-        const favProducts = userFavorites.map(f => ({
-          id: f.productId,
-          title: f.productTitle,
-          price: f.currentPrice || 0,
-          originalPrice: f.currentPrice || 0,
-          currency: f.currency,
-          discount: 0,
-          rating: 0,
-          orders: 0,
-          imageUrl: f.productImage || "",
-          affiliateUrl: f.productUrl,
-          freeShipping: false,
-        }));
-        
-        return {
-          response: `❤️ <b>Ваші обрані товари (${favProducts.length}):</b>`,
-          chatId: inputData.chatId,
-          success: true,
-          keyboard: "main",
-          products: favProducts,
-          telegramId: inputData.telegramId,
-        };
-      }
-      
-      if (!existingUser) {
-        return {
-          response: texts.chooseCountry,
-          chatId: inputData.chatId,
-          success: true,
-          keyboard: "country",
-          telegramId: inputData.telegramId,
-        };
-      }
-      
-      const isTop = message === "/top" || (inputData.isCallback === true && (inputData.callbackData === "action:top10" || inputData.callbackData === "top10"));
-      const isSearch = message && message.length > 1 && !message.startsWith("/") && !inputData.isCallback;
-      
-      if (isTop || isSearch) {
-        logger?.info("🔍 [Step 1] Direct product search", { isTop, query: message });
-        
-        let products: any[] = [];
-        let totalProducts = 0;
-        
-        if (isTop) {
-          const result = await getTopProductsTool.execute({
-            context: {
-              country: existingUser.country,
-              currency: existingUser.currency,
-              category: "",
-            },
-            mastra,
-            runtimeContext: {} as any,
-          });
-          if (result.success) {
-            totalProducts = result.products.length;
-            products = result.products.slice(0, 5);
-          }
-        } else {
-          const result = await searchProductsTool.execute({
-            context: {
-              query: message,
-              country: existingUser.country,
-              currency: existingUser.currency,
-              quality: "default",
-              maxPrice: 0,
-              freeShipping: false,
-              onlyDiscount: false,
-              preferCheaper: false,
-            },
-            mastra,
-            runtimeContext: {} as any,
-          });
-          if (result.success) {
-            totalProducts = result.products.length;
-            products = result.products.slice(0, 5);
-          }
-        }
-        
-        logger?.info("✅ [Step 1] Products found", { count: products.length, total: totalProducts });
-        
-        if (products.length > 0) {
-          searchCache.set(inputData.telegramId, { query: message, page: 0, isTop });
-          
-          if (!isTop && existingUser) {
-            await db.insert(searchHistory).values({
-              userId: existingUser.id,
-              query: message.substring(0, 200),
-              createdAt: new Date(),
-            });
-            logger?.info("📝 [Step 1] Search saved to history:", message.substring(0, 30));
-          }
-          
-          const hasMore = totalProducts > 5;
-          const title = isTop ? `🔥 <b>ТОП-${products.length} товарів:</b>` : `🔍 <b>Знайдено ${products.length} товарів:</b>`;
-          return {
-            response: title,
-            chatId: inputData.chatId,
-            success: true,
-            keyboard: "none",
-            products,
-            hasMore,
-            telegramId: inputData.telegramId,
-          };
-        }
-        
-        return {
-          response: "😔 На жаль, нічого не знайдено. Спробуйте інший запит.",
-          chatId: inputData.chatId,
-          success: true,
-          keyboard: "main",
-          telegramId: inputData.telegramId,
-        };
-      }
-      
-      const fullPrompt = `[Telegram ID: ${inputData.telegramId}]\n[Language: ${inputData.languageCode || "uk"}]\n\nUser: ${message}`;
-      
-      const response = await buyWiseAgent.generateLegacy(fullPrompt, {
-        resourceId: "telegram-bot",
-        threadId: `telegram_${inputData.telegramId}`,
-        maxSteps: 3,
-      });
-      
-      const responseText = response.text || "Вибачте, сталася помилка. Спробуйте ще раз.";
-      logger?.info("✅ [Step 1] Agent response", { length: responseText.length });
-      
-      return {
-        response: responseText,
-        chatId: inputData.chatId,
-        success: true,
-        keyboard: "main",
-        telegramId: inputData.telegramId,
-      };
-    } catch (error) {
-      logger?.error("❌ [Step 1] Error:", error);
-      return {
-        response: "Вибачте, сталася помилка. Спробуйте ще раз.",
-        chatId: inputData.chatId,
-        success: false,
-        keyboard: "none",
-        telegramId: inputData.telegramId,
-      };
+
+      return { response: "👋 Що я можу для вас зробити? Оберіть дію в меню 👇", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode: lang };
+    } catch (e) {
+      logger?.error("❌ [Step 1] Error:", e);
+      return { response: "❌ Помилка. Спробуйте ще раз.", chatId: inputData.chatId, success: false, keyboard: "main", telegramId: inputData.telegramId };
     }
-  },
+  }
 });
 
 const sendToTelegramStep = createStep({
   id: "send-to-telegram",
-  description: "Sends the response with inline buttons to Telegram",
-  
-  inputSchema: z.object({
-    response: z.string(),
-    chatId: z.string(),
-    success: z.boolean(),
-    keyboard: z.string(),
-    customKeyboard: z.array(z.array(z.object({
-      text: z.string(),
-      callback_data: z.string().optional(),
-      url: z.string().optional(),
-    }))).optional(),
-    languageCode: z.string().optional(),
-    products: z.array(z.object({
-      id: z.string(),
-      title: z.string(),
-      price: z.number(),
-      originalPrice: z.number(),
-      currency: z.string(),
-      discount: z.number(),
-      rating: z.number(),
-      orders: z.number(),
-      imageUrl: z.string(),
-      affiliateUrl: z.string(),
-      freeShipping: z.boolean(),
-    })).optional(),
-    hasMore: z.boolean().optional(),
-    telegramId: z.string().optional(),
-  }),
-  
-  outputSchema: z.object({
-    sent: z.boolean(),
-    messageId: z.number().optional(),
-    error: z.string().optional(),
-  }),
-  
-  execute: async ({ inputData, mastra }) => {
+  description: "Sends the response to Telegram",
+  inputSchema: z.any(),
+  execute: async ({ context, mastra }) => {
     const logger = mastra?.getLogger();
-    logger?.info("📤 [Step 2] Sending to Telegram", { 
-      chatId: inputData.chatId, 
-      keyboard: inputData.keyboard,
-      productsCount: inputData.products?.length || 0,
-    });
-    
+    const inputData = context.getStepResult<any>("process-message");
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    if (!botToken) {
-      return { sent: false, error: "Bot token not configured" };
-    }
-    
-    const sendMessage = async (text: string, keyboard?: any) => {
-      const body: any = {
-        chat_id: inputData.chatId,
-        text,
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-      };
-      if (keyboard) {
-        body.reply_markup = { inline_keyboard: keyboard };
-      }
-      const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      return res.json();
-    };
-    
-    const sendPhoto = async (photoUrl: string, caption: string, keyboard: any) => {
-      const body = {
-        chat_id: inputData.chatId,
-        photo: photoUrl,
-        caption,
-        parse_mode: "HTML",
-        reply_markup: { inline_keyboard: keyboard },
-      };
-      const res = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      return res.json();
-    };
-    
-    const getInlineKeyboard = (keyboardType: string) => {
-      switch (keyboardType) {
-        case "main":
-          return MAIN_MENU_BUTTONS;
-        case "profile_notif_on":
-          return [
-            [{ text: "🌍 Змінити країну", callback_data: "settings:country" }],
-            [{ text: "🌐 Змінити мову", callback_data: "action:language" }],
-            [{ text: "🔕 Вимкнути ТОП-10", callback_data: "toggle:daily_off" }],
-            [{ text: "🔙 Меню", callback_data: "action:menu" }],
-          ];
-        case "profile_notif_off":
-          return [
-            [{ text: "🌍 Змінити країну", callback_data: "settings:country" }],
-            [{ text: "🌐 Змінити мову", callback_data: "action:language" }],
-            [{ text: "🔔 Увімкнути ТОП-10", callback_data: "toggle:daily_on" }],
-            [{ text: "🔙 Меню", callback_data: "action:menu" }],
-          ];
-        case "country":
-          return COUNTRY_BUTTONS;
-        case "language":
-          return LANGUAGE_BUTTONS;
-        case "admin_menu":
-          return [
-            [{ text: "📊 Статистика", callback_data: "admin:stats" }],
-            [{ text: "📢 Розсилка", callback_data: "admin:broadcast" }],
-            [{ text: "🔙 Меню", callback_data: "action:menu" }],
-          ];
-        case "history_menu":
-          return inputData.customKeyboard || MAIN_MENU_BUTTONS;
-        case "back":
-          return BACK_BUTTON;
-        default:
-          return MAIN_MENU_BUTTONS;
-      }
-    };
+    if (!botToken || !inputData) return { success: false };
 
     try {
-      let inlineKeyboard = getInlineKeyboard(inputData.keyboard);
-      const texts = getTexts(inputData.languageCode || "en");
-
-      const SUPPORT_BUTTONS = [
-        [{ text: "✍️ Support", url: "https://t.me/SYNTRAM" }],
-        [{ text: texts.backMenu, callback_data: "action:menu" }],
-      ];
-
-      const PROFILE_BUTTONS_NOTIF_ON = [
-        [{ text: texts.changeCountry, callback_data: "settings:country" }],
-        [{ text: texts.changeLang, callback_data: "action:language" }],
-        [{ text: texts.disableNotif, callback_data: "toggle:daily_off" }],
-        [{ text: texts.backMenu, callback_data: "action:menu" }],
-      ];
-
-      const PROFILE_BUTTONS_NOTIF_OFF = [
-        [{ text: texts.changeCountry, callback_data: "settings:country" }],
-        [{ text: texts.changeLang, callback_data: "action:language" }],
-        [{ text: texts.enableNotif, callback_data: "toggle:daily_on" }],
-        [{ text: texts.backMenu, callback_data: "action:menu" }],
-      ];
-
-      const CATEGORY_BUTTONS_LOCALIZED = [
-        [{ text: texts.catElectronics, callback_data: "cat:electronics" }, { text: texts.catClothing, callback_data: "cat:clothing" }],
-        [{ text: texts.catHome, callback_data: "cat:home" }, { text: texts.catBeauty, callback_data: "cat:beauty" }],
-        [{ text: texts.catGadgets, callback_data: "cat:gadgets" }, { text: texts.catGifts, callback_data: "cat:gifts" }],
-        [{ text: texts.catUnder10, callback_data: "cat:under10" }],
-        [{ text: texts.backMenu, callback_data: "action:menu" }],
-      ];
-
-      const ADMIN_MENU_BUTTONS = [
-        [{ text: "📊 Статистика", callback_data: "admin:stats" }],
-        [{ text: "👥 Користувачі", callback_data: "admin:users" }],
-        [{ text: "📢 Розсилка", callback_data: "admin:broadcast" }],
-        [{ text: "📜 Історія розсилок", callback_data: "admin:broadcast_history" }],
-        [{ text: texts.backMenu, callback_data: "action:menu" }],
-      ];
-
-      const ADMIN_BROADCAST_BUTTONS = [
-        [{ text: "🌍 Всім", callback_data: "admin:send_all" }],
-        [{ text: "🇺🇦 Україна", callback_data: "admin:send_ua" }, { text: "🇵🇱 Польща", callback_data: "admin:send_pl" }],
-        [{ text: "🔙 Назад", callback_data: "admin:menu" }],
-      ];
-
-      if (inputData.keyboard === "country") {
-        inlineKeyboard = COUNTRY_BUTTONS as any;
-      } else if (inputData.keyboard === "main") {
-        inlineKeyboard = MAIN_MENU_BUTTONS as any;
-      } else if (inputData.keyboard === "language") {
-        inlineKeyboard = LANGUAGE_BUTTONS as any;
-      } else if (inputData.keyboard === "profile_notif_on") {
-        inlineKeyboard = PROFILE_BUTTONS_NOTIF_ON as any;
-      } else if (inputData.keyboard === "profile_notif_off") {
-        inlineKeyboard = PROFILE_BUTTONS_NOTIF_OFF as any;
-      } else if (inputData.keyboard === "categories") {
-        inlineKeyboard = CATEGORY_BUTTONS_LOCALIZED as any;
-      } else if (inputData.keyboard === "history") {
-        inlineKeyboard = [
-          [{ text: "1️⃣", callback_data: "repeat:1" }, { text: "2️⃣", callback_data: "repeat:2" }, { text: "3️⃣", callback_data: "repeat:3" }],
-          [{ text: "4️⃣", callback_data: "repeat:4" }, { text: "5️⃣", callback_data: "repeat:5" }],
-          [{ text: texts.backMenu, callback_data: "action:menu" }],
-        ] as any;
-      } else if (inputData.keyboard === "support") {
-        inlineKeyboard = SUPPORT_BUTTONS as any;
-      } else if (inputData.keyboard === "admin_menu") {
-        inlineKeyboard = ADMIN_MENU_BUTTONS as any;
-      } else if (inputData.keyboard === "admin_broadcast") {
-        inlineKeyboard = ADMIN_BROADCAST_BUTTONS as any;
-      } else if (inputData.keyboard === "back") {
-        inlineKeyboard = BACK_BUTTON as any;
-      }
-
+      let keyboard: any = null;
+      if (inputData.keyboard === "main") keyboard = { inline_keyboard: MAIN_MENU_BUTTONS };
+      if (inputData.keyboard === "country") keyboard = { inline_keyboard: COUNTRY_BUTTONS };
+      if (inputData.keyboard === "language") keyboard = { inline_keyboard: LANGUAGE_BUTTONS };
+      if (inputData.keyboard === "back") keyboard = { inline_keyboard: BACK_BUTTON };
+      if (inputData.keyboard === "profile_notif_on") keyboard = { inline_keyboard: PROFILE_BUTTONS };
+      
       if (inputData.products && inputData.products.length > 0) {
-        for (let i = 0; i < inputData.products.length; i++) {
-          const p = inputData.products[i];
-          const productData = {
-            id: p.id,
-            title: p.title,
-            price: p.price,
-            originalPrice: p.originalPrice,
-            currency: p.currency,
-            discount: p.discount,
-            rating: p.rating,
-            orders: p.orders,
-            imageUrl: p.imageUrl,
-            affiliateUrl: p.affiliateUrl,
-          };
-          
-          const caption = formatProductCard(productData, inputData.languageCode || "uk");
-          const keyboard = createProductKeyboard(productData, inputData.languageCode || "uk", i, inputData.products.length);
-          
-          await sendPhoto(p.imageUrl, caption, keyboard.inline_keyboard);
-          // Small delay to avoid hitting Telegram rate limits and ensure order
-          await new Promise(r => setTimeout(r, 100));
+        for (const p of inputData.products) {
+          const text = `<b>${p.title}</b>\n\n💰 Ціна: <b>${p.price} ${p.currency}</b>`;
+          const kb = { inline_keyboard: [[{ text: "🔗 Купити", url: p.affiliateUrl }, { text: "❤️", callback_data: `like:${p.id}` }]] };
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: inputData.chatId, text, parse_mode: "HTML", reply_markup: kb }) });
         }
-        
         if (inputData.hasMore) {
-          await sendMessage("👇 Отримати більше результатів:", [[{ text: "🔄 Показати ще", callback_data: "action:more" }]]);
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: inputData.chatId, text: "👇 Ще більше товарів", reply_markup: { inline_keyboard: [[{ text: "➕ Ще", callback_data: "action:more" }]] } }) });
         }
-        
-        return { sent: true };
+      } else {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: inputData.chatId, text: inputData.response, parse_mode: "HTML", reply_markup: keyboard }) });
       }
-
-      const res = await sendMessage(inputData.response, inlineKeyboard);
-      return { sent: true, messageId: res.result?.message_id };
-    } catch (error) {
-      logger?.error("❌ [Step 2] Error:", error);
-      return { sent: false, error: String(error) };
+      return { success: true };
+    } catch (e) {
+      logger?.error("❌ [Step 2] Error:", e);
+      return { success: false };
     }
-  },
+  }
 });
 
-const telegramBotWorkflow = createWorkflow({
-  id: "telegram-bot-workflow",
-  inputSchema: z.object({
-    telegramId: z.string(),
-    userName: z.string().optional(),
-    message: z.string().optional(),
-    chatId: z.string(),
-    languageCode: z.string().optional(),
-    isCallback: z.boolean().optional(),
-    callbackData: z.string().optional(),
-  }),
-  outputSchema: z.object({
-    sent: z.boolean(),
-    messageId: z.number().optional(),
-    error: z.string().optional(),
-  }),
-})
-  .then(processWithAgentStep)
-  .then(sendToTelegramStep as any)
+export const telegramBotWorkflow = createWorkflow({ id: "telegram-bot-workflow" })
+  .step(processMessageStep)
+  .then(sendToTelegramStep)
   .commit();
-
-export { telegramBotWorkflow };
