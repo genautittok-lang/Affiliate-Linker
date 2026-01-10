@@ -765,6 +765,7 @@ const processWithAgentStep = createStep({
               let histText = texts.recentSearches + "\n\n";
               history.forEach((h, i) => { histText += `${i+1}. ${h.query}\n`; });
               return { response: histText, chatId: inputData.chatId, success: true, keyboard: "history", telegramId: inputData.telegramId, languageCode };
+            case "action:top10":
             case "top10":
               if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
               const topResult = await getTopProductsTool.execute({
@@ -1381,8 +1382,8 @@ const processWithAgentStep = createStep({
         };
       }
       
-      const isTop = message === "/top" || (inputData.isCallback === true && inputData.callbackData === "action:top10");
-      const isSearch = message.length > 1 && !message.startsWith("/");
+      const isTop = message === "/top" || (inputData.isCallback === true && (inputData.callbackData === "action:top10" || inputData.callbackData === "top10"));
+      const isSearch = message && message.length > 1 && !message.startsWith("/") && !inputData.isCallback;
       
       if (isTop || isSearch) {
         logger?.info("🔍 [Step 1] Direct product search", { isTop, query: message });
