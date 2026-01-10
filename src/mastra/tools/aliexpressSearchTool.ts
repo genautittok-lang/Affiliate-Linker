@@ -101,7 +101,7 @@ export async function searchAliExpressAPI(
       target_language: "en",
       ship_to_country: getCountryCode(country),
       page_no: "1",
-      page_size: "12",
+      page_size: "10",
       sort: "LAST_VOLUME_DESC",
     };
     

@@ -486,6 +486,11 @@ const processWithAgentStep = createStep({
     chatId: z.string(),
     success: z.boolean(),
     keyboard: z.string(),
+    customKeyboard: z.array(z.array(z.object({
+      text: z.string(),
+      callback_data: z.string().optional(),
+      url: z.string().optional(),
+    }))).optional(),
     languageCode: z.string().optional(),
     products: z.array(z.object({
       id: z.string(),
@@ -754,24 +759,23 @@ const processWithAgentStep = createStep({
             case "categories":
               return { response: texts.categories, chatId: inputData.chatId, success: true, keyboard: "categories", telegramId: inputData.telegramId, languageCode };
             case "history":
-              if (!existingUser) {
-                return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
-              }
-              const historyItems = await db
-                .select()
-                .from(searchHistory)
-                .where(eq(searchHistory.userId, existingUser.id))
-                .orderBy(desc(searchHistory.createdAt))
-                .limit(5);
-              
-              if (historyItems.length === 0) {
-                return { response: texts.noSearchHistory, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
-              }
-              
-              const historyText = texts.recentSearches + "\n\n" + historyItems.map((h, i) => `${i + 1}. ${h.query}`).join("\n");
-              return { response: historyText, chatId: inputData.chatId, success: true, keyboard: "history", telegramId: inputData.telegramId, languageCode };
+              if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
+              const history = await db.select().from(searchHistory).where(eq(searchHistory.userId, existingUser.id)).orderBy(desc(searchHistory.createdAt)).limit(5);
+              if (history.length === 0) return { response: texts.noSearchHistory, chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
+              let histText = texts.recentSearches + "\n\n";
+              history.forEach((h, i) => { histText += `${i+1}. ${h.query}\n`; });
+              return { response: histText, chatId: inputData.chatId, success: true, keyboard: "history", telegramId: inputData.telegramId, languageCode };
             case "top10":
-              break;
+              if (!existingUser) return { response: texts.chooseCountry, chatId: inputData.chatId, success: true, keyboard: "country", telegramId: inputData.telegramId, languageCode };
+              const topResult = await getTopProductsTool.execute({
+                context: { country: existingUser.country, currency: existingUser.currency, category: "" },
+                mastra, runtimeContext: {} as any,
+              });
+              if (topResult.success) {
+                searchCache.set(inputData.telegramId, { query: "top10", page: 0, isTop: true });
+                return { response: "🔥 <b>ТОП-10 товарів дня:</b>", chatId: inputData.chatId, success: true, keyboard: "none", products: topResult.products.slice(0, 5), hasMore: true, telegramId: inputData.telegramId, languageCode };
+              }
+              return { response: "😔 Не вдалося отримати ТОП-10", chatId: inputData.chatId, success: true, keyboard: "main", telegramId: inputData.telegramId, languageCode };
           }
         }
         
@@ -1497,6 +1501,11 @@ const sendToTelegramStep = createStep({
     chatId: z.string(),
     success: z.boolean(),
     keyboard: z.string(),
+    customKeyboard: z.array(z.array(z.object({
+      text: z.string(),
+      callback_data: z.string().optional(),
+      url: z.string().optional(),
+    }))).optional(),
     languageCode: z.string().optional(),
     products: z.array(z.object({
       id: z.string(),
@@ -1596,6 +1605,8 @@ const sendToTelegramStep = createStep({
             [{ text: "📢 Розсилка", callback_data: "admin:broadcast" }],
             [{ text: "🔙 Меню", callback_data: "action:menu" }],
           ];
+        case "history_menu":
+          return inputData.customKeyboard || MAIN_MENU_BUTTONS;
         case "back":
           return BACK_BUTTON;
         default:
@@ -1649,25 +1660,31 @@ const sendToTelegramStep = createStep({
       ];
 
       if (inputData.keyboard === "country") {
-        inlineKeyboard = COUNTRY_BUTTONS;
+        inlineKeyboard = COUNTRY_BUTTONS as any;
       } else if (inputData.keyboard === "main") {
-        inlineKeyboard = createMainMenuKeyboard(inputData.languageCode || "uk").inline_keyboard;
+        inlineKeyboard = MAIN_MENU_BUTTONS as any;
       } else if (inputData.keyboard === "language") {
-        inlineKeyboard = LANGUAGE_BUTTONS;
+        inlineKeyboard = LANGUAGE_BUTTONS as any;
       } else if (inputData.keyboard === "profile_notif_on") {
-        inlineKeyboard = PROFILE_BUTTONS_NOTIF_ON;
+        inlineKeyboard = PROFILE_BUTTONS_NOTIF_ON as any;
       } else if (inputData.keyboard === "profile_notif_off") {
-        inlineKeyboard = PROFILE_BUTTONS_NOTIF_OFF;
+        inlineKeyboard = PROFILE_BUTTONS_NOTIF_OFF as any;
       } else if (inputData.keyboard === "categories") {
-        inlineKeyboard = CATEGORY_BUTTONS_LOCALIZED;
+        inlineKeyboard = CATEGORY_BUTTONS_LOCALIZED as any;
+      } else if (inputData.keyboard === "history") {
+        inlineKeyboard = [
+          [{ text: "1️⃣", callback_data: "repeat:1" }, { text: "2️⃣", callback_data: "repeat:2" }, { text: "3️⃣", callback_data: "repeat:3" }],
+          [{ text: "4️⃣", callback_data: "repeat:4" }, { text: "5️⃣", callback_data: "repeat:5" }],
+          [{ text: texts.backMenu, callback_data: "action:menu" }],
+        ] as any;
       } else if (inputData.keyboard === "support") {
-        inlineKeyboard = SUPPORT_BUTTONS;
+        inlineKeyboard = SUPPORT_BUTTONS as any;
       } else if (inputData.keyboard === "admin_menu") {
-        inlineKeyboard = ADMIN_MENU_BUTTONS;
+        inlineKeyboard = ADMIN_MENU_BUTTONS as any;
       } else if (inputData.keyboard === "admin_broadcast") {
-        inlineKeyboard = ADMIN_BROADCAST_BUTTONS;
+        inlineKeyboard = ADMIN_BROADCAST_BUTTONS as any;
       } else if (inputData.keyboard === "back") {
-        inlineKeyboard = BACK_BUTTON;
+        inlineKeyboard = BACK_BUTTON as any;
       }
 
       if (inputData.products && inputData.products.length > 0) {
