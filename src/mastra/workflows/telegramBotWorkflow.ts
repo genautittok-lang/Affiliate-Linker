@@ -1,8 +1,8 @@
 import { createStep, createWorkflow } from "../inngest";
 import { z } from "zod";
 import { db } from "../../db";
-import { users, searchHistory } from "../../db/schema";
-import { eq } from "drizzle-orm";
+import { users, favorites, searchHistory } from "../../db/schema";
+import { eq, desc } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
 const COUNTRY_BUTTONS = [
@@ -15,8 +15,8 @@ const COUNTRY_BUTTONS = [
 
 const MAIN_MENU_BUTTONS = [
   [{ text: "🔍 Пошук", callback_data: "action:search" }, { text: "🔥 ТОП-10", callback_data: "action:top10" }],
-  [{ text: "📂 Категорії", callback_data: "action:categories" }, { text: "🕐 Історія", callback_data: "action:history" }],
-  [{ text: "❤️ Обране", callback_data: "action:favorites" }, { text: "👤 Профіль", callback_data: "action:profile" }],
+  [{ text: "📂 Категорії", callback_data: "action:categories" }, { text: "❤️ Обране", callback_data: "action:favorites" }],
+  [{ text: "👤 Профіль", callback_data: "action:profile" }, { text: "💬 Підтримка", callback_data: "action:support" }],
 ];
 
 const BACK_BUTTON = [[{ text: "🔙 Меню", callback_data: "action:menu" }]];
@@ -24,88 +24,44 @@ const BACK_BUTTON = [[{ text: "🔙 Меню", callback_data: "action:menu" }]];
 const processMessageStep = createStep({
   id: "process-message",
   execute: async ({ context, mastra }) => {
-    // In Mastra Inngest, input data is directly in context.inputData
     const inputData = context?.inputData as any;
-    
-    if (!inputData) {
-      console.error("❌ [processMessageStep] No inputData found in context");
-      return { response: "Помилка отримання даних.", chatId: "unknown", keyboard: "main" };
-    }
+    if (!inputData) return { response: "Помилка", chatId: "unknown" };
 
     const message = inputData.message;
     const chatId = inputData.chatId;
     const telegramId = inputData.telegramId;
 
-    console.log(`📝 [processMessageStep] Processing for ${telegramId}: ${message}`);
-
     try {
       const [user] = await db.select().from(users).where(eq(users.telegramId, telegramId)).limit(1);
 
       if (message === "/start") {
-        if (!user) {
-          return { response: "Вітаю! Оберіть країну для показу правильних цін та доставки:", chatId, keyboard: "country" };
-        }
-        return { response: "З поверненням! Чим можу допомогти?", chatId, keyboard: "main" };
+        if (!user) return { response: "Вітаю! Оберіть країну:", chatId, keyboard: "country" };
+        return { response: "З поверненням! Оберіть дію:", chatId, keyboard: "main" };
       }
 
       if (inputData.isCallback && inputData.callbackData) {
         const [type, value] = inputData.callbackData.split(":");
         if (type === "country") {
-          if (user) {
-            await db.update(users).set({ country: value }).where(eq(users.telegramId, telegramId));
-          } else {
-            await db.insert(users).values({ 
-              telegramId, 
-              country: value, 
-              currency: "USD", 
-              language: "uk", 
-              referralCode: "BW" + Math.random().toString(36).substr(2,5).toUpperCase() 
-            });
-          }
-          return { response: "Готово! Тепер ви можете шукати товари або переглянути ТОП-10.", chatId, keyboard: "main" };
+          if (user) await db.update(users).set({ country: value }).where(eq(users.telegramId, telegramId));
+          else await db.insert(users).values({ telegramId, country: value, currency: "USD", language: "uk", referralCode: "BW" + Math.random().toString(36).substr(2,5).toUpperCase() });
+          return { response: "Готово! Можна шукати товари.", chatId, keyboard: "main" };
         }
-        if (value === "menu" || inputData.callbackData === "action:menu") {
-          return { response: "Головне меню:", chatId, keyboard: "main" };
-        }
+        if (value === "menu" || inputData.callbackData === "action:menu") return { response: "Головне меню:", chatId, keyboard: "main" };
         if (value === "top10" || inputData.callbackData === "action:top10") {
-          const res = await getTopProductsTool.execute({ 
-            context: { country: user?.country || "Ukraine", currency: user?.currency || "UAH", category: "" }, 
-            mastra, 
-            runtimeContext: {} as any 
-          });
+          const res = await getTopProductsTool.execute({ context: { country: user?.country || "Ukraine", currency: user?.currency || "UAH", category: "" }, mastra, runtimeContext: {} as any });
           return { response: "🔥 ТОП-10 актуальних товарів:", chatId, products: res.success ? res.products.slice(0, 5) : [] };
         }
-        if (value === "search" || inputData.callbackData === "action:search") {
-          return { response: "Введіть назву товару, який ви хочете знайти:", chatId, keyboard: "back" };
-        }
+        if (value === "search" || inputData.callbackData === "action:search") return { response: "Що ви шукаєте?", chatId, keyboard: "back" };
       }
 
       if (message && message.length > 1 && !message.startsWith("/")) {
-        const res = await searchProductsTool.execute({ 
-          context: { 
-            query: message, 
-            country: user?.country || "Ukraine", 
-            currency: user?.currency || "UAH", 
-            quality: "default", 
-            maxPrice: 0, 
-            freeShipping: false, 
-            onlyDiscount: false, 
-            preferCheaper: false 
-          }, 
-          mastra, 
-          runtimeContext: {} as any 
-        });
-        if (user) {
-          await db.insert(searchHistory).values({ userId: user.id, query: message, createdAt: new Date() });
-        }
-        return { response: `🔍 Результати пошуку за запитом "${message}":`, chatId, products: res.success ? res.products.slice(0, 5) : [] };
+        const res = await searchProductsTool.execute({ context: { query: message, country: user?.country || "Ukraine", currency: user?.currency || "UAH", quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: false, preferCheaper: false }, mastra, runtimeContext: {} as any });
+        if (user) await db.insert(searchHistory).values({ userId: user.id, query: message, createdAt: new Date() });
+        return { response: `🔍 Результати для "${message}":`, chatId, products: res.success ? res.products.slice(0, 5) : [] };
       }
 
-      return { response: "Оберіть дію в меню нижче 👇", chatId, keyboard: "main" };
-    } catch (e) { 
-      console.error("❌ [processMessageStep] Error:", e);
-      return { response: "Вибачте, сталася помилка при обробці вашого запиту.", chatId, keyboard: "main" }; 
-    }
+      return { response: "Виберіть дію:", chatId, keyboard: "main" };
+    } catch (e) { return { response: "Сталася помилка.", chatId, keyboard: "main" }; }
   }
 });
 
@@ -125,28 +81,13 @@ const sendToTelegramStep = createStep({
       if (inputData.products && inputData.products.length > 0) {
         for (const p of inputData.products) {
           const text = `<b>${p.title}</b>\n💰 Ціна: <b>${p.price} ${p.currency}</b>`;
-          const mk = { inline_keyboard: [[{ text: "🔗 Купити на AliExpress", url: p.affiliateUrl }]] };
-          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { 
-            method: "POST", 
-            headers: { "Content-Type": "application/json" }, 
-            body: JSON.stringify({ chat_id: inputData.chatId, text, parse_mode: "HTML", reply_markup: mk }) 
-          });
+          const mk = { inline_keyboard: [[{ text: "🔗 Купити", url: p.affiliateUrl }]] };
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: inputData.chatId, text, parse_mode: "HTML", reply_markup: mk }) });
         }
       } else {
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { 
-          method: "POST", 
-          headers: { "Content-Type": "application/json" }, 
-          body: JSON.stringify({ 
-            chat_id: inputData.chatId, 
-            text: inputData.response, 
-            parse_mode: "HTML", 
-            reply_markup: kb 
-          }) 
-        });
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: inputData.chatId, text: inputData.response, parse_mode: "HTML", reply_markup: kb }) });
       }
-    } catch (error) {
-      console.error("Error sending to Telegram:", error);
-    }
+    } catch (e) { console.error(e); }
   }
 });
 
