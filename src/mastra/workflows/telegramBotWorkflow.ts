@@ -23,43 +23,38 @@ const BACK_BUTTON = [[{ text: "🔙 Меню", callback_data: "action:menu" }]];
 
 const processMessageStep = createStep({
   id: "process-message",
-  inputSchema: z.any(),
-  outputSchema: z.any(),
   execute: async ({ context, mastra }: any) => {
+    // Correct way to access input data in Mastra Inngest steps
     const inputData = context?.inputData;
-    if (!inputData) return { response: "Помилка", chatId: "unknown" };
+    
+    if (!inputData) {
+      console.error("❌ [processMessageStep] No inputData in context");
+      return { response: "Помилка отримання даних.", chatId: "unknown", keyboard: "main" };
+    }
 
-    const message = inputData.message;
-    const chatId = inputData.chatId;
-    const telegramId = inputData.telegramId;
+    const { message, chatId, telegramId, isCallback, callbackData } = inputData;
 
     try {
       const [user] = await db.select().from(users).where(eq(users.telegramId, telegramId)).limit(1);
 
       if (message === "/start") {
         if (!user) return { response: "Вітаю! Оберіть країну:", chatId, keyboard: "country" };
-        return { response: "З поверненням! Оберіть дію:", chatId, keyboard: "main" };
+        return { response: "З поверненням!", chatId, keyboard: "main" };
       }
 
-      if (inputData.isCallback && inputData.callbackData) {
-        const [type, value] = inputData.callbackData.split(":");
+      if (isCallback && callbackData) {
+        const [type, value] = callbackData.split(":");
         if (type === "country") {
           if (user) await db.update(users).set({ country: value }).where(eq(users.telegramId, telegramId));
-          else await db.insert(users).values({ 
-            telegramId, 
-            country: value, 
-            currency: "USD", 
-            language: "uk", 
-            referralCode: "BW" + Math.random().toString(36).substr(2,5).toUpperCase() 
-          });
+          else await db.insert(users).values({ telegramId, country: value, currency: "USD", language: "uk", referralCode: "BW" + Math.random().toString(36).substr(2,5).toUpperCase() });
           return { response: "Готово! Можна шукати товари.", chatId, keyboard: "main" };
         }
-        if (value === "menu" || inputData.callbackData === "action:menu") return { response: "Головне меню:", chatId, keyboard: "main" };
-        if (value === "top10" || inputData.callbackData === "action:top10") {
+        if (value === "menu" || callbackData === "action:menu") return { response: "Головне меню:", chatId, keyboard: "main" };
+        if (value === "top10" || callbackData === "action:top10") {
           const res = await getTopProductsTool.execute({ context: { country: user?.country || "Ukraine", currency: user?.currency || "UAH", category: "" }, mastra, runtimeContext: {} as any });
-          return { response: "🔥 ТОП-10 актуальних товарів:", chatId, products: res.success ? res.products.slice(0, 5) : [] };
+          return { response: "🔥 ТОП-10:", chatId, products: res.success ? res.products.slice(0, 5) : [] };
         }
-        if (value === "search" || inputData.callbackData === "action:search") return { response: "Що ви шукаєте?", chatId, keyboard: "back" };
+        if (value === "search" || callbackData === "action:search") return { response: "Що ви шукаєте?", chatId, keyboard: "back" };
       }
 
       if (message && message.length > 1 && !message.startsWith("/")) {
@@ -68,16 +63,18 @@ const processMessageStep = createStep({
         return { response: `🔍 Результати для "${message}":`, chatId, products: res.success ? res.products.slice(0, 5) : [] };
       }
 
-      return { response: "Виберіть дію:", chatId, keyboard: "main" };
-    } catch (e) { return { response: "Сталася помилка.", chatId, keyboard: "main" }; }
+      return { response: "Оберіть дію:", chatId, keyboard: "main" };
+    } catch (e) { 
+      console.error("❌ [processMessageStep] Error:", e);
+      return { response: "Помилка", chatId, keyboard: "main" }; 
+    }
   }
 });
 
 const sendToTelegramStep = createStep({
   id: "send-to-telegram",
-  inputSchema: z.any(),
-  outputSchema: z.any(),
   execute: async ({ context }: any) => {
+    // In Mastra Inngest, step results are accessed via getStepResult
     const inputData = context.getStepResult("process-message");
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken || !inputData || inputData.chatId === "unknown") return;
@@ -97,14 +94,12 @@ const sendToTelegramStep = createStep({
       } else {
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: inputData.chatId, text: inputData.response, parse_mode: "HTML", reply_markup: kb }) });
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("❌ [sendToTelegramStep] Error:", e); }
   }
 });
 
 export const telegramBotWorkflow = createWorkflow({ 
   id: "telegram-bot-workflow",
-  inputSchema: z.any(),
-  outputSchema: z.any(),
 })
   .then(processMessageStep)
   .then(sendToTelegramStep)
