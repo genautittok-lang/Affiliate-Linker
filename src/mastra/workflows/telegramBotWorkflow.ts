@@ -25,8 +25,8 @@ const processMessageStep = createStep({
   id: "process-message",
   inputSchema: z.any(),
   outputSchema: z.any(),
-  execute: async ({ context, mastra }) => {
-    const inputData = (context as any)?.inputData;
+  execute: async ({ context, mastra }: any) => {
+    const inputData = context?.inputData;
     if (!inputData) return { response: "Помилка", chatId: "unknown" };
 
     const message = inputData.message;
@@ -77,8 +77,8 @@ const sendToTelegramStep = createStep({
   id: "send-to-telegram",
   inputSchema: z.any(),
   outputSchema: z.any(),
-  execute: async ({ context }) => {
-    const inputData = (context as any).getStepResult("process-message");
+  execute: async ({ context }: any) => {
+    const inputData = context.getStepResult("process-message");
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken || !inputData || inputData.chatId === "unknown") return;
 
