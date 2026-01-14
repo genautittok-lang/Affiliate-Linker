@@ -1,8 +1,8 @@
 import { createStep, createWorkflow } from "../inngest";
 import { z } from "zod";
 import { db } from "../../db";
-import { users, favorites, searchHistory } from "../../db/schema";
-import { eq, desc } from "drizzle-orm";
+import { users, searchHistory } from "../../db/schema";
+import { eq } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
 const COUNTRY_BUTTONS = [
@@ -23,8 +23,10 @@ const BACK_BUTTON = [[{ text: "🔙 Меню", callback_data: "action:menu" }]];
 
 const processMessageStep = createStep({
   id: "process-message",
+  inputSchema: z.any(),
+  outputSchema: z.any(),
   execute: async ({ context, mastra }) => {
-    const inputData = context?.inputData as any;
+    const inputData = (context as any)?.inputData;
     if (!inputData) return { response: "Помилка", chatId: "unknown" };
 
     const message = inputData.message;
@@ -43,7 +45,13 @@ const processMessageStep = createStep({
         const [type, value] = inputData.callbackData.split(":");
         if (type === "country") {
           if (user) await db.update(users).set({ country: value }).where(eq(users.telegramId, telegramId));
-          else await db.insert(users).values({ telegramId, country: value, currency: "USD", language: "uk", referralCode: "BW" + Math.random().toString(36).substr(2,5).toUpperCase() });
+          else await db.insert(users).values({ 
+            telegramId, 
+            country: value, 
+            currency: "USD", 
+            language: "uk", 
+            referralCode: "BW" + Math.random().toString(36).substr(2,5).toUpperCase() 
+          });
           return { response: "Готово! Можна шукати товари.", chatId, keyboard: "main" };
         }
         if (value === "menu" || inputData.callbackData === "action:menu") return { response: "Головне меню:", chatId, keyboard: "main" };
@@ -67,8 +75,10 @@ const processMessageStep = createStep({
 
 const sendToTelegramStep = createStep({
   id: "send-to-telegram",
+  inputSchema: z.any(),
+  outputSchema: z.any(),
   execute: async ({ context }) => {
-    const inputData = context.getStepResult<any>("process-message");
+    const inputData = (context as any).getStepResult("process-message");
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken || !inputData || inputData.chatId === "unknown") return;
 
@@ -91,7 +101,11 @@ const sendToTelegramStep = createStep({
   }
 });
 
-export const telegramBotWorkflow = createWorkflow({ id: "telegram-bot-workflow" })
+export const telegramBotWorkflow = createWorkflow({ 
+  id: "telegram-bot-workflow",
+  inputSchema: z.any(),
+  outputSchema: z.any(),
+})
   .then(processMessageStep)
   .then(sendToTelegramStep)
   .commit();
