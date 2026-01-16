@@ -1,11 +1,15 @@
 import { createStep, createWorkflow } from "../inngest";
 import { z } from "zod";
 import { db } from "../../db";
-import { users, searchHistory, favorites, referrals, coupons } from "../../db/schema";
+import { users, searchHistory, favorites, referrals, coupons, broadcasts } from "../../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
 const ADMIN_ID = "8210587392";
+
+function isAdmin(telegramId: string): boolean {
+  return telegramId === ADMIN_ID;
+}
 
 const LANG_TEXTS: Record<string, any> = {
   uk: {
@@ -41,6 +45,18 @@ const LANG_TEXTS: Record<string, any> = {
     countrySelected: "✅ Країну обрано! Тепер можна шукати.",
     langSelected: "✅ Мову змінено!",
     error: "❌ Помилка. Спробуй ще раз.",
+    adminPanel: "🔐 Адмін-панель",
+    adminStats: "📊 Статистика",
+    adminBroadcast: "📢 Розсилка",
+    adminUsers: "👥 Користувачі",
+    totalUsers: "👥 Всього: {count}",
+    activeToday: "📅 Сьогодні: {count}",
+    withNotif: "🔔 З сповіщеннями: {count}",
+    broadcastSent: "✅ Розсилку надіслано {count} користувачам",
+    broadcastPrompt: "Напиши текст для розсилки:",
+    history: "🕐 Історія",
+    addFav: "❤️ В обране",
+    favAddedShort: "❤️",
   },
   ru: {
     welcome: "Привет, {name}! 🛍️ Я помогу найти лучшие товары с AliExpress. Выбери страну:",
@@ -109,6 +125,18 @@ const LANG_TEXTS: Record<string, any> = {
     countrySelected: "✅ Country selected! Ready to search.",
     langSelected: "✅ Language changed!",
     error: "❌ Error. Please try again.",
+    adminPanel: "🔐 Admin Panel",
+    adminStats: "📊 Statistics",
+    adminBroadcast: "📢 Broadcast",
+    adminUsers: "👥 Users",
+    totalUsers: "👥 Total: {count}",
+    activeToday: "📅 Today: {count}",
+    withNotif: "🔔 With notifications: {count}",
+    broadcastSent: "✅ Broadcast sent to {count} users",
+    broadcastPrompt: "Write broadcast message:",
+    history: "🕐 History",
+    addFav: "❤️ Add to favorites",
+    favAddedShort: "❤️",
   },
   de: {
     welcome: "Hallo {name}! 🛍️ Ich helfe dir, die besten AliExpress-Angebote zu finden. Wähle dein Land:",
@@ -371,13 +399,18 @@ function getText(lang: string, key: string, params?: Record<string, any>): strin
   return text;
 }
 
-function getMainMenuButtons(lang: string) {
+function getMainMenuButtons(lang: string, telegramId?: string) {
   const t = LANG_TEXTS[lang] || LANG_TEXTS.en;
-  return [
+  const buttons = [
     [{ text: t.search, callback_data: "action:search" }, { text: t.top10, callback_data: "action:top10" }],
     [{ text: t.categories, callback_data: "action:categories" }, { text: t.favorites, callback_data: "action:favorites" }],
-    [{ text: t.profile, callback_data: "action:profile" }, { text: t.support, callback_data: "action:support" }],
+    [{ text: t.history || "🕐 History", callback_data: "action:history" }, { text: t.profile, callback_data: "action:profile" }],
+    [{ text: t.support, callback_data: "action:support" }],
   ];
+  if (telegramId && isAdmin(telegramId)) {
+    buttons.push([{ text: t.adminPanel || "🔐 Admin", callback_data: "action:admin" }]);
+  }
+  return buttons;
 }
 
 function getCategoryButtons(lang: string) {
@@ -433,12 +466,18 @@ const CATEGORY_KEYWORDS: Record<string, string> = {
 const responseSchema = z.object({
   response: z.string(),
   chatId: z.string(),
+  telegramId: z.string().optional(),
   keyboard: z.string().optional(),
   lang: z.string().optional(),
   dailyTopEnabled: z.boolean().optional(),
   products: z.array(z.any()).optional(),
   favorites: z.array(z.any()).optional(),
   searchHistory: z.array(z.any()).optional(),
+  adminStats: z.object({
+    total: z.number(),
+    today: z.number(),
+    withNotif: z.number(),
+  }).optional(),
 });
 
 const processMessageStep = createStep({
@@ -500,14 +539,14 @@ const processMessageStep = createStep({
             }
           }
 
-          return { response: t("welcome", { name: firstName }), chatId, keyboard: "country", lang: "uk" };
+          return { response: t("welcome", { name: firstName }), chatId, telegramId, keyboard: "country", lang: "uk" };
         }
 
-        return { response: t("welcomeBack", { name: user.firstName || firstName }), chatId, keyboard: "main", lang };
+        return { response: t("welcomeBack", { name: user.firstName || firstName }), chatId, telegramId, keyboard: "main", lang };
       }
 
       if (!user) {
-        return { response: getText("uk", "welcome", { name: firstName }), chatId, keyboard: "country", lang: "uk" };
+        return { response: getText("uk", "welcome", { name: firstName }), chatId, telegramId, keyboard: "country", lang: "uk" };
       }
 
       if (isCallback && callbackData) {
@@ -517,18 +556,18 @@ const processMessageStep = createStep({
           const currency = COUNTRY_CURRENCY[value] || "USD";
           const newLang = COUNTRY_LANG[value] || "en";
           await db.update(users).set({ country: value, currency, language: newLang }).where(eq(users.telegramId, telegramId));
-          return { response: getText(newLang, "countrySelected"), chatId, keyboard: "main", lang: newLang };
+          return { response: getText(newLang, "countrySelected"), chatId, telegramId, keyboard: "main", lang: newLang };
         }
 
         if (type === "lang") {
           await db.update(users).set({ language: value }).where(eq(users.telegramId, telegramId));
-          return { response: getText(value, "langSelected"), chatId, keyboard: "main", lang: value };
+          return { response: getText(value, "langSelected"), chatId, telegramId, keyboard: "main", lang: value };
         }
 
         if (type === "toggle") {
           const enabled = value === "daily_on";
           await db.update(users).set({ dailyTopEnabled: enabled }).where(eq(users.telegramId, telegramId));
-          return { response: enabled ? t("notifOn") : t("notifOff"), chatId, keyboard: "profile", lang, dailyTopEnabled: enabled };
+          return { response: enabled ? t("notifOn") : t("notifOff"), chatId, telegramId, keyboard: "profile", lang, dailyTopEnabled: enabled };
         }
 
         if (type === "cat") {
@@ -538,13 +577,38 @@ const processMessageStep = createStep({
             context: { query: keyword, country: user.country, currency: user.currency, quality: "default", maxPrice, freeShipping: false, onlyDiscount: false, preferCheaper: value === "under10" },
             mastra, runtimeContext: {} as any
           });
-          return { response: `📂 ${value.toUpperCase()}:`, chatId, products: res.success ? res.products.slice(0, 5) : [], lang };
+          return { response: `📂 ${value.toUpperCase()}:`, chatId, telegramId, products: res.success ? res.products.slice(0, 5) : [], lang };
         }
 
         if (type === "fav" && value === "remove") {
           const productId = callbackData.split(":")[2];
           await db.delete(favorites).where(and(eq(favorites.userId, user.id), eq(favorites.productId, productId)));
-          return { response: t("favRemoved"), chatId, keyboard: "main", lang };
+          return { response: t("favRemoved"), chatId, telegramId, keyboard: "main", lang };
+        }
+
+        if (type === "fav" && value === "add") {
+          const parts = callbackData.split(":");
+          const productId = parts[2];
+          const productTitle = decodeURIComponent(parts[3] || "Product");
+          const productUrl = decodeURIComponent(parts[4] || "");
+          const productImage = decodeURIComponent(parts[5] || "");
+          const price = parseFloat(parts[6] || "0");
+          const currency = parts[7] || user.currency;
+          
+          const existing = await db.select().from(favorites).where(and(eq(favorites.userId, user.id), eq(favorites.productId, productId))).limit(1);
+          if (existing.length === 0) {
+            await db.insert(favorites).values({
+              userId: user.id,
+              productId,
+              productTitle,
+              productUrl,
+              productImage,
+              originalPrice: price,
+              currentPrice: price,
+              currency,
+            });
+          }
+          return { response: t("favAdded"), chatId, telegramId, keyboard: "main", lang };
         }
 
         if (type === "repeat") {
@@ -556,42 +620,77 @@ const processMessageStep = createStep({
               context: { query, country: user.country, currency: user.currency, quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: false, preferCheaper: false },
               mastra, runtimeContext: {} as any
             });
-            return { response: `${t("resultsFor")} "${query}":`, chatId, products: res.success ? res.products.slice(0, 5) : [], lang };
+            return { response: `${t("resultsFor")} "${query}":`, chatId, telegramId, products: res.success ? res.products.slice(0, 5) : [], lang };
           }
         }
 
         if (type === "action") {
           switch (value) {
             case "menu":
-              return { response: t("mainMenu"), chatId, keyboard: "main", lang };
+              return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
 
             case "search":
-              return { response: t("searchPrompt"), chatId, keyboard: "back", lang };
+              return { response: t("searchPrompt"), chatId, telegramId, keyboard: "back", lang };
 
             case "top10":
               const res = await getTopProductsTool.execute({
                 context: { country: user.country, currency: user.currency, category: "" },
                 mastra, runtimeContext: {} as any
               });
-              return { response: t("topTitle"), chatId, products: res.success ? res.products.slice(0, 10) : [], lang };
+              return { response: t("topTitle"), chatId, telegramId, products: res.success ? res.products.slice(0, 10) : [], lang };
 
             case "categories":
-              return { response: t("categories"), chatId, keyboard: "categories", lang };
+              return { response: t("categories"), chatId, telegramId, keyboard: "categories", lang };
 
             case "favorites":
               const favs = await db.select().from(favorites).where(eq(favorites.userId, user.id)).orderBy(desc(favorites.createdAt)).limit(10);
               if (favs.length === 0) {
-                return { response: t("favEmpty"), chatId, keyboard: "main", lang };
+                return { response: t("favEmpty"), chatId, telegramId, keyboard: "main", lang };
               }
-              return { response: t("favorites"), chatId, favorites: favs, lang };
+              return { response: t("favorites"), chatId, telegramId, favorites: favs, lang };
 
             case "profile":
               const [currentUser] = await db.select().from(users).where(eq(users.telegramId, telegramId)).limit(1);
               const profileText = `${t("profileTitle")}\n\n${t("country")}: ${currentUser.country || "-"}\n${t("language")}: ${currentUser.language}\n${t("notifications")}: ${currentUser.dailyTopEnabled ? t("notifOn") : t("notifOff")}`;
-              return { response: profileText, chatId, keyboard: "profile", lang, dailyTopEnabled: currentUser.dailyTopEnabled };
+              return { response: profileText, chatId, telegramId, keyboard: "profile", lang, dailyTopEnabled: currentUser.dailyTopEnabled };
+
+            case "history":
+              const historyItems = await db.select().from(searchHistory).where(eq(searchHistory.userId, user.id)).orderBy(desc(searchHistory.createdAt)).limit(5);
+              if (historyItems.length === 0) {
+                return { response: t("noSearchHistory"), chatId, telegramId, keyboard: "main", lang };
+              }
+              return { response: t("recentSearches"), chatId, telegramId, searchHistory: historyItems, lang };
 
             case "support":
-              return { response: `${t("supportMsg")}\n\n@SYNTRAM`, chatId, keyboard: "support", lang };
+              return { response: `${t("supportMsg")}\n\n@SYNTRAM`, chatId, telegramId, keyboard: "support", lang };
+
+            case "admin":
+              if (!isAdmin(telegramId)) {
+                return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
+              }
+              const totalUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const activeToday = await db.select({ count: sql<number>`count(*)` }).from(users).where(sql`${users.createdAt} >= ${today}`);
+              const withNotif = await db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.dailyTopEnabled, true));
+              return {
+                response: `🔐 Адмін-панель\n\n${t("totalUsers", { count: totalUsers[0]?.count || 0 })}\n${t("activeToday", { count: activeToday[0]?.count || 0 })}\n${t("withNotif", { count: withNotif[0]?.count || 0 })}`,
+                chatId,
+                telegramId,
+                keyboard: "admin",
+                lang,
+                adminStats: {
+                  total: Number(totalUsers[0]?.count || 0),
+                  today: Number(activeToday[0]?.count || 0),
+                  withNotif: Number(withNotif[0]?.count || 0),
+                }
+              };
+
+            case "broadcast":
+              if (!isAdmin(telegramId)) {
+                return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
+              }
+              return { response: t("broadcastPrompt") || "Напиши текст розсилки:", chatId, telegramId, keyboard: "admin_broadcast", lang };
 
             case "change_country":
               return { response: t("changeCountry"), chatId, keyboard: "country", lang };
@@ -610,15 +709,13 @@ const processMessageStep = createStep({
               } else if (count < 5) {
                 refText += `\n\n${t("couponProgress", { left: 5 - count })}`;
               }
-              return { response: refText, chatId, keyboard: "main", lang };
+              return { response: refText, chatId, telegramId, keyboard: "main", lang };
 
-            case "history":
-              const history = await db.select().from(searchHistory).where(eq(searchHistory.userId, user.id)).orderBy(desc(searchHistory.createdAt)).limit(5);
-              if (history.length === 0) {
-                return { response: t("noSearchHistory"), chatId, keyboard: "main", lang };
-              }
-              return { response: t("recentSearches"), chatId, searchHistory: history, lang };
           }
+        }
+
+        if (type === "broadcast" && value === "send" && isAdmin(telegramId)) {
+          return { response: t("broadcastPrompt") || "Напиши текст для розсилки:", chatId, telegramId, keyboard: "admin_broadcast", lang };
         }
       }
 
@@ -629,15 +726,15 @@ const processMessageStep = createStep({
           mastra, runtimeContext: {} as any
         });
         if (res.products.length === 0) {
-          return { response: t("noResults"), chatId, keyboard: "main", lang };
+          return { response: t("noResults"), chatId, telegramId, keyboard: "main", lang };
         }
-        return { response: `${t("resultsFor")} "${message}":`, chatId, products: res.products.slice(0, 5), lang };
+        return { response: `${t("resultsFor")} "${message}":`, chatId, telegramId, products: res.products.slice(0, 5), lang };
       }
 
-      return { response: t("mainMenu"), chatId, keyboard: "main", lang };
+      return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
     } catch (e) {
       console.error("❌ [processMessageStep] Error:", e);
-      return { response: getText("uk", "error"), chatId, keyboard: "main", lang: "uk" };
+      return { response: getText("uk", "error"), chatId, telegramId, keyboard: "main", lang: "uk" };
     }
   }
 });
@@ -682,44 +779,112 @@ const sendToTelegramStep = createStep({
             [{ text: t.back, callback_data: "action:menu" }]
           ]};
           break;
+        case "admin":
+          kb = { inline_keyboard: [
+            [{ text: t.adminBroadcast || "📢 Broadcast", callback_data: "action:broadcast" }],
+            [{ text: t.adminStats || "📊 Stats", callback_data: "action:admin" }],
+            [{ text: t.back, callback_data: "action:menu" }]
+          ]};
+          break;
+        case "admin_broadcast":
+          kb = { inline_keyboard: [
+            [{ text: t.back, callback_data: "action:admin" }]
+          ]};
+          break;
       }
 
       if (data.products && data.products.length > 0) {
         for (const p of data.products) {
           const discount = p.discount > 0 ? ` (-${p.discount}%)` : "";
-          const text = `<b>${p.title}</b>\n\n💰 ${p.price} ${p.currency}${discount}\n⭐ ${p.rating?.toFixed(1) || "4.5"} | 📦 ${p.orders || 0} sold`;
-          const mk = { inline_keyboard: [[{ text: t.buy, url: p.affiliateUrl }]] };
-          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: data.chatId, text, parse_mode: "HTML", reply_markup: mk })
-          });
+          const caption = `<b>${p.title?.substring(0, 100)}</b>\n\n💰 ${p.price} ${p.currency}${discount}\n⭐ ${p.rating?.toFixed(1) || "4.5"} | 📦 ${p.orders || 0} sold`;
+          
+          const productId = p.id || p.productId || String(Date.now());
+          const encodedTitle = encodeURIComponent((p.title || "Product").substring(0, 50));
+          const encodedUrl = encodeURIComponent(p.affiliateUrl || p.productUrl || "");
+          const encodedImage = encodeURIComponent(p.imageUrl || "");
+          const favCallback = `fav:add:${productId}:${encodedTitle}:${encodedUrl}:${encodedImage}:${p.price}:${p.currency}`;
+          
+          const mk = { inline_keyboard: [
+            [{ text: t.buy, url: p.affiliateUrl || p.productUrl }],
+            [{ text: t.addFav || "❤️ Add", callback_data: favCallback.substring(0, 64) }]
+          ]};
+          
+          if (p.imageUrl) {
+            try {
+              await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                  chat_id: data.chatId, 
+                  photo: p.imageUrl, 
+                  caption, 
+                  parse_mode: "HTML", 
+                  reply_markup: mk 
+                })
+              });
+            } catch {
+              await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: data.chatId, text: caption, parse_mode: "HTML", reply_markup: mk })
+              });
+            }
+          } else {
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ chat_id: data.chatId, text: caption, parse_mode: "HTML", reply_markup: mk })
+            });
+          }
         }
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: data.chatId, text: t.mainMenu, reply_markup: { inline_keyboard: getMainMenuButtons(lang) } })
+          body: JSON.stringify({ chat_id: data.chatId, text: t.mainMenu, reply_markup: { inline_keyboard: getMainMenuButtons(lang, data.telegramId) } })
         });
         return { sent: true };
       }
 
       if (data.favorites && data.favorites.length > 0) {
         for (const f of data.favorites) {
-          const text = `❤️ <b>${f.productTitle}</b>\n💰 ${f.currentPrice} ${f.currency}`;
+          const caption = `❤️ <b>${f.productTitle}</b>\n💰 ${f.currentPrice} ${f.currency}`;
           const mk = { inline_keyboard: [
             [{ text: t.buy, url: f.productUrl }],
             [{ text: "❌ Remove", callback_data: `fav:remove:${f.productId}` }]
           ]};
-          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: data.chatId, text, parse_mode: "HTML", reply_markup: mk })
-          });
+          
+          if (f.productImage) {
+            try {
+              await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                  chat_id: data.chatId, 
+                  photo: f.productImage, 
+                  caption, 
+                  parse_mode: "HTML", 
+                  reply_markup: mk 
+                })
+              });
+            } catch {
+              await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: data.chatId, text: caption, parse_mode: "HTML", reply_markup: mk })
+              });
+            }
+          } else {
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ chat_id: data.chatId, text: caption, parse_mode: "HTML", reply_markup: mk })
+            });
+          }
         }
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: data.chatId, text: t.mainMenu, reply_markup: { inline_keyboard: getMainMenuButtons(lang) } })
+          body: JSON.stringify({ chat_id: data.chatId, text: t.mainMenu, reply_markup: { inline_keyboard: getMainMenuButtons(lang, data.telegramId) } })
         });
         return { sent: true };
       }
@@ -733,6 +898,10 @@ const sendToTelegramStep = createStep({
           body: JSON.stringify({ chat_id: data.chatId, text: data.response, reply_markup: { inline_keyboard: buttons } })
         });
         return { sent: true };
+      }
+
+      if (!kb && data.keyboard === "main") {
+        kb = { inline_keyboard: getMainMenuButtons(lang, data.telegramId) };
       }
 
       await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
