@@ -1161,9 +1161,8 @@ const processMessageStep = createStep({
 
         if (type === "country") {
           const currency = COUNTRY_CURRENCY[value] || "USD";
-          const newLang = COUNTRY_LANG[value] || "en";
-          await db.update(users).set({ country: value, currency, language: newLang }).where(eq(users.telegramId, telegramId));
-          return { response: getText(newLang, "countrySelected"), chatId, telegramId, keyboard: "main", lang: newLang };
+          await db.update(users).set({ country: value, currency }).where(eq(users.telegramId, telegramId));
+          return { response: getText(lang, "countrySelected"), chatId, telegramId, keyboard: "main", lang };
         }
 
         if (type === "lang") {
