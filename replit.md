@@ -19,9 +19,12 @@ Preferred communication style: Simple, everyday language.
 - Users can share `t.me/BuyWiseBot?start=CODE` links and see referral stats in profile
 
 ### Admin Panel & Support
-- Admin ID: 8210587392 (username @SYNTRAM)
+- Admin ID: 7820995179 (username @bogdan_OP24) - ONLY admin account
+- Admin access via /admin command ONLY (no button in main menu)
 - Tools: `isAdmin` checks admin status, `getSupportInfoTool` provides localized support templates
 - Support button links directly to admin with pre-filled message templates
+- Broadcast feature: Admin clicks "📢 Broadcast" → writes text → sends to all users
+- Database: `pendingAction` column tracks admin broadcast state
 
 ### Personalized Greetings
 - Welcome messages use `{name}` placeholder for personalization
@@ -125,3 +128,18 @@ Preferred communication style: Simple, everyday language.
 - `TELEGRAM_BOT_TOKEN`: Telegram bot authentication
 - `DATABASE_URL`: PostgreSQL connection string
 - `ALIEXPRESS_APP_KEY`, `ALIEXPRESS_APP_SECRET`, `ALIEXPRESS_TRACKING_ID`: AliExpress API credentials
+
+## Railway Deployment
+
+Project is ready for Railway hosting:
+- `Dockerfile`: Production-ready container config with health checks
+- `railway.json`: Railway-specific deployment configuration
+- `.env.example`: Template for all required environment variables
+- `RAILWAY_DEPLOY.md`: Step-by-step deployment instructions
+
+Deploy steps:
+1. Push code to GitHub
+2. Connect Railway to GitHub repo
+3. Add PostgreSQL database in Railway
+4. Set environment variables
+5. Set Telegram webhook to Railway URL

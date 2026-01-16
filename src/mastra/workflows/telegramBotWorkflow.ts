@@ -5,7 +5,7 @@ import { users, searchHistory, favorites, referrals, coupons, broadcasts } from 
 import { eq, desc, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
-const ADMIN_IDS = ["8210587392", "6141605098", "7820995179"];
+const ADMIN_IDS = ["7820995179"];
 
 function isAdmin(telegramId: string): boolean {
   return ADMIN_IDS.includes(telegramId);
@@ -574,16 +574,12 @@ function getText(lang: string, key: string, params?: Record<string, any>): strin
 
 function getMainMenuButtons(lang: string, telegramId?: string) {
   const t = LANG_TEXTS[lang] || LANG_TEXTS.en;
-  const buttons = [
+  return [
     [{ text: t.search, callback_data: "action:search" }, { text: t.top10, callback_data: "action:top10" }],
     [{ text: t.categories, callback_data: "action:categories" }, { text: t.favorites, callback_data: "action:favorites" }],
     [{ text: t.history || "🕐 History", callback_data: "action:history" }, { text: t.profile, callback_data: "action:profile" }],
     [{ text: t.support, callback_data: "action:support" }],
   ];
-  if (telegramId && isAdmin(telegramId)) {
-    buttons.push([{ text: t.adminPanel || "🔐 Admin", callback_data: "action:admin" }]);
-  }
-  return buttons;
 }
 
 function getCategoryButtons(lang: string) {
@@ -716,6 +712,30 @@ const processMessageStep = createStep({
         }
 
         return { response: t("welcomeBack", { name: user.firstName || firstName }), chatId, telegramId, keyboard: "main", lang };
+      }
+
+      if (message === "/admin") {
+        if (!isAdmin(telegramId)) {
+          return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
+        }
+        const totalUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayISO = today.toISOString();
+        const activeToday = await db.select({ count: sql<number>`count(*)` }).from(users).where(sql`${users.createdAt} >= ${todayISO}`);
+        const withNotif = await db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.dailyTopEnabled, true));
+        return {
+          response: `🔐 Адмін-панель\n\n${t("totalUsers", { count: totalUsers[0]?.count || 0 })}\n${t("activeToday", { count: activeToday[0]?.count || 0 })}\n${t("withNotif", { count: withNotif[0]?.count || 0 })}`,
+          chatId,
+          telegramId,
+          keyboard: "admin",
+          lang,
+          adminStats: {
+            total: Number(totalUsers[0]?.count || 0),
+            today: Number(activeToday[0]?.count || 0),
+            withNotif: Number(withNotif[0]?.count || 0),
+          }
+        };
       }
 
       if (!user) {
