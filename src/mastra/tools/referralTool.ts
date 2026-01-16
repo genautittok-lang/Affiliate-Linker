@@ -183,7 +183,7 @@ export const getReferralStatsTool = createTool({
         success: true,
         totalReferrals,
         referralCode,
-        referralLink: `https://t.me/BuyWiseBot?start=${referralCode}`,
+        referralLink: `https://t.me/BuyWises_bot?start=${referralCode}`,
       };
     } catch (error: any) {
       logger?.error("❌ [ReferralStats] Error", { error: error.message });

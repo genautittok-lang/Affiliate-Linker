@@ -754,7 +754,7 @@ const processMessageStep = createStep({
               const count = Number(refCount[0]?.count || 0);
               const [coupon] = await db.select().from(coupons).where(eq(coupons.userId, user.id)).limit(1);
               
-              let refText = `${t("referralTitle")}\n\nhttps://t.me/BuyWiseBot?start=${user.referralCode}\n\n${t("referralStats", { count })}`;
+              let refText = `${t("referralTitle")}\n\nhttps://t.me/BuyWises_bot?start=${user.referralCode}\n\n${t("referralStats", { count })}`;
               if (coupon) {
                 refText += `\n\n${t("yourCoupon", { code: coupon.code })}`;
               } else if (count < 5) {
