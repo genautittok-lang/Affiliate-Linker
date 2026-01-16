@@ -6,6 +6,11 @@ import { eq, desc, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
 const ADMIN_IDS = ["7820995179"];
+const MODERATOR_IDS = ["6141605098"];
+
+function isSuperAdmin(telegramId: string): boolean {
+  return ADMIN_IDS.includes(telegramId);
+}
 
 // Product cache for favorites - stores product data in DB for persistence across restarts
 interface CachedProduct {
@@ -80,7 +85,7 @@ async function generateUniqueReferralCode(telegramId: string): Promise<string> {
 }
 
 function isAdmin(telegramId: string): boolean {
-  return ADMIN_IDS.includes(telegramId);
+  return ADMIN_IDS.includes(telegramId) || MODERATOR_IDS.includes(telegramId);
 }
 
 const LANG_TEXTS: Record<string, any> = {
@@ -942,7 +947,7 @@ function getMainMenuButtons(lang: string, telegramId?: string) {
     [{ text: t.categories, callback_data: "action:categories" }, { text: t.favorites, callback_data: "action:favorites" }],
     [{ text: t.hotDeals || "🔥 Hot Deals", callback_data: "action:hot_deals" }, { text: t.leaderboard || "🏆 Top", callback_data: "action:leaderboard" }],
     [{ text: t.history || "🕐 History", callback_data: "action:history" }, { text: t.profile, callback_data: "action:profile" }],
-    [{ text: t.support, callback_data: "action:support" }],
+    [{ text: t.orderAd || "📢 Реклама", callback_data: "action:order_ad" }, { text: t.support, callback_data: "action:support" }],
   ];
 }
 
@@ -1366,6 +1371,22 @@ ${t("notifications")}: ${currentUser.dailyTopEnabled ? t("notifOn") : t("notifOf
             case "support":
               return { response: `${t("supportMsg")}\n\n@bogdan_OP24`, chatId, telegramId, keyboard: "support", lang };
 
+            case "order_ad":
+              const orderAdText = t("orderAdInfo") || `📢 <b>Замовити рекламу</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Розмістіть рекламу вашого товару чи магазину!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>Наші можливості:</b>
+┣ 👥 Активна аудиторія покупців
+┣ 📱 Просування в боті
+┣ 📢 Розсилка по базі користувачів
+┗ 🎯 Таргетована реклама
+
+💬 <b>Для замовлення зв'яжіться:</b>`;
+              return { response: orderAdText, chatId, telegramId, keyboard: "order_ad", lang };
+
             case "admin":
               if (!isAdmin(telegramId)) {
                 return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
@@ -1691,11 +1712,17 @@ const sendToTelegramStep = createStep({
           const supportButtons: any[][] = [
             [{ text: "💬 @bogdan_OP24", url: "https://t.me/bogdan_OP24" }]
           ];
-          if (data.telegramId && isAdmin(data.telegramId)) {
+          if (data.telegramId && isSuperAdmin(data.telegramId)) {
             supportButtons.push([{ text: "🔐 Адмін-панель", callback_data: "action:admin" }]);
           }
           supportButtons.push([{ text: t.back, callback_data: "action:menu" }]);
           kb = { inline_keyboard: supportButtons };
+          break;
+        case "order_ad":
+          kb = { inline_keyboard: [
+            [{ text: "💬 @bogdan_OP24", url: "https://t.me/bogdan_OP24" }],
+            [{ text: t.back, callback_data: "action:menu" }]
+          ]};
           break;
         case "admin":
           kb = { inline_keyboard: [
