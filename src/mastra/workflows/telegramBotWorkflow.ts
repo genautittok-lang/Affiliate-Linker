@@ -147,12 +147,25 @@ const LANG_TEXTS: Record<string, any> = {
     changeCountry: "🌍 Изменить страну", changeLang: "🌐 Изменить язык",
     notifOn: "🔔 Включено", notifOff: "🔕 Выключено",
     enableNotif: "🔔 Включить", disableNotif: "🔕 Выключить",
-    referral: "👥 Пригласить друзей",
-    referralTitle: "🎁 Твоя реферальная ссылка:",
-    referralStats: "👥 Приглашено: {count} друзей",
-    couponEarned: "🎉 Ты получил купон на скидку!",
-    couponProgress: "Ещё {left} друзей до купона",
-    yourCoupon: "🏷️ Твой купон: {code}",
+    referral: "🎁 Пригласить друзей",
+    referralTitle: `🎁 <b>РЕФЕРАЛЬНАЯ ПРОГРАММА</b> 🎁
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Пригласи 5 друзей — получи КУПОН!</b>
+━━━━━━━━━━━━━━━━━
+
+📲 <b>Твоя ссылка:</b>`,
+    referralStats: `
+━━━━━━━━━━━━━━━━━
+👥 <b>Приглашено:</b> {count} друзей`,
+    couponEarned: `🎊 <b>ПОЗДРАВЛЯЕМ!</b> 🎊
+
+Ты пригласил 5 друзей и получил купон!`,
+    couponProgress: `
+📊 <b>Прогресс:</b> {left} друзей до купона`,
+    yourCoupon: `
+🏷️ <b>ТВОЙ КУПОН:</b>
+<code>{code}</code>`,
     supportMsg: "💬 Свяжись с поддержкой:",
     recentSearches: "🕐 Недавние поиски:",
     noSearchHistory: "История поиска пуста",
@@ -209,12 +222,25 @@ Choose what interests you:
     changeCountry: "🌍 Change Country", changeLang: "🌐 Change Language",
     notifOn: "🔔 On", notifOff: "🔕 Off",
     enableNotif: "🔔 Enable", disableNotif: "🔕 Disable",
-    referral: "👥 Invite Friends",
-    referralTitle: "🎁 Your referral link:",
-    referralStats: "👥 Invited: {count} friends",
-    couponEarned: "🎉 You earned a discount coupon!",
-    couponProgress: "{left} more friends for coupon",
-    yourCoupon: "🏷️ Your coupon: {code}",
+    referral: "🎁 Invite Friends",
+    referralTitle: `🎁 <b>REFERRAL PROGRAM</b> 🎁
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Invite 5 friends — get a COUPON!</b>
+━━━━━━━━━━━━━━━━━
+
+📲 <b>Your link:</b>`,
+    referralStats: `
+━━━━━━━━━━━━━━━━━
+👥 <b>Invited:</b> {count} friends`,
+    couponEarned: `🎊 <b>CONGRATULATIONS!</b> 🎊
+
+You invited 5 friends and earned a coupon!`,
+    couponProgress: `
+📊 <b>Progress:</b> {left} more friends for coupon`,
+    yourCoupon: `
+🏷️ <b>YOUR COUPON:</b>
+<code>{code}</code>`,
     supportMsg: "💬 Contact support:",
     recentSearches: "🕐 Recent searches:",
     noSearchHistory: "No search history",
