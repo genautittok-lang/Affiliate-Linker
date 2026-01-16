@@ -90,6 +90,13 @@ Preferred communication style: Simple, everyday language.
 - **messageId Tracking**: Callbacks now include messageId for in-place message updates
 - **Localized "More" Button**: Translations in all 10 languages (Ще/Ещё/More/Mehr/Więcej/Plus/Más/Altro/Další/Mai mult)
 
+### Bug Fixes & Improvements (January 2026)
+- **Unique Referral Codes**: `generateUniqueReferralCode()` async function with DB collision check and 5-retry logic
+- **DB Constraint**: Unique constraint on `users.referralCode` column to prevent duplicates
+- **Product Cache Table**: New `product_cache` table stores product data for favorites (productId, title, url, image, price, currency)
+- **Favorites Fix**: Short callback format `fav:add:{productId}` avoids Telegram 64-byte limit; products fetched from cache
+- **Admin Panel**: Enhanced with "Users by Country" (flag emojis), "Broadcast History" (last 10), improved button layout
+
 ## System Architecture
 
 ### Core Framework
