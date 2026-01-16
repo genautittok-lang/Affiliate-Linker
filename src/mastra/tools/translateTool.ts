@@ -103,14 +103,31 @@ export async function translateProductQuery(query: string): Promise<string> {
       messages: [
         {
           role: "system",
-          content: `Translate to English product keywords for AliExpress. Output ONLY keywords, 2-4 words. Examples: "кофта" -> "sweater hoodie women", "Kopfhörer" -> "headphones wireless"`,
+          content: `You are a product search translator. Translate the given text to English product keywords for AliExpress search.
+
+RULES:
+- Output ONLY 2-5 English keywords, nothing else
+- Use common product terms that work on AliExpress
+- Include the main product type and relevant adjective/category
+
+EXAMPLES:
+"штани" -> "pants trousers men women"
+"кофта" -> "sweater hoodie pullover"
+"навушники" -> "headphones wireless earbuds"
+"телефон" -> "smartphone phone mobile"
+"сумка" -> "bag handbag women"
+"взуття" -> "shoes footwear sneakers"
+"годинник" -> "watch smartwatch men"
+"куртка" -> "jacket coat winter"
+
+Output the English keywords only, no punctuation, no explanations.`,
         },
         { role: "user", content: query },
       ],
       maxTokens: 30,
     });
     
-    const translated = result.text.trim().toLowerCase();
+    const translated = result.text.trim().toLowerCase().replace(/[^a-z0-9\s]/g, '');
     translationCache.set(cacheKey, translated);
     console.log(`🌐 [Translate] "${query}" -> "${translated}"`);
     return translated;
