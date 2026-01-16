@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   dailyTopEnabled: boolean("daily_top_enabled").notNull().default(true),
   referralCode: text("referral_code"),
   referredBy: integer("referred_by"),
+  pendingAction: text("pending_action"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });

@@ -864,6 +864,7 @@ const processMessageStep = createStep({
               if (!isAdmin(telegramId)) {
                 return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
               }
+              await db.update(users).set({ pendingAction: "broadcast" }).where(eq(users.telegramId, telegramId));
               return { response: t("broadcastPrompt") || "Напиши текст розсилки:", chatId, telegramId, keyboard: "admin_broadcast", lang };
 
             case "change_country":
@@ -894,6 +895,25 @@ const processMessageStep = createStep({
       }
 
       if (message && message.length > 1 && !message.startsWith("/")) {
+        if (user.pendingAction === "broadcast" && isAdmin(telegramId)) {
+          await db.update(users).set({ pendingAction: null }).where(eq(users.telegramId, telegramId));
+          const allUsers = await db.select().from(users);
+          const botToken = process.env.TELEGRAM_BOT_TOKEN;
+          let sentCount = 0;
+          for (const u of allUsers) {
+            try {
+              await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: u.telegramId, text: message, parse_mode: "HTML" })
+              });
+              sentCount++;
+            } catch {}
+          }
+          await db.insert(broadcasts).values({ adminId: telegramId, message, sentCount, sentAt: new Date() });
+          return { response: t("broadcastSent", { count: sentCount }), chatId, telegramId, keyboard: "admin", lang };
+        }
+
         await db.insert(searchHistory).values({ userId: user.id, query: message, createdAt: new Date() });
         const res = await searchProductsTool.execute({
           context: { query: message, country: user.country, currency: user.currency, quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: false, preferCheaper: false },
