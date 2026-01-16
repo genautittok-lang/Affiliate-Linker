@@ -163,6 +163,20 @@ const LANG_TEXTS: Record<string, any> = {
 🏷️ <b>ТВІЙ КУПОН:</b>
 <code>{code}</code>`,
     supportMsg: "💬 Зв'яжись з підтримкою:",
+    orderAd: "📢 Реклама",
+    orderAdInfo: `📢 <b>Замовити рекламу</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Розмістіть рекламу вашого товару чи магазину!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>Наші можливості:</b>
+┣ 👥 Активна аудиторія покупців
+┣ 📱 Просування в боті
+┣ 📢 Розсилка по базі користувачів
+┗ 🎯 Таргетована реклама
+
+💬 <b>Для замовлення зв'яжіться:</b>`,
     recentSearches: "🕐 Нещодавні пошуки:",
     noSearchHistory: "Історія пошуку порожня",
     topTitle: "🔥 ТОП-10 товарів сьогодні:",
@@ -310,6 +324,20 @@ const LANG_TEXTS: Record<string, any> = {
 🏷️ <b>ТВОЙ КУПОН:</b>
 <code>{code}</code>`,
     supportMsg: "💬 Свяжись с поддержкой:",
+    orderAd: "📢 Реклама",
+    orderAdInfo: `📢 <b>Заказать рекламу</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Разместите рекламу вашего товара или магазина!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>Наши возможности:</b>
+┣ 👥 Активная аудитория покупателей
+┣ 📱 Продвижение в боте
+┣ 📢 Рассылка по базе пользователей
+┗ 🎯 Таргетированная реклама
+
+💬 <b>Для заказа свяжитесь:</b>`,
     recentSearches: "🕐 Недавние поиски:",
     noSearchHistory: "История поиска пуста",
     topTitle: "🔥 ТОП-10 товаров сегодня:",
@@ -445,6 +473,20 @@ You invited 5 friends and earned a coupon!`,
 🏷️ <b>YOUR COUPON:</b>
 <code>{code}</code>`,
     supportMsg: "💬 Contact support:",
+    orderAd: "📢 Advertise",
+    orderAdInfo: `📢 <b>Order Advertising</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Promote your product or store!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>What we offer:</b>
+┣ 👥 Active buyer audience
+┣ 📱 Bot promotion
+┣ 📢 Mass mailing to users
+┗ 🎯 Targeted advertising
+
+💬 <b>To order, contact:</b>`,
     recentSearches: "🕐 Recent searches:",
     noSearchHistory: "No search history",
     topTitle: "🔥 TOP-10 deals today:",
@@ -545,6 +587,20 @@ Products with 30%+ discount!`,
     couponProgress: "Noch {left} Freunde bis zum Coupon",
     yourCoupon: "🏷️ Dein Coupon: {code}",
     supportMsg: "💬 Kontaktiere Support:",
+    orderAd: "📢 Werbung",
+    orderAdInfo: `📢 <b>Werbung bestellen</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Werben Sie für Ihr Produkt oder Ihren Shop!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>Unsere Möglichkeiten:</b>
+┣ 👥 Aktive Käufer-Zielgruppe
+┣ 📱 Bot-Werbung
+┣ 📢 Massen-Mailing an Nutzer
+┗ 🎯 Zielgerichtete Werbung
+
+💬 <b>Zur Bestellung kontaktieren:</b>`,
     recentSearches: "🕐 Letzte Suchen:",
     noSearchHistory: "Kein Suchverlauf",
     topTitle: "🔥 TOP-10 Angebote heute:",
@@ -602,6 +658,20 @@ Products with 30%+ discount!`,
     couponProgress: "Jeszcze {left} znajomych do kuponu",
     yourCoupon: "🏷️ Twój kupon: {code}",
     supportMsg: "💬 Skontaktuj się z pomocą:",
+    orderAd: "📢 Reklama",
+    orderAdInfo: `📢 <b>Zamów reklamę</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Promuj swój produkt lub sklep!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>Nasze możliwości:</b>
+┣ 👥 Aktywna publiczność kupujących
+┣ 📱 Promocja w bocie
+┣ 📢 Masowa wysyłka do użytkowników
+┗ 🎯 Reklama targetowana
+
+💬 <b>Aby zamówić, skontaktuj się:</b>`,
     recentSearches: "🕐 Ostatnie wyszukiwania:",
     noSearchHistory: "Brak historii wyszukiwania",
     topTitle: "🔥 TOP-10 ofert dzisiaj:",
@@ -659,6 +729,20 @@ Products with 30%+ discount!`,
     couponProgress: "Encore {left} amis pour le coupon",
     yourCoupon: "🏷️ Ton coupon: {code}",
     supportMsg: "💬 Contacte le support:",
+    orderAd: "📢 Publicité",
+    orderAdInfo: `📢 <b>Commander de la publicité</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Faites la promotion de votre produit ou boutique!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>Nos possibilités:</b>
+┣ 👥 Audience active d'acheteurs
+┣ 📱 Promotion dans le bot
+┣ 📢 Envoi massif aux utilisateurs
+┗ 🎯 Publicité ciblée
+
+💬 <b>Pour commander, contactez:</b>`,
     recentSearches: "🕐 Recherches récentes:",
     noSearchHistory: "Pas d'historique",
     topTitle: "🔥 TOP-10 offres du jour:",
@@ -716,6 +800,20 @@ Products with 30%+ discount!`,
     couponProgress: "Faltan {left} amigos para el cupón",
     yourCoupon: "🏷️ Tu cupón: {code}",
     supportMsg: "💬 Contacta soporte:",
+    orderAd: "📢 Publicidad",
+    orderAdInfo: `📢 <b>Pedir publicidad</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>¡Promociona tu producto o tienda!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>Nuestras posibilidades:</b>
+┣ 👥 Audiencia activa de compradores
+┣ 📱 Promoción en el bot
+┣ 📢 Envío masivo a usuarios
+┗ 🎯 Publicidad dirigida
+
+💬 <b>Para pedir, contacta:</b>`,
     recentSearches: "🕐 Búsquedas recientes:",
     noSearchHistory: "Sin historial",
     topTitle: "🔥 TOP-10 ofertas de hoy:",
@@ -773,6 +871,20 @@ Products with 30%+ discount!`,
     couponProgress: "Altri {left} amici per il coupon",
     yourCoupon: "🏷️ Il tuo coupon: {code}",
     supportMsg: "💬 Contatta supporto:",
+    orderAd: "📢 Pubblicità",
+    orderAdInfo: `📢 <b>Ordina pubblicità</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Promuovi il tuo prodotto o negozio!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>Le nostre possibilità:</b>
+┣ 👥 Pubblico attivo di acquirenti
+┣ 📱 Promozione nel bot
+┣ 📢 Invio massivo agli utenti
+┗ 🎯 Pubblicità mirata
+
+💬 <b>Per ordinare, contatta:</b>`,
     recentSearches: "🕐 Ricerche recenti:",
     noSearchHistory: "Nessuna cronologia",
     topTitle: "🔥 TOP-10 offerte di oggi:",
@@ -830,6 +942,20 @@ Products with 30%+ discount!`,
     couponProgress: "Ještě {left} přátel do kuponu",
     yourCoupon: "🏷️ Tvůj kupon: {code}",
     supportMsg: "💬 Kontaktuj podporu:",
+    orderAd: "📢 Reklama",
+    orderAdInfo: `📢 <b>Objednat reklamu</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Propagujte svůj produkt nebo obchod!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>Naše možnosti:</b>
+┣ 👥 Aktivní publikum kupujících
+┣ 📱 Propagace v botu
+┣ 📢 Hromadné zasílání uživatelům
+┗ 🎯 Cílená reklama
+
+💬 <b>Pro objednání kontaktujte:</b>`,
     recentSearches: "🕐 Poslední hledání:",
     noSearchHistory: "Žádná historie",
     topTitle: "🔥 TOP-10 nabídek dnes:",
@@ -887,6 +1013,20 @@ Products with 30%+ discount!`,
     couponProgress: "Încă {left} prieteni pentru cupon",
     yourCoupon: "🏷️ Cuponul tău: {code}",
     supportMsg: "💬 Contactează suportul:",
+    orderAd: "📢 Publicitate",
+    orderAdInfo: `📢 <b>Comandă publicitate</b>
+
+━━━━━━━━━━━━━━━━━
+💰 <b>Promovează-ți produsul sau magazinul!</b>
+━━━━━━━━━━━━━━━━━
+
+📊 <b>Posibilitățile noastre:</b>
+┣ 👥 Audiență activă de cumpărători
+┣ 📱 Promovare în bot
+┣ 📢 Trimitere în masă către utilizatori
+┗ 🎯 Publicitate țintită
+
+💬 <b>Pentru a comanda, contactează:</b>`,
     recentSearches: "🕐 Căutări recente:",
     noSearchHistory: "Fără istoric",
     topTitle: "🔥 TOP-10 oferte azi:",
