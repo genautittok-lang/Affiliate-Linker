@@ -1,30 +1,33 @@
-# Use Node.js 20 as base
 FROM node:20-slim
 
-# Install OpenSSL and curl for Prisma/Drizzle and healthchecks
-RUN apt-get update && apt-get install -y openssl ca-certificates curl && rm -rf /var/lib/apt/lists/*
+# Встановлюємо все необхідне, включно з Python
+RUN apt-get update && apt-get install -y \
+  openssl \
+  ca-certificates \
+  curl \
+  python3 \
+  python-is-python3 \
+  && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Робоча директорія
 WORKDIR /app
 
-# Copy package files
+# Копіюємо залежності
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy source code
+# Копіюємо весь код
 COPY . .
 
-# Build the project
+# Білд Mastra
 RUN npm run build
 
-# Expose port (Railway will set PORT env var)
+# Порт (Mastra зазвичай 5000)
 EXPOSE 5000
 
-# Health check - use root endpoint
+# Healthcheck (не обовʼязково, але корисно)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD curl -f http://localhost:5000/ || exit 1
 
-# Start command
+# Старт сервера
 CMD ["npx", "mastra", "start"]
