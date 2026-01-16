@@ -951,6 +951,7 @@ const responseSchema = z.object({
   searchHistory: z.array(z.any()).optional(),
   searchQuery: z.string().optional(),
   searchPage: z.number().optional(),
+  hasMore: z.boolean().optional(),
   adminStats: z.object({
     total: z.number(),
     today: z.number(),
@@ -1111,7 +1112,8 @@ const processMessageStep = createStep({
             context: { query: keyword, country: user.country, currency: user.currency, quality: "default", maxPrice, freeShipping: false, onlyDiscount: false, preferCheaper: value === "under10" },
             mastra, runtimeContext: {} as any
           });
-          return { response: `📂 ${value.toUpperCase()}:`, chatId, telegramId, products: res.success ? res.products.slice(0, 5) : [], lang };
+          const allProducts = res.success ? res.products : [];
+          return { response: `📂 ${value.toUpperCase()}:`, chatId, telegramId, messageId, products: allProducts.slice(0, 5), lang, searchQuery: `cat:${value}`, searchPage: 1, hasMore: allProducts.length > 5 };
         }
 
         if (type === "fav" && value === "remove") {
@@ -1165,7 +1167,61 @@ const processMessageStep = createStep({
               context: { query, country: user.country, currency: user.currency, quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: false, preferCheaper: false },
               mastra, runtimeContext: {} as any
             });
-            return { response: `${t("resultsFor")} "${query}":`, chatId, telegramId, products: res.success ? res.products.slice(0, 5) : [], lang };
+            const repeatProducts = res.success ? res.products : [];
+            return { response: `${t("resultsFor")} "${query}":`, chatId, telegramId, messageId, products: repeatProducts.slice(0, 5), lang, searchQuery: query, searchPage: 1, hasMore: repeatProducts.length > 5 };
+          }
+        }
+
+        if (type === "more") {
+          const parts = callbackData.split(":");
+          const moreType = parts[1];
+          const page = parseInt(parts[2]) || 1;
+          const query = decodeURIComponent(parts[3] || "");
+          
+          if (moreType === "search" && query) {
+            const res = await searchProductsTool.execute({
+              context: { query, country: user.country, currency: user.currency, quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: false, preferCheaper: false },
+              mastra, runtimeContext: {} as any
+            });
+            const allProducts = res.success ? res.products : [];
+            const start = page * 5;
+            const pageProducts = allProducts.slice(start, start + 5);
+            return { response: `${t("resultsFor")} "${query}" (${page + 1}):`, chatId, telegramId, messageId, products: pageProducts, lang, searchQuery: query, searchPage: page + 1, hasMore: allProducts.length > start + 5 };
+          }
+          
+          if (moreType === "cat") {
+            const keyword = CATEGORY_KEYWORDS[query] || "trending";
+            const maxPrice = query === "under10" ? 10 : 0;
+            const res = await searchProductsTool.execute({
+              context: { query: keyword, country: user.country, currency: user.currency, quality: "default", maxPrice, freeShipping: false, onlyDiscount: false, preferCheaper: query === "under10" },
+              mastra, runtimeContext: {} as any
+            });
+            const allProducts = res.success ? res.products : [];
+            const start = page * 5;
+            const pageProducts = allProducts.slice(start, start + 5);
+            return { response: `📂 ${query.toUpperCase()} (${page + 1}):`, chatId, telegramId, messageId, products: pageProducts, lang, searchQuery: `cat:${query}`, searchPage: page + 1, hasMore: allProducts.length > start + 5 };
+          }
+
+          if (moreType === "top") {
+            const res = await getTopProductsTool.execute({
+              context: { country: user.country, currency: user.currency, category: "" },
+              mastra, runtimeContext: {} as any
+            });
+            const allProducts = res.success ? res.products : [];
+            const start = page * 10;
+            const pageProducts = allProducts.slice(start, start + 10);
+            return { response: `${t("topTitle")} (${page + 1}):`, chatId, telegramId, messageId, products: pageProducts, lang, searchQuery: "top", searchPage: page + 1, hasMore: allProducts.length > start + 10 };
+          }
+
+          if (moreType === "hot") {
+            const hotRes = await searchProductsTool.execute({
+              context: { query: "deals discount sale", country: user.country, currency: user.currency, quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: true, preferCheaper: false },
+              mastra, runtimeContext: {} as any
+            });
+            const allProducts = hotRes.products || [];
+            const start = page * 5;
+            const pageProducts = allProducts.slice(start, start + 5);
+            return { response: `${t("hotDealsTitle")} (${page + 1}):`, chatId, telegramId, messageId, products: pageProducts, lang, searchQuery: "hot", searchPage: page + 1, hasMore: allProducts.length > start + 5 };
           }
         }
 
@@ -1178,11 +1234,12 @@ const processMessageStep = createStep({
               return { response: t("searchPrompt"), chatId, telegramId, keyboard: "back", lang };
 
             case "top10":
-              const res = await getTopProductsTool.execute({
+              const topRes = await getTopProductsTool.execute({
                 context: { country: user.country, currency: user.currency, category: "" },
                 mastra, runtimeContext: {} as any
               });
-              return { response: t("topTitle"), chatId, telegramId, products: res.success ? res.products.slice(0, 10) : [], lang };
+              const topProducts = topRes.success ? topRes.products : [];
+              return { response: t("topTitle"), chatId, telegramId, messageId, products: topProducts.slice(0, 10), lang, searchQuery: "top", searchPage: 1, hasMore: topProducts.length > 10 };
 
             case "categories":
               return { response: t("categories"), chatId, telegramId, keyboard: "categories", lang };
@@ -1374,17 +1431,18 @@ ${t("statsStreak")} ${user.streak || 0} ${t("statsDays")}`;
               return { response: statsText, chatId, telegramId, keyboard: "profile", lang };
 
             case "hot_deals":
-              const hotRes = await searchProductsTool.execute({
+              const hotDealsRes = await searchProductsTool.execute({
                 context: { query: "hot sale discount", country: user.country, currency: user.currency, quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: true, preferCheaper: false },
                 mastra, runtimeContext: {} as any
               });
               
               await db.insert(clickAnalytics).values({ userId: user.id, action: "view_hot_deals", createdAt: new Date() });
               
-              if (!hotRes.success || hotRes.products.length === 0) {
+              if (!hotDealsRes.success || hotDealsRes.products.length === 0) {
                 return { response: t("hotDealsTitle") + "\n\n😔 Зараз немає гарячих знижок", chatId, telegramId, keyboard: "main", lang };
               }
-              return { response: t("hotDealsTitle"), chatId, telegramId, products: hotRes.products.slice(0, 5), lang };
+              const hotProducts = hotDealsRes.products;
+              return { response: t("hotDealsTitle"), chatId, telegramId, messageId, products: hotProducts.slice(0, 5), lang, searchQuery: "hot", searchPage: 1, hasMore: hotProducts.length > 5 };
 
           }
         }
@@ -1440,14 +1498,15 @@ ${t("statsStreak")} ${user.streak || 0} ${t("statsDays")}`;
           }
         }
         
-        const res = await searchProductsTool.execute({
+        const searchRes = await searchProductsTool.execute({
           context: { query: message, country: user.country, currency: user.currency, quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: false, preferCheaper: false },
           mastra, runtimeContext: {} as any
         });
-        if (res.products.length === 0) {
+        if (searchRes.products.length === 0) {
           return { response: t("noResults"), chatId, telegramId, keyboard: "main", lang };
         }
-        return { response: `${t("resultsFor")} "${message}":`, chatId, telegramId, products: res.products.slice(0, 5), lang };
+        const allSearchProducts = searchRes.products;
+        return { response: `${t("resultsFor")} "${message}":`, chatId, telegramId, products: allSearchProducts.slice(0, 5), lang, searchQuery: message, searchPage: 1, hasMore: allSearchProducts.length > 5 };
       }
 
       return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
@@ -1565,10 +1624,29 @@ const sendToTelegramStep = createStep({
             });
           }
         }
+        
+        const menuButtons: any[] = [];
+        if (data.hasMore && data.searchQuery && data.searchPage) {
+          let moreType = "search";
+          let moreQuery = encodeURIComponent(data.searchQuery);
+          if (data.searchQuery === "top") {
+            moreType = "top";
+            moreQuery = "";
+          } else if (data.searchQuery === "hot") {
+            moreType = "hot";
+            moreQuery = "";
+          } else if (data.searchQuery.startsWith("cat:")) {
+            moreType = "cat";
+            moreQuery = data.searchQuery.replace("cat:", "");
+          }
+          menuButtons.push([{ text: t.more || "➕ More", callback_data: `more:${moreType}:${data.searchPage}:${moreQuery}` }]);
+        }
+        menuButtons.push(...getMainMenuButtons(lang, data.telegramId));
+        
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: data.chatId, text: t.mainMenu, reply_markup: { inline_keyboard: getMainMenuButtons(lang, data.telegramId) } })
+          body: JSON.stringify({ chat_id: data.chatId, text: t.mainMenu, reply_markup: { inline_keyboard: menuButtons } })
         });
         return { sent: true };
       }
@@ -1625,11 +1703,20 @@ const sendToTelegramStep = createStep({
       if (data.searchHistory && data.searchHistory.length > 0) {
         const buttons = data.searchHistory.map((h: any, i: number) => [{ text: `${i + 1}️⃣ ${h.query}`, callback_data: `repeat:${i}` }]);
         buttons.push([{ text: t.back, callback_data: "action:menu" }]);
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: data.chatId, text: data.response, reply_markup: { inline_keyboard: buttons } })
-        });
+        
+        if (data.messageId) {
+          await fetch(`https://api.telegram.org/bot${botToken}/editMessageText`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: data.chatId, message_id: data.messageId, text: data.response, parse_mode: "HTML", reply_markup: { inline_keyboard: buttons } })
+          });
+        } else {
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: data.chatId, text: data.response, reply_markup: { inline_keyboard: buttons } })
+          });
+        }
         return { sent: true };
       }
 
@@ -1637,11 +1724,19 @@ const sendToTelegramStep = createStep({
         kb = { inline_keyboard: getMainMenuButtons(lang, data.telegramId) };
       }
 
-      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: data.chatId, text: data.response, parse_mode: "HTML", reply_markup: kb })
-      });
+      if (data.messageId && kb) {
+        await fetch(`https://api.telegram.org/bot${botToken}/editMessageText`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: data.chatId, message_id: data.messageId, text: data.response, parse_mode: "HTML", reply_markup: kb })
+        });
+      } else {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: data.chatId, text: data.response, parse_mode: "HTML", reply_markup: kb })
+        });
+      }
       return { sent: true };
     } catch (e) {
       console.error("❌ [sendToTelegramStep] Error:", e);

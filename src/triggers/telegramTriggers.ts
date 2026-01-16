@@ -16,6 +16,7 @@ export type TriggerInfoTelegram = {
     isCallback: boolean;
     callbackData?: string;
     callbackQueryId?: string;
+    messageId?: number;
   };
   payload: any;
 };
@@ -63,6 +64,7 @@ export function registerTelegramTrigger({
                 isCallback: true,
                 callbackData: cb.data,
                 callbackQueryId: cb.id,
+                messageId: cb.message?.message_id,
               },
               payload,
             });
