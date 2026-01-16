@@ -13,9 +13,26 @@ function isAdmin(telegramId: string): boolean {
 
 const LANG_TEXTS: Record<string, any> = {
   uk: {
-    welcome: "Привіт, {name}! 🛍️ Я допоможу знайти найкращі товари з AliExpress. Обери країну:",
-    welcomeBack: "З поверненням, {name}! 🎉 Готовий шукати?",
-    mainMenu: "📱 Головне меню",
+    welcome: `🛍️ <b>Привіт, {name}!</b>
+
+Я <b>BuyWise</b> — твій помічник для шопінгу на AliExpress!
+
+✨ <b>Що я вмію:</b>
+🔍 Шукати товари за запитом
+🔥 Показувати ТОП-10 популярних товарів
+📂 Переглядати категорії
+❤️ Зберігати в обране
+🎁 Реферальна програма з купонами
+
+👇 <b>Обери свою країну для початку:</b>`,
+    welcomeBack: `🎉 <b>З поверненням, {name}!</b>
+
+Радий бачити тебе знову! Готовий знайти щось класне?
+
+🔍 Напиши що шукаєш або обери з меню 👇`,
+    mainMenu: `📱 <b>Головне меню</b>
+
+Обери що тебе цікавить:`,
     search: "🔍 Пошук", top10: "🔥 ТОП-10", categories: "📂 Категорії", favorites: "❤️ Обране",
     profile: "👤 Профіль", support: "💬 Підтримка", back: "🔙 Меню",
     searchPrompt: "Що шукаємо? Напиши назву товару:",
@@ -59,9 +76,26 @@ const LANG_TEXTS: Record<string, any> = {
     favAddedShort: "❤️",
   },
   ru: {
-    welcome: "Привет, {name}! 🛍️ Я помогу найти лучшие товары с AliExpress. Выбери страну:",
-    welcomeBack: "С возвращением, {name}! 🎉 Готов искать?",
-    mainMenu: "📱 Главное меню",
+    welcome: `🛍️ <b>Привет, {name}!</b>
+
+Я <b>BuyWise</b> — твой помощник для шопинга на AliExpress!
+
+✨ <b>Что я умею:</b>
+🔍 Искать товары по запросу
+🔥 Показывать ТОП-10 популярных товаров
+📂 Просматривать категории
+❤️ Сохранять в избранное
+🎁 Реферальная программа с купонами
+
+👇 <b>Выбери свою страну для начала:</b>`,
+    welcomeBack: `🎉 <b>С возвращением, {name}!</b>
+
+Рад видеть тебя снова! Готов найти что-то классное?
+
+🔍 Напиши что ищешь или выбери из меню 👇`,
+    mainMenu: `📱 <b>Главное меню</b>
+
+Выбери что тебя интересует:`,
     search: "🔍 Поиск", top10: "🔥 ТОП-10", categories: "📂 Категории", favorites: "❤️ Избранное",
     profile: "👤 Профиль", support: "💬 Поддержка", back: "🔙 Меню",
     searchPrompt: "Что ищем? Напиши название товара:",
@@ -93,9 +127,26 @@ const LANG_TEXTS: Record<string, any> = {
     error: "❌ Ошибка. Попробуй ещё раз.",
   },
   en: {
-    welcome: "Hi {name}! 🛍️ I'll help you find the best AliExpress deals. Choose your country:",
-    welcomeBack: "Welcome back, {name}! 🎉 Ready to shop?",
-    mainMenu: "📱 Main Menu",
+    welcome: `🛍️ <b>Hi {name}!</b>
+
+I'm <b>BuyWise</b> — your AliExpress shopping assistant!
+
+✨ <b>What I can do:</b>
+🔍 Search products by keyword
+🔥 Show TOP-10 popular products
+📂 Browse categories
+❤️ Save to favorites
+🎁 Referral program with coupons
+
+👇 <b>Choose your country to start:</b>`,
+    welcomeBack: `🎉 <b>Welcome back, {name}!</b>
+
+Great to see you again! Ready to find something awesome?
+
+🔍 Type what you're looking for or choose from menu 👇`,
+    mainMenu: `📱 <b>Main Menu</b>
+
+Choose what interests you:`,
     search: "🔍 Search", top10: "🔥 TOP-10", categories: "📂 Categories", favorites: "❤️ Favorites",
     profile: "👤 Profile", support: "💬 Support", back: "🔙 Menu",
     searchPrompt: "What are you looking for?",
