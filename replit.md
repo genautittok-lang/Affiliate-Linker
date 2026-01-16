@@ -82,6 +82,14 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced Profile**: New buttons for Coupons, Achievements, and Stats
 - **Database**: Added `points`, `streak`, `lastActiveAt` columns to users table
 
+### Pagination & UX Improvements (January 2026)
+- **"More" Button**: After showing products, a "Ще" / "More" button appears to load additional items
+- **Pagination Support**: Works for search, categories, TOP-10, hot deals, and search history repeats
+- **Page Size**: 5 products per page for search/categories/hot deals, 10 for TOP-10
+- **Message Editing**: Uses editMessageText instead of sendMessage for menu callbacks to reduce chat clutter
+- **messageId Tracking**: Callbacks now include messageId for in-place message updates
+- **Localized "More" Button**: Translations in all 10 languages (Ще/Ещё/More/Mehr/Więcej/Plus/Más/Altro/Další/Mai mult)
+
 ## System Architecture
 
 ### Core Framework
