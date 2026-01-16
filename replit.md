@@ -71,6 +71,17 @@ Preferred communication style: Simple, everyday language.
 - Updates currentPrice in favorites table for tracking
 - Localized in all 10 languages (title, dropped, viewBtn)
 
+### Gamification & Analytics (January 2026)
+- **Click Analytics**: `clickAnalytics` table tracks all user actions (search, view_hot_deals, add_favorite)
+- **Points System**: Users earn points for activity (+1 per search, +10 first search, +15 first favorite, +25 first referral, +50 for 10 searches, +100 for 5 referrals)
+- **Leaderboard**: Top 10 users by points displayed in main menu with medal emojis (🥇🥈🥉)
+- **Achievements**: 5 achievement types stored in `achievements` table:
+  - first_search, first_favorite, first_referral, searches_10, referrals_5
+- **User Stats**: Personal statistics page showing searches, favorites, referrals, clicks, points, and streak
+- **Hot Deals**: Dedicated button for products with high discounts (onlyDiscount filter)
+- **Enhanced Profile**: New buttons for Coupons, Achievements, and Stats
+- **Database**: Added `points`, `streak`, `lastActiveAt` columns to users table
+
 ## System Architecture
 
 ### Core Framework
@@ -95,13 +106,16 @@ Preferred communication style: Simple, everyday language.
 ### Database Layer
 - **PostgreSQL** with Drizzle ORM for data persistence
 - **Schema** (`src/db/schema.ts`): 
-  - Users table (telegram ID, firstName, language, country, currency, dailyTopEnabled, referralCode, referredBy)
+  - Users table (telegram ID, firstName, language, country, currency, dailyTopEnabled, referralCode, referredBy, points, streak, lastActiveAt)
   - Favorites table (product tracking with currentPrice/originalPrice for price drop detection)
   - Search history table
   - Translation cache table
   - Referrals table (referrer/referred relationships)
   - Broadcasts table (admin broadcast logs)
   - Coupons table (referral reward coupons)
+  - Click analytics table (user action tracking)
+  - Achievements table (user achievement tracking)
+  - Hot deals table (discounted products cache)
 - Shared storage instance for Mastra workflows and memory
 
 ### Entry Point

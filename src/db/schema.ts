@@ -14,6 +14,9 @@ export const users = pgTable("users", {
   referralCode: text("referral_code"),
   referredBy: integer("referred_by"),
   pendingAction: text("pending_action"),
+  points: integer("points").notNull().default(0),
+  streak: integer("streak").notNull().default(0),
+  lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
@@ -76,6 +79,41 @@ export const coupons = pgTable("coupons", {
   earnedForReferrals: integer("earned_for_referrals").notNull().default(5),
   expiresAt: timestamp("expires_at"),
   usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const clickAnalytics = pgTable("click_analytics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
+  productId: text("product_id"),
+  action: text("action").notNull(),
+  productTitle: text("product_title"),
+  productPrice: real("product_price"),
+  currency: text("currency"),
+  category: text("category"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  achievementType: text("achievement_type").notNull(),
+  earnedAt: timestamp("earned_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const hotDeals = pgTable("hot_deals", {
+  id: serial("id").primaryKey(),
+  productId: text("product_id").notNull(),
+  productTitle: text("product_title").notNull(),
+  productUrl: text("product_url").notNull(),
+  productImage: text("product_image"),
+  originalPrice: real("original_price").notNull(),
+  salePrice: real("sale_price").notNull(),
+  discountPercent: integer("discount_percent").notNull(),
+  currency: text("currency").notNull().default("USD"),
+  country: text("country"),
+  notifiedAt: timestamp("notified_at"),
+  expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 

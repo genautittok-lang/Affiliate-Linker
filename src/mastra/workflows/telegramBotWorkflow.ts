@@ -1,7 +1,7 @@
 import { createStep, createWorkflow } from "../inngest";
 import { z } from "zod";
 import { db } from "../../db";
-import { users, searchHistory, favorites, referrals, coupons, broadcasts } from "../../db/schema";
+import { users, searchHistory, favorites, referrals, coupons, broadcasts, clickAnalytics, achievements, hotDeals } from "../../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
@@ -110,6 +110,39 @@ const LANG_TEXTS: Record<string, any> = {
     priceDrop: "Ціна впала!",
     was: "Було",
     myCoupons: "🎟️ Купони",
+    hotDeals: "🔥 Знижки",
+    leaderboard: "🏆 Топ",
+    achievements: "🏅 Досягнення",
+    myStats: "📊 Статистика",
+    leaderboardTitle: `🏆 <b>ТОП КОРИСТУВАЧІВ</b> 🏆
+
+━━━━━━━━━━━━━━━━━`,
+    achievementsTitle: `🏅 <b>ТВОЇ ДОСЯГНЕННЯ</b> 🏅
+
+━━━━━━━━━━━━━━━━━`,
+    noAchievements: `😔 У тебе поки немає досягнень
+
+📊 <b>Як отримати:</b>
+┣ 🔍 Перший пошук (+10 pts)
+┣ ❤️ Перше обране (+15 pts)
+┣ 👥 Перший реферал (+25 pts)
+┣ 🔥 10 пошуків (+50 pts)
+┗ 🌟 5 рефералів (+100 pts)`,
+    statsTitle: `📊 <b>ТВОЯ СТАТИСТИКА</b> 📊
+
+━━━━━━━━━━━━━━━━━`,
+    statsSearches: "🔍 <b>Пошуків:</b>",
+    statsFavorites: "❤️ <b>В обраному:</b>",
+    statsReferrals: "👥 <b>Рефералів:</b>",
+    statsClicks: "👆 <b>Кліків:</b>",
+    statsPoints: "🏆 <b>Очки:</b>",
+    statsStreak: "🔥 <b>Streak:</b>",
+    statsDays: "днів",
+    leaderboardYourRank: "👤 Твоє місце:",
+    hotDealsTitle: `🔥 <b>ГАРЯЧІ ЗНИЖКИ</b> 🔥
+
+━━━━━━━━━━━━━━━━━
+Товари зі знижкою від 30%!`,
     couponsTitle: `🎟️ <b>ТВОЇ КУПОНИ</b> 🎟️
 
 ━━━━━━━━━━━━━━━━━`,
@@ -211,6 +244,39 @@ const LANG_TEXTS: Record<string, any> = {
     priceDrop: "Цена упала!",
     was: "Было",
     myCoupons: "🎟️ Купоны",
+    hotDeals: "🔥 Скидки",
+    leaderboard: "🏆 Топ",
+    achievements: "🏅 Достижения",
+    myStats: "📊 Статистика",
+    leaderboardTitle: `🏆 <b>ТОП ПОЛЬЗОВАТЕЛЕЙ</b> 🏆
+
+━━━━━━━━━━━━━━━━━`,
+    achievementsTitle: `🏅 <b>ТВОИ ДОСТИЖЕНИЯ</b> 🏅
+
+━━━━━━━━━━━━━━━━━`,
+    noAchievements: `😔 У тебя пока нет достижений
+
+📊 <b>Как получить:</b>
+┣ 🔍 Первый поиск (+10 pts)
+┣ ❤️ Первое избранное (+15 pts)
+┣ 👥 Первый реферал (+25 pts)
+┣ 🔥 10 поисков (+50 pts)
+┗ 🌟 5 рефералов (+100 pts)`,
+    statsTitle: `📊 <b>ТВОЯ СТАТИСТИКА</b> 📊
+
+━━━━━━━━━━━━━━━━━`,
+    statsSearches: "🔍 <b>Поисков:</b>",
+    statsFavorites: "❤️ <b>В избранном:</b>",
+    statsReferrals: "👥 <b>Рефералов:</b>",
+    statsClicks: "👆 <b>Кликов:</b>",
+    statsPoints: "🏆 <b>Очки:</b>",
+    statsStreak: "🔥 <b>Streak:</b>",
+    statsDays: "дней",
+    leaderboardYourRank: "👤 Твоё место:",
+    hotDealsTitle: `🔥 <b>ГОРЯЧИЕ СКИДКИ</b> 🔥
+
+━━━━━━━━━━━━━━━━━
+Товары со скидкой от 30%!`,
     couponsTitle: `🎟️ <b>ТВОИ КУПОНЫ</b> 🎟️
 
 ━━━━━━━━━━━━━━━━━`,
@@ -324,6 +390,39 @@ You invited 5 friends and earned a coupon!`,
     priceDrop: "Price dropped!",
     was: "Was",
     myCoupons: "🎟️ Coupons",
+    hotDeals: "🔥 Hot Deals",
+    leaderboard: "🏆 Top",
+    achievements: "🏅 Achievements",
+    myStats: "📊 Stats",
+    leaderboardTitle: `🏆 <b>TOP USERS</b> 🏆
+
+━━━━━━━━━━━━━━━━━`,
+    achievementsTitle: `🏅 <b>YOUR ACHIEVEMENTS</b> 🏅
+
+━━━━━━━━━━━━━━━━━`,
+    noAchievements: `😔 No achievements yet
+
+📊 <b>How to earn:</b>
+┣ 🔍 First search (+10 pts)
+┣ ❤️ First favorite (+15 pts)
+┣ 👥 First referral (+25 pts)
+┣ 🔥 10 searches (+50 pts)
+┗ 🌟 5 referrals (+100 pts)`,
+    statsTitle: `📊 <b>YOUR STATISTICS</b> 📊
+
+━━━━━━━━━━━━━━━━━`,
+    statsSearches: "🔍 <b>Searches:</b>",
+    statsFavorites: "❤️ <b>Favorites:</b>",
+    statsReferrals: "👥 <b>Referrals:</b>",
+    statsClicks: "👆 <b>Clicks:</b>",
+    statsPoints: "🏆 <b>Points:</b>",
+    statsStreak: "🔥 <b>Streak:</b>",
+    statsDays: "days",
+    leaderboardYourRank: "👤 Your rank:",
+    hotDealsTitle: `🔥 <b>HOT DEALS</b> 🔥
+
+━━━━━━━━━━━━━━━━━
+Products with 30%+ discount!`,
     couponsTitle: `🎟️ <b>YOUR COUPONS</b> 🎟️
 
 ━━━━━━━━━━━━━━━━━`,
@@ -377,6 +476,23 @@ You invited 5 friends and earned a coupon!`,
     freeShip: "Kostenloser Versand",
     priceDrop: "Preis gefallen!",
     was: "War",
+    hotDeals: "🔥 Angebote",
+    leaderboard: "🏆 Top",
+    achievements: "🏅 Erfolge",
+    myStats: "📊 Statistik",
+    leaderboardTitle: "🏆 <b>TOP BENUTZER</b> 🏆\n\n━━━━━━━━━━━━━━━━━",
+    achievementsTitle: "🏅 <b>DEINE ERFOLGE</b> 🏅\n\n━━━━━━━━━━━━━━━━━",
+    noAchievements: "😔 Noch keine Erfolge\n\n📊 <b>Wie verdienen:</b>\n┣ 🔍 Erste Suche (+10 pts)\n┣ ❤️ Erster Favorit (+15 pts)\n┣ 👥 Erster Referral (+25 pts)\n┣ 🔥 10 Suchen (+50 pts)\n┗ 🌟 5 Referrals (+100 pts)",
+    statsTitle: "📊 <b>DEINE STATISTIK</b> 📊\n\n━━━━━━━━━━━━━━━━━",
+    statsSearches: "🔍 <b>Suchen:</b>",
+    statsFavorites: "❤️ <b>Favoriten:</b>",
+    statsReferrals: "👥 <b>Referrals:</b>",
+    statsClicks: "👆 <b>Klicks:</b>",
+    statsPoints: "🏆 <b>Punkte:</b>",
+    statsStreak: "🔥 <b>Streak:</b>",
+    statsDays: "Tage",
+    leaderboardYourRank: "👤 Dein Rang:",
+    hotDealsTitle: "🔥 <b>HOT DEALS</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProdukte mit 30%+ Rabatt!",
   },
   pl: {
     welcome: "Cześć {name}! 🛍️ Pomogę Ci znaleźć najlepsze oferty. Wybierz kraj:",
@@ -416,6 +532,23 @@ You invited 5 friends and earned a coupon!`,
     freeShip: "Darmowa dostawa",
     priceDrop: "Cena spadła!",
     was: "Było",
+    hotDeals: "🔥 Promocje",
+    leaderboard: "🏆 Top",
+    achievements: "🏅 Osiągnięcia",
+    myStats: "📊 Statystyki",
+    leaderboardTitle: "🏆 <b>TOP UŻYTKOWNICY</b> 🏆\n\n━━━━━━━━━━━━━━━━━",
+    achievementsTitle: "🏅 <b>TWOJE OSIĄGNIĘCIA</b> 🏅\n\n━━━━━━━━━━━━━━━━━",
+    noAchievements: "😔 Brak osiągnięć\n\n📊 <b>Jak zdobyć:</b>\n┣ 🔍 Pierwsze wyszukiwanie (+10 pts)\n┣ ❤️ Pierwszy ulubiony (+15 pts)\n┣ 👥 Pierwszy polecony (+25 pts)\n┣ 🔥 10 wyszukiwań (+50 pts)\n┗ 🌟 5 poleconych (+100 pts)",
+    statsTitle: "📊 <b>TWOJA STATYSTYKA</b> 📊\n\n━━━━━━━━━━━━━━━━━",
+    statsSearches: "🔍 <b>Wyszukiwań:</b>",
+    statsFavorites: "❤️ <b>Ulubionych:</b>",
+    statsReferrals: "👥 <b>Poleconych:</b>",
+    statsClicks: "👆 <b>Kliknięć:</b>",
+    statsPoints: "🏆 <b>Punkty:</b>",
+    statsStreak: "🔥 <b>Streak:</b>",
+    statsDays: "dni",
+    leaderboardYourRank: "👤 Twoja pozycja:",
+    hotDealsTitle: "🔥 <b>GORĄCE OFERTY</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProdukty z 30%+ rabatem!",
   },
   fr: {
     welcome: "Salut {name}! 🛍️ Je t'aide à trouver les meilleures offres. Choisis ton pays:",
@@ -455,6 +588,23 @@ You invited 5 friends and earned a coupon!`,
     freeShip: "Livraison gratuite",
     priceDrop: "Prix baissé!",
     was: "Était",
+    hotDeals: "🔥 Promos",
+    leaderboard: "🏆 Top",
+    achievements: "🏅 Succès",
+    myStats: "📊 Stats",
+    leaderboardTitle: "🏆 <b>TOP UTILISATEURS</b> 🏆\n\n━━━━━━━━━━━━━━━━━",
+    achievementsTitle: "🏅 <b>TES SUCCÈS</b> 🏅\n\n━━━━━━━━━━━━━━━━━",
+    noAchievements: "😔 Pas encore de succès\n\n📊 <b>Comment gagner:</b>\n┣ 🔍 Première recherche (+10 pts)\n┣ ❤️ Premier favori (+15 pts)\n┣ 👥 Premier parrainage (+25 pts)\n┣ 🔥 10 recherches (+50 pts)\n┗ 🌟 5 parrainages (+100 pts)",
+    statsTitle: "📊 <b>TES STATISTIQUES</b> 📊\n\n━━━━━━━━━━━━━━━━━",
+    statsSearches: "🔍 <b>Recherches:</b>",
+    statsFavorites: "❤️ <b>Favoris:</b>",
+    statsReferrals: "👥 <b>Parrainages:</b>",
+    statsClicks: "👆 <b>Clics:</b>",
+    statsPoints: "🏆 <b>Points:</b>",
+    statsStreak: "🔥 <b>Streak:</b>",
+    statsDays: "jours",
+    leaderboardYourRank: "👤 Ton rang:",
+    hotDealsTitle: "🔥 <b>PROMOS</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProduits avec 30%+ de réduction!",
   },
   es: {
     welcome: "¡Hola {name}! 🛍️ Te ayudo a encontrar las mejores ofertas. Elige tu país:",
@@ -494,6 +644,23 @@ You invited 5 friends and earned a coupon!`,
     freeShip: "Envío gratis",
     priceDrop: "¡Precio bajó!",
     was: "Era",
+    hotDeals: "🔥 Ofertas",
+    leaderboard: "🏆 Top",
+    achievements: "🏅 Logros",
+    myStats: "📊 Estadísticas",
+    leaderboardTitle: "🏆 <b>TOP USUARIOS</b> 🏆\n\n━━━━━━━━━━━━━━━━━",
+    achievementsTitle: "🏅 <b>TUS LOGROS</b> 🏅\n\n━━━━━━━━━━━━━━━━━",
+    noAchievements: "😔 Sin logros aún\n\n📊 <b>Cómo ganar:</b>\n┣ 🔍 Primera búsqueda (+10 pts)\n┣ ❤️ Primer favorito (+15 pts)\n┣ 👥 Primer referido (+25 pts)\n┣ 🔥 10 búsquedas (+50 pts)\n┗ 🌟 5 referidos (+100 pts)",
+    statsTitle: "📊 <b>TUS ESTADÍSTICAS</b> 📊\n\n━━━━━━━━━━━━━━━━━",
+    statsSearches: "🔍 <b>Búsquedas:</b>",
+    statsFavorites: "❤️ <b>Favoritos:</b>",
+    statsReferrals: "👥 <b>Referidos:</b>",
+    statsClicks: "👆 <b>Clics:</b>",
+    statsPoints: "🏆 <b>Puntos:</b>",
+    statsStreak: "🔥 <b>Streak:</b>",
+    statsDays: "días",
+    leaderboardYourRank: "👤 Tu posición:",
+    hotDealsTitle: "🔥 <b>OFERTAS CALIENTES</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProductos con 30%+ descuento!",
   },
   it: {
     welcome: "Ciao {name}! 🛍️ Ti aiuto a trovare le migliori offerte. Scegli il tuo paese:",
@@ -533,6 +700,23 @@ You invited 5 friends and earned a coupon!`,
     freeShip: "Spedizione gratuita",
     priceDrop: "Prezzo sceso!",
     was: "Era",
+    hotDeals: "🔥 Offerte",
+    leaderboard: "🏆 Top",
+    achievements: "🏅 Successi",
+    myStats: "📊 Statistiche",
+    leaderboardTitle: "🏆 <b>TOP UTENTI</b> 🏆\n\n━━━━━━━━━━━━━━━━━",
+    achievementsTitle: "🏅 <b>I TUOI SUCCESSI</b> 🏅\n\n━━━━━━━━━━━━━━━━━",
+    noAchievements: "😔 Nessun successo ancora\n\n📊 <b>Come guadagnare:</b>\n┣ 🔍 Prima ricerca (+10 pts)\n┣ ❤️ Primo preferito (+15 pts)\n┣ 👥 Primo referral (+25 pts)\n┣ 🔥 10 ricerche (+50 pts)\n┗ 🌟 5 referral (+100 pts)",
+    statsTitle: "📊 <b>LE TUE STATISTICHE</b> 📊\n\n━━━━━━━━━━━━━━━━━",
+    statsSearches: "🔍 <b>Ricerche:</b>",
+    statsFavorites: "❤️ <b>Preferiti:</b>",
+    statsReferrals: "👥 <b>Referral:</b>",
+    statsClicks: "👆 <b>Click:</b>",
+    statsPoints: "🏆 <b>Punti:</b>",
+    statsStreak: "🔥 <b>Streak:</b>",
+    statsDays: "giorni",
+    leaderboardYourRank: "👤 La tua posizione:",
+    hotDealsTitle: "🔥 <b>OFFERTE CALDE</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProdotti con 30%+ sconto!",
   },
   cs: {
     welcome: "Ahoj {name}! 🛍️ Pomohu ti najít nejlepší nabídky. Vyber svou zemi:",
@@ -572,6 +756,23 @@ You invited 5 friends and earned a coupon!`,
     freeShip: "Doprava zdarma",
     priceDrop: "Cena klesla!",
     was: "Bylo",
+    hotDeals: "🔥 Slevy",
+    leaderboard: "🏆 Top",
+    achievements: "🏅 Úspěchy",
+    myStats: "📊 Statistiky",
+    leaderboardTitle: "🏆 <b>TOP UŽIVATELÉ</b> 🏆\n\n━━━━━━━━━━━━━━━━━",
+    achievementsTitle: "🏅 <b>TVÉ ÚSPĚCHY</b> 🏅\n\n━━━━━━━━━━━━━━━━━",
+    noAchievements: "😔 Zatím žádné úspěchy\n\n📊 <b>Jak získat:</b>\n┣ 🔍 První vyhledávání (+10 pts)\n┣ ❤️ První oblíbený (+15 pts)\n┣ 👥 První doporučení (+25 pts)\n┣ 🔥 10 vyhledávání (+50 pts)\n┗ 🌟 5 doporučení (+100 pts)",
+    statsTitle: "📊 <b>TVÉ STATISTIKY</b> 📊\n\n━━━━━━━━━━━━━━━━━",
+    statsSearches: "🔍 <b>Vyhledávání:</b>",
+    statsFavorites: "❤️ <b>Oblíbené:</b>",
+    statsReferrals: "👥 <b>Doporučení:</b>",
+    statsClicks: "👆 <b>Kliknutí:</b>",
+    statsPoints: "🏆 <b>Body:</b>",
+    statsStreak: "🔥 <b>Streak:</b>",
+    statsDays: "dní",
+    leaderboardYourRank: "👤 Tvoje pozice:",
+    hotDealsTitle: "🔥 <b>HORKÉ NABÍDKY</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProdukty s 30%+ slevou!",
   },
   ro: {
     welcome: "Salut {name}! 🛍️ Te ajut să găsești cele mai bune oferte. Alege țara:",
@@ -611,6 +812,23 @@ You invited 5 friends and earned a coupon!`,
     freeShip: "Livrare gratuită",
     priceDrop: "Preț scăzut!",
     was: "A fost",
+    hotDeals: "🔥 Oferte",
+    leaderboard: "🏆 Top",
+    achievements: "🏅 Realizări",
+    myStats: "📊 Statistici",
+    leaderboardTitle: "🏆 <b>TOP UTILIZATORI</b> 🏆\n\n━━━━━━━━━━━━━━━━━",
+    achievementsTitle: "🏅 <b>REALIZĂRILE TALE</b> 🏅\n\n━━━━━━━━━━━━━━━━━",
+    noAchievements: "😔 Nicio realizare încă\n\n📊 <b>Cum să câștigi:</b>\n┣ 🔍 Prima căutare (+10 pts)\n┣ ❤️ Primul favorit (+15 pts)\n┣ 👥 Primul referral (+25 pts)\n┣ 🔥 10 căutări (+50 pts)\n┗ 🌟 5 referral-uri (+100 pts)",
+    statsTitle: "📊 <b>STATISTICILE TALE</b> 📊\n\n━━━━━━━━━━━━━━━━━",
+    statsSearches: "🔍 <b>Căutări:</b>",
+    statsFavorites: "❤️ <b>Favorite:</b>",
+    statsReferrals: "👥 <b>Referral-uri:</b>",
+    statsClicks: "👆 <b>Click-uri:</b>",
+    statsPoints: "🏆 <b>Puncte:</b>",
+    statsStreak: "🔥 <b>Streak:</b>",
+    statsDays: "zile",
+    leaderboardYourRank: "👤 Poziția ta:",
+    hotDealsTitle: "🔥 <b>OFERTE FIERBINȚI</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProduse cu 30%+ reducere!",
   },
 };
 
@@ -640,6 +858,7 @@ function getMainMenuButtons(lang: string, telegramId?: string) {
   return [
     [{ text: t.search, callback_data: "action:search" }, { text: t.top10, callback_data: "action:top10" }],
     [{ text: t.categories, callback_data: "action:categories" }, { text: t.favorites, callback_data: "action:favorites" }],
+    [{ text: t.hotDeals || "🔥 Hot Deals", callback_data: "action:hot_deals" }, { text: t.leaderboard || "🏆 Top", callback_data: "action:leaderboard" }],
     [{ text: t.history || "🕐 History", callback_data: "action:history" }, { text: t.profile, callback_data: "action:profile" }],
     [{ text: t.support, callback_data: "action:support" }],
   ];
@@ -659,10 +878,10 @@ function getCategoryButtons(lang: string) {
 function getProfileButtons(lang: string, dailyTopEnabled: boolean) {
   const t = LANG_TEXTS[lang] || LANG_TEXTS.en;
   return [
-    [{ text: t.changeCountry, callback_data: "action:change_country" }],
-    [{ text: t.changeLang, callback_data: "action:change_lang" }],
-    [{ text: dailyTopEnabled ? t.disableNotif : t.enableNotif, callback_data: dailyTopEnabled ? "toggle:daily_off" : "toggle:daily_on" }],
     [{ text: t.referral, callback_data: "action:referral" }, { text: t.myCoupons || "🎟️ Coupons", callback_data: "action:coupons" }],
+    [{ text: t.achievements || "🏅 Achievements", callback_data: "action:achievements" }, { text: t.myStats || "📊 Stats", callback_data: "action:my_stats" }],
+    [{ text: t.changeCountry, callback_data: "action:change_country" }, { text: t.changeLang, callback_data: "action:change_lang" }],
+    [{ text: dailyTopEnabled ? t.disableNotif : t.enableNotif, callback_data: dailyTopEnabled ? "toggle:daily_off" : "toggle:daily_on" }],
     [{ text: t.back, callback_data: "action:menu" }],
   ];
 }
@@ -776,6 +995,21 @@ const processMessageStep = createStep({
               await db.insert(referrals).values({ referrerId: referredById, referredId: newUser.id });
               const refCount = await db.select({ count: sql<number>`count(*)` }).from(referrals).where(eq(referrals.referrerId, referredById));
               const totalRefs = Number(refCount[0]?.count || 0);
+              
+              if (totalRefs === 1) {
+                const existingFirstRef = await db.select().from(achievements).where(and(eq(achievements.userId, referredById), eq(achievements.achievementType, "first_referral"))).limit(1);
+                if (existingFirstRef.length === 0) {
+                  await db.insert(achievements).values({ userId: referredById, achievementType: "first_referral" });
+                  await db.update(users).set({ points: sql`${users.points} + 25` }).where(eq(users.id, referredById));
+                }
+              }
+              if (totalRefs === 5) {
+                const existingFiveRef = await db.select().from(achievements).where(and(eq(achievements.userId, referredById), eq(achievements.achievementType, "referrals_5"))).limit(1);
+                if (existingFiveRef.length === 0) {
+                  await db.insert(achievements).values({ userId: referredById, achievementType: "referrals_5" });
+                  await db.update(users).set({ points: sql`${users.points} + 100` }).where(eq(users.id, referredById));
+                }
+              }
               
               for (const milestone of COUPON_MILESTONES) {
                 if (totalRefs >= milestone.refs) {
@@ -893,6 +1127,17 @@ const processMessageStep = createStep({
               currentPrice: price,
               currency,
             });
+            
+            await db.insert(clickAnalytics).values({ userId: user.id, action: "add_favorite", productId, productTitle, productPrice: price, currency, createdAt: new Date() });
+            
+            const favTotal = await db.select({ count: sql<number>`count(*)` }).from(favorites).where(eq(favorites.userId, user.id));
+            if (Number(favTotal[0]?.count || 0) === 1) {
+              const existingAch = await db.select().from(achievements).where(and(eq(achievements.userId, user.id), eq(achievements.achievementType, "first_favorite"))).limit(1);
+              if (existingAch.length === 0) {
+                await db.insert(achievements).values({ userId: user.id, achievementType: "first_favorite" });
+                await db.update(users).set({ points: sql`${users.points} + 15` }).where(eq(users.id, user.id));
+              }
+            }
           }
           return { response: t("favAdded"), chatId, telegramId, keyboard: "main", lang };
         }
@@ -1050,6 +1295,83 @@ ${t("notifications")}: ${currentUser.dailyTopEnabled ? t("notifOn") : t("notifOf
               }
               return { response: couponsText, chatId, telegramId, keyboard: "profile", lang };
 
+            case "leaderboard":
+              const topUsers = await db.select({
+                firstName: users.firstName,
+                points: users.points,
+                streak: users.streak
+              }).from(users).orderBy(desc(users.points)).limit(10);
+              
+              let lbText = t("leaderboardTitle") + "\n\n";
+              topUsers.forEach((u, i) => {
+                const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
+                lbText += `${medal} <b>${u.firstName || "User"}</b> — ${u.points || 0} pts\n`;
+              });
+              
+              const myRankResult = await db.select({ count: sql<number>`count(*)` }).from(users).where(sql`${users.points} > ${user.points || 0}`);
+              const myRank = Number(myRankResult[0]?.count || 0) + 1;
+              lbText += `\n━━━━━━━━━━━━━━━━━\n${t("leaderboardYourRank")} <b>#${myRank}</b> (${user.points || 0} pts)`;
+              
+              return { response: lbText, chatId, telegramId, keyboard: "main", lang };
+
+            case "achievements":
+              const userAchievements = await db.select().from(achievements).where(eq(achievements.userId, user.id));
+              
+              if (userAchievements.length === 0) {
+                return { response: t("noAchievements"), chatId, telegramId, keyboard: "profile", lang };
+              }
+              
+              const ACHIEVEMENT_NAMES: Record<string, Record<string, string>> = {
+                uk: { first_search: "🔍 Перший пошук", first_favorite: "❤️ Перше обране", first_referral: "👥 Перший реферал", searches_10: "🔥 10 пошуків", referrals_5: "🌟 5 рефералів" },
+                ru: { first_search: "🔍 Первый поиск", first_favorite: "❤️ Первое избранное", first_referral: "👥 Первый реферал", searches_10: "🔥 10 поисков", referrals_5: "🌟 5 рефералов" },
+                en: { first_search: "🔍 First Search", first_favorite: "❤️ First Favorite", first_referral: "👥 First Referral", searches_10: "🔥 10 Searches", referrals_5: "🌟 5 Referrals" },
+                de: { first_search: "🔍 Erste Suche", first_favorite: "❤️ Erster Favorit", first_referral: "👥 Erster Empfehlene", searches_10: "🔥 10 Suchen", referrals_5: "🌟 5 Empfehlene" },
+                pl: { first_search: "🔍 Pierwsze wyszukiwanie", first_favorite: "❤️ Pierwszy ulubiony", first_referral: "👥 Pierwszy polecony", searches_10: "🔥 10 wyszukiwań", referrals_5: "🌟 5 poleconych" },
+                cs: { first_search: "🔍 První vyhledávání", first_favorite: "❤️ První oblíbený", first_referral: "👥 První doporučení", searches_10: "🔥 10 vyhledávání", referrals_5: "🌟 5 doporučení" },
+                fr: { first_search: "🔍 Première recherche", first_favorite: "❤️ Premier favori", first_referral: "👥 Premier parrainage", searches_10: "🔥 10 recherches", referrals_5: "🌟 5 parrainages" },
+                es: { first_search: "🔍 Primera búsqueda", first_favorite: "❤️ Primer favorito", first_referral: "👥 Primer referido", searches_10: "🔥 10 búsquedas", referrals_5: "🌟 5 referidos" },
+                it: { first_search: "🔍 Prima ricerca", first_favorite: "❤️ Primo preferito", first_referral: "👥 Primo referral", searches_10: "🔥 10 ricerche", referrals_5: "🌟 5 referral" },
+                ro: { first_search: "🔍 Prima căutare", first_favorite: "❤️ Primul favorit", first_referral: "👥 Primul referral", searches_10: "🔥 10 căutări", referrals_5: "🌟 5 referral-uri" }
+              };
+              const achNames = ACHIEVEMENT_NAMES[lang] || ACHIEVEMENT_NAMES.en;
+              
+              let achText = t("achievementsTitle") + "\n\n";
+              for (const a of userAchievements) {
+                achText += `${achNames[a.achievementType] || a.achievementType}\n`;
+              }
+              return { response: achText, chatId, telegramId, keyboard: "profile", lang };
+
+            case "my_stats":
+              const searchCount = await db.select({ count: sql<number>`count(*)` }).from(searchHistory).where(eq(searchHistory.userId, user.id));
+              const favCount = await db.select({ count: sql<number>`count(*)` }).from(favorites).where(eq(favorites.userId, user.id));
+              const refStatsCount = await db.select({ count: sql<number>`count(*)` }).from(referrals).where(eq(referrals.referrerId, user.id));
+              const clickCount = await db.select({ count: sql<number>`count(*)` }).from(clickAnalytics).where(eq(clickAnalytics.userId, user.id));
+              
+              const statsText = `${t("statsTitle")}
+
+${t("statsSearches")} ${searchCount[0]?.count || 0}
+${t("statsFavorites")} ${favCount[0]?.count || 0}
+${t("statsReferrals")} ${refStatsCount[0]?.count || 0}
+${t("statsClicks")} ${clickCount[0]?.count || 0}
+
+━━━━━━━━━━━━━━━━━
+${t("statsPoints")} ${user.points || 0}
+${t("statsStreak")} ${user.streak || 0} ${t("statsDays")}`;
+              return { response: statsText, chatId, telegramId, keyboard: "profile", lang };
+
+            case "hot_deals":
+              const hotRes = await searchProductsTool.execute({
+                context: { query: "hot sale discount", country: user.country, currency: user.currency, quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: true, preferCheaper: false },
+                mastra, runtimeContext: {} as any
+              });
+              
+              await db.insert(clickAnalytics).values({ userId: user.id, action: "view_hot_deals", createdAt: new Date() });
+              
+              if (!hotRes.success || hotRes.products.length === 0) {
+                return { response: t("hotDealsTitle") + "\n\n😔 Зараз немає гарячих знижок", chatId, telegramId, keyboard: "main", lang };
+              }
+              return { response: t("hotDealsTitle"), chatId, telegramId, products: hotRes.products.slice(0, 5), lang };
+
           }
         }
 
@@ -1079,6 +1401,31 @@ ${t("notifications")}: ${currentUser.dailyTopEnabled ? t("notifOn") : t("notifOf
         }
 
         await db.insert(searchHistory).values({ userId: user.id, query: message, createdAt: new Date() });
+        await db.insert(clickAnalytics).values({ userId: user.id, action: "search", category: message, createdAt: new Date() });
+        
+        await db.update(users).set({ 
+          points: sql`${users.points} + 1`,
+          lastActiveAt: new Date()
+        }).where(eq(users.id, user.id));
+        
+        const searchTotalCount = await db.select({ count: sql<number>`count(*)` }).from(searchHistory).where(eq(searchHistory.userId, user.id));
+        const totalSearches = Number(searchTotalCount[0]?.count || 0);
+        
+        if (totalSearches === 1) {
+          const existingAch = await db.select().from(achievements).where(and(eq(achievements.userId, user.id), eq(achievements.achievementType, "first_search"))).limit(1);
+          if (existingAch.length === 0) {
+            await db.insert(achievements).values({ userId: user.id, achievementType: "first_search" });
+            await db.update(users).set({ points: sql`${users.points} + 10` }).where(eq(users.id, user.id));
+          }
+        }
+        if (totalSearches === 10) {
+          const existingAch = await db.select().from(achievements).where(and(eq(achievements.userId, user.id), eq(achievements.achievementType, "searches_10"))).limit(1);
+          if (existingAch.length === 0) {
+            await db.insert(achievements).values({ userId: user.id, achievementType: "searches_10" });
+            await db.update(users).set({ points: sql`${users.points} + 50` }).where(eq(users.id, user.id));
+          }
+        }
+        
         const res = await searchProductsTool.execute({
           context: { query: message, country: user.country, currency: user.currency, quality: "default", maxPrice: 0, freeShipping: false, onlyDiscount: false, preferCheaper: false },
           mastra, runtimeContext: {} as any
