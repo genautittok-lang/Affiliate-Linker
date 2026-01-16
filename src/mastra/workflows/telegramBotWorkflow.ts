@@ -143,6 +143,7 @@ const LANG_TEXTS: Record<string, any> = {
 
 ━━━━━━━━━━━━━━━━━
 Товари зі знижкою від 30%!`,
+    more: "➕ Ще",
     couponsTitle: `🎟️ <b>ТВОЇ КУПОНИ</b> 🎟️
 
 ━━━━━━━━━━━━━━━━━`,
@@ -277,6 +278,7 @@ const LANG_TEXTS: Record<string, any> = {
 
 ━━━━━━━━━━━━━━━━━
 Товары со скидкой от 30%!`,
+    more: "➕ Ещё",
     couponsTitle: `🎟️ <b>ТВОИ КУПОНЫ</b> 🎟️
 
 ━━━━━━━━━━━━━━━━━`,
@@ -423,6 +425,7 @@ You invited 5 friends and earned a coupon!`,
 
 ━━━━━━━━━━━━━━━━━
 Products with 30%+ discount!`,
+    more: "➕ More",
     couponsTitle: `🎟️ <b>YOUR COUPONS</b> 🎟️
 
 ━━━━━━━━━━━━━━━━━`,
@@ -493,6 +496,7 @@ Products with 30%+ discount!`,
     statsDays: "Tage",
     leaderboardYourRank: "👤 Dein Rang:",
     hotDealsTitle: "🔥 <b>HOT DEALS</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProdukte mit 30%+ Rabatt!",
+    more: "➕ Mehr",
   },
   pl: {
     welcome: "Cześć {name}! 🛍️ Pomogę Ci znaleźć najlepsze oferty. Wybierz kraj:",
@@ -549,6 +553,7 @@ Products with 30%+ discount!`,
     statsDays: "dni",
     leaderboardYourRank: "👤 Twoja pozycja:",
     hotDealsTitle: "🔥 <b>GORĄCE OFERTY</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProdukty z 30%+ rabatem!",
+    more: "➕ Więcej",
   },
   fr: {
     welcome: "Salut {name}! 🛍️ Je t'aide à trouver les meilleures offres. Choisis ton pays:",
@@ -605,6 +610,7 @@ Products with 30%+ discount!`,
     statsDays: "jours",
     leaderboardYourRank: "👤 Ton rang:",
     hotDealsTitle: "🔥 <b>PROMOS</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProduits avec 30%+ de réduction!",
+    more: "➕ Plus",
   },
   es: {
     welcome: "¡Hola {name}! 🛍️ Te ayudo a encontrar las mejores ofertas. Elige tu país:",
@@ -661,6 +667,7 @@ Products with 30%+ discount!`,
     statsDays: "días",
     leaderboardYourRank: "👤 Tu posición:",
     hotDealsTitle: "🔥 <b>OFERTAS CALIENTES</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProductos con 30%+ descuento!",
+    more: "➕ Más",
   },
   it: {
     welcome: "Ciao {name}! 🛍️ Ti aiuto a trovare le migliori offerte. Scegli il tuo paese:",
@@ -717,6 +724,7 @@ Products with 30%+ discount!`,
     statsDays: "giorni",
     leaderboardYourRank: "👤 La tua posizione:",
     hotDealsTitle: "🔥 <b>OFFERTE CALDE</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProdotti con 30%+ sconto!",
+    more: "➕ Altro",
   },
   cs: {
     welcome: "Ahoj {name}! 🛍️ Pomohu ti najít nejlepší nabídky. Vyber svou zemi:",
@@ -773,6 +781,7 @@ Products with 30%+ discount!`,
     statsDays: "dní",
     leaderboardYourRank: "👤 Tvoje pozice:",
     hotDealsTitle: "🔥 <b>HORKÉ NABÍDKY</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProdukty s 30%+ slevou!",
+    more: "➕ Další",
   },
   ro: {
     welcome: "Salut {name}! 🛍️ Te ajut să găsești cele mai bune oferte. Alege țara:",
@@ -829,6 +838,7 @@ Products with 30%+ discount!`,
     statsDays: "zile",
     leaderboardYourRank: "👤 Poziția ta:",
     hotDealsTitle: "🔥 <b>OFERTE FIERBINȚI</b> 🔥\n\n━━━━━━━━━━━━━━━━━\nProduse cu 30%+ reducere!",
+    more: "➕ Mai mult",
   },
 };
 
@@ -932,12 +942,15 @@ const responseSchema = z.object({
   response: z.string(),
   chatId: z.string(),
   telegramId: z.string().optional(),
+  messageId: z.number().optional(),
   keyboard: z.string().optional(),
   lang: z.string().optional(),
   dailyTopEnabled: z.boolean().optional(),
   products: z.array(z.any()).optional(),
   favorites: z.array(z.any()).optional(),
   searchHistory: z.array(z.any()).optional(),
+  searchQuery: z.string().optional(),
+  searchPage: z.number().optional(),
   adminStats: z.object({
     total: z.number(),
     today: z.number(),
@@ -955,10 +968,11 @@ const processMessageStep = createStep({
     callbackData: z.string().optional(),
     userName: z.string().optional(),
     languageCode: z.string().optional(),
+    messageId: z.number().optional(),
   }),
   outputSchema: responseSchema,
   execute: async ({ inputData, mastra }) => {
-    const { message, chatId, telegramId, isCallback, callbackData, userName } = inputData;
+    const { message, chatId, telegramId, isCallback, callbackData, userName, messageId } = inputData;
     const firstName = userName || "Friend";
 
     try {
