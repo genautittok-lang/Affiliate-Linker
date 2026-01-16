@@ -5,7 +5,7 @@ import { users, broadcasts } from "../../db/schema";
 import { eq, sql } from "drizzle-orm";
 
 const ADMIN_IDS = ["8210587392"];
-const ADMIN_USERNAME = "@SYNTRAM";
+const ADMIN_USERNAME = "@bogdan_OP24";
 
 export const isAdmin = (telegramId: string): boolean => {
   return ADMIN_IDS.includes(telegramId);
@@ -222,7 +222,7 @@ export const getSupportInfoTool = createTool({
     return {
       adminUsername: ADMIN_USERNAME,
       messageTemplate,
-      supportUrl: `https://t.me/SYNTRAM?text=${encodedMessage}`,
+      supportUrl: `https://t.me/bogdan_OP24?text=${encodedMessage}`,
     };
   },
 });
