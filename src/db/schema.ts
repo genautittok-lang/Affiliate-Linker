@@ -11,7 +11,7 @@ export const users = pgTable("users", {
   currency: text("currency").notNull().default("USD"),
   timezone: text("timezone"),
   dailyTopEnabled: boolean("daily_top_enabled").notNull().default(true),
-  referralCode: text("referral_code"),
+  referralCode: text("referral_code").unique(),
   referredBy: integer("referred_by"),
   pendingAction: text("pending_action"),
   points: integer("points").notNull().default(0),
@@ -114,6 +114,17 @@ export const hotDeals = pgTable("hot_deals", {
   country: text("country"),
   notifiedAt: timestamp("notified_at"),
   expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const productCache = pgTable("product_cache", {
+  id: serial("id").primaryKey(),
+  productId: text("product_id").notNull().unique(),
+  title: text("title").notNull(),
+  url: text("url").notNull(),
+  image: text("image"),
+  price: real("price").notNull(),
+  currency: text("currency").notNull().default("USD"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 

@@ -4,9 +4,19 @@ import { db } from "../../db";
 import { users, referrals } from "../../db/schema";
 import { eq, sql } from "drizzle-orm";
 
-function generateReferralCode(telegramId: string): string {
-  const base = Buffer.from(telegramId).toString('base64').replace(/[+/=]/g, '').substring(0, 8);
-  return `BW${base}`.toUpperCase();
+async function generateReferralCode(telegramId: string): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    const idPart = telegramId.slice(-4);
+    const code = `BW${idPart}${timestamp.slice(-4)}${random}`.toUpperCase();
+    
+    const [existing] = await db.select().from(users).where(eq(users.referralCode, code)).limit(1);
+    if (!existing) {
+      return code;
+    }
+  }
+  return `BW${Date.now().toString(36)}${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
 }
 
 export const getReferralLinkTool = createTool({
@@ -36,7 +46,7 @@ export const getReferralLinkTool = createTool({
       
       let referralCode = user.referralCode;
       if (!referralCode) {
-        referralCode = generateReferralCode(context.telegramId);
+        referralCode = await generateReferralCode(context.telegramId);
         await db.update(users)
           .set({ referralCode })
           .where(eq(users.telegramId, context.telegramId));
@@ -171,7 +181,7 @@ export const getReferralStatsTool = createTool({
       
       let referralCode = user.referralCode;
       if (!referralCode) {
-        referralCode = generateReferralCode(context.telegramId);
+        referralCode = await generateReferralCode(context.telegramId);
         await db.update(users)
           .set({ referralCode })
           .where(eq(users.telegramId, context.telegramId));

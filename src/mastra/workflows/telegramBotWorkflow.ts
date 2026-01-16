@@ -1,11 +1,83 @@
 import { createStep, createWorkflow } from "../inngest";
 import { z } from "zod";
 import { db } from "../../db";
-import { users, searchHistory, favorites, referrals, coupons, broadcasts, clickAnalytics, achievements, hotDeals } from "../../db/schema";
+import { users, searchHistory, favorites, referrals, coupons, broadcasts, clickAnalytics, achievements, hotDeals, productCache as productCacheTable } from "../../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
 const ADMIN_IDS = ["7820995179"];
+
+// Product cache for favorites - stores product data in DB for persistence across restarts
+interface CachedProduct {
+  title: string;
+  url: string;
+  image: string;
+  price: number;
+  currency: string;
+}
+
+// In-memory cache for faster reads (backed by DB)
+const memoryCache = new Map<string, CachedProduct>();
+
+async function cacheProduct(id: string, title: string, url: string, image: string, price: number, currency: string) {
+  try {
+    // Store in memory for quick access
+    memoryCache.set(id, { title, url, image, price, currency });
+    
+    // Persist to DB (upsert)
+    await db.insert(productCacheTable).values({
+      productId: id,
+      title,
+      url,
+      image: image || "",
+      price,
+      currency,
+    }).onConflictDoUpdate({
+      target: productCacheTable.productId,
+      set: { title, url, image: image || "", price, currency }
+    });
+  } catch (e) {
+    console.log("⚠️ [ProductCache] Error caching product:", e);
+  }
+}
+
+async function getCachedProduct(id: string): Promise<CachedProduct | undefined> {
+  // Check memory cache first
+  if (memoryCache.has(id)) {
+    return memoryCache.get(id);
+  }
+  
+  // Fallback to DB
+  try {
+    const [cached] = await db.select().from(productCacheTable).where(eq(productCacheTable.productId, id)).limit(1);
+    if (cached) {
+      const product = { title: cached.title, url: cached.url, image: cached.image || "", price: cached.price, currency: cached.currency };
+      memoryCache.set(id, product);
+      return product;
+    }
+  } catch (e) {
+    console.log("⚠️ [ProductCache] Error fetching cached product:", e);
+  }
+  return undefined;
+}
+
+// Generate unique referral code with retry on collision
+async function generateUniqueReferralCode(telegramId: string): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    const idPart = telegramId.slice(-4);
+    const code = `BW${idPart}${timestamp.slice(-4)}${random}`.toUpperCase();
+    
+    // Check if code exists
+    const [existing] = await db.select().from(users).where(eq(users.referralCode, code)).limit(1);
+    if (!existing) {
+      return code;
+    }
+  }
+  // Fallback with more randomness
+  return `BW${Date.now().toString(36)}${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
+}
 
 function isAdmin(telegramId: string): boolean {
   return ADMIN_IDS.includes(telegramId);
@@ -986,7 +1058,7 @@ const processMessageStep = createStep({
         const refCode = parts[1];
 
         if (!user) {
-          const newRefCode = "BW" + Math.random().toString(36).substr(2, 6).toUpperCase();
+          const newRefCode = await generateUniqueReferralCode(telegramId);
           let referredById: number | null = null;
 
           if (refCode) {
@@ -1125,11 +1197,18 @@ const processMessageStep = createStep({
         if (type === "fav" && value === "add") {
           const parts = callbackData.split(":");
           const productId = parts[2];
-          const productTitle = decodeURIComponent(parts[3] || "Product");
-          const productUrl = decodeURIComponent(parts[4] || "");
-          const productImage = decodeURIComponent(parts[5] || "");
-          const price = parseFloat(parts[6] || "0");
-          const currency = parts[7] || user.currency;
+          
+          // Look up product data from cache
+          const cachedProduct = await getCachedProduct(productId);
+          const productTitle = cachedProduct?.title || "Product";
+          const productUrl = cachedProduct?.url || "";
+          const productImage = cachedProduct?.image || "";
+          const price = cachedProduct?.price || 0;
+          const currency = cachedProduct?.currency || user.currency;
+          
+          if (!cachedProduct) {
+            console.log(`⚠️ [Favorites] Product ${productId} not found in cache`);
+          }
           
           const existing = await db.select().from(favorites).where(and(eq(favorites.userId, user.id), eq(favorites.productId, productId))).limit(1);
           if (existing.length === 0) {
@@ -1317,6 +1396,64 @@ ${t("notifications")}: ${currentUser.dailyTopEnabled ? t("notifOn") : t("notifOf
               }
               await db.update(users).set({ pendingAction: "broadcast" }).where(eq(users.telegramId, telegramId));
               return { response: t("broadcastPrompt") || "Напиши текст розсилки:", chatId, telegramId, keyboard: "admin_broadcast", lang };
+
+            case "admin_countries":
+              if (!isAdmin(telegramId)) {
+                return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
+              }
+              const countryStats = await db.select({
+                country: users.country,
+                count: sql<number>`count(*)`,
+              }).from(users).groupBy(users.country);
+              
+              let countryText = "👥 <b>Users by Country</b>\n\n━━━━━━━━━━━━━━━━━\n";
+              const sortedCountries = countryStats
+                .filter(s => s.country && s.country.length > 0)
+                .sort((a, b) => Number(b.count) - Number(a.count));
+              
+              for (const stat of sortedCountries) {
+                const flag = stat.country === "Ukraine" ? "🇺🇦" : 
+                             stat.country === "Germany" ? "🇩🇪" :
+                             stat.country === "Poland" ? "🇵🇱" :
+                             stat.country === "Czechia" ? "🇨🇿" :
+                             stat.country === "Romania" ? "🇷🇴" :
+                             stat.country === "France" ? "🇫🇷" :
+                             stat.country === "Spain" ? "🇪🇸" :
+                             stat.country === "Italy" ? "🇮🇹" :
+                             stat.country === "UK" ? "🇬🇧" :
+                             stat.country === "USA" ? "🇺🇸" : "🌍";
+                countryText += `${flag} <b>${stat.country}:</b> ${stat.count}\n`;
+              }
+              
+              const noCountry = countryStats.find(s => !s.country || s.country.length === 0);
+              if (noCountry) {
+                countryText += `\n⚠️ <b>No country set:</b> ${noCountry.count}`;
+              }
+              
+              return { response: countryText, chatId, telegramId, keyboard: "admin", lang };
+
+            case "admin_history":
+              if (!isAdmin(telegramId)) {
+                return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
+              }
+              const recentBroadcasts = await db.select()
+                .from(broadcasts)
+                .orderBy(desc(broadcasts.sentAt))
+                .limit(10);
+              
+              let historyText = "📜 <b>Broadcast History</b>\n\n━━━━━━━━━━━━━━━━━\n";
+              
+              if (recentBroadcasts.length === 0) {
+                historyText += "No broadcasts yet.";
+              } else {
+                for (const b of recentBroadcasts) {
+                  const date = b.sentAt ? new Date(b.sentAt).toLocaleDateString('uk-UA') : "N/A";
+                  const msgPreview = b.message?.substring(0, 30) || "N/A";
+                  historyText += `📅 <b>${date}</b>\n👥 Sent to: ${b.sentCount}\n💬 ${msgPreview}...\n\n`;
+                }
+              }
+              
+              return { response: historyText, chatId, telegramId, keyboard: "admin", lang };
 
             case "change_country":
               return { response: t("changeCountry"), chatId, keyboard: "country", lang };
@@ -1560,7 +1697,9 @@ const sendToTelegramStep = createStep({
         case "admin":
           kb = { inline_keyboard: [
             [{ text: t.adminBroadcast || "📢 Broadcast", callback_data: "action:broadcast" }],
-            [{ text: t.adminStats || "📊 Stats", callback_data: "action:admin" }],
+            [{ text: "👥 Users by Country", callback_data: "action:admin_countries" }],
+            [{ text: "📜 Broadcast History", callback_data: "action:admin_history" }],
+            [{ text: t.adminStats || "📊 Refresh Stats", callback_data: "action:admin" }],
             [{ text: t.back, callback_data: "action:menu" }]
           ]};
           break;
@@ -1586,14 +1725,23 @@ const sendToTelegramStep = createStep({
           const caption = `<b>${p.title?.substring(0, 100)}</b>${discountBadge}\n\n💰 ${originalPriceText}<b>${price.toFixed(2)} ${p.currency}</b>\n${stars} ${rating.toFixed(1)} | 📦 ${ordersText} ${t.sold || 'sold'}\n🚚 ${t.freeShip || 'Free shipping'}`;
           
           const productId = p.id || p.productId || String(Date.now());
-          const encodedTitle = encodeURIComponent((p.title || "Product").substring(0, 50));
-          const encodedUrl = encodeURIComponent(p.affiliateUrl || p.productUrl || "");
-          const encodedImage = encodeURIComponent(p.imageUrl || "");
-          const favCallback = `fav:add:${productId}:${encodedTitle}:${encodedUrl}:${encodedImage}:${p.price}:${p.currency}`;
+          
+          // Cache product data for later lookup when user clicks "Add to favorites"
+          await cacheProduct(
+            productId,
+            (p.title || "Product").substring(0, 100),
+            p.affiliateUrl || p.productUrl || "",
+            p.imageUrl || "",
+            price,
+            p.currency || "USD"
+          );
+          
+          // Use short callback format that fits in 64 bytes
+          const favCallback = `fav:add:${productId}`;
           
           const mk = { inline_keyboard: [
             [{ text: t.buy, url: p.affiliateUrl || p.productUrl }],
-            [{ text: t.addFav || "❤️ Add", callback_data: favCallback.substring(0, 64) }]
+            [{ text: t.addFav || "❤️ Add", callback_data: favCallback }]
           ]};
           
           if (p.imageUrl) {
@@ -1745,7 +1893,22 @@ const sendToTelegramStep = createStep({
   }
 });
 
-export const telegramBotWorkflow = createWorkflow({ id: "telegram-bot-workflow" })
+export const telegramBotWorkflow = createWorkflow({
+  id: "telegram-bot-workflow",
+  inputSchema: z.object({
+    message: z.string().optional(),
+    chatId: z.string(),
+    telegramId: z.string(),
+    isCallback: z.boolean(),
+    callbackData: z.string().optional(),
+    userName: z.string().optional(),
+    languageCode: z.string().optional(),
+    messageId: z.number().optional(),
+  }),
+  outputSchema: z.object({
+    sent: z.boolean(),
+  }),
+})
   .then(processMessageStep)
   .then(sendToTelegramStep)
   .commit();
