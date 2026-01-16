@@ -98,6 +98,11 @@ const LANG_TEXTS: Record<string, any> = {
     history: "🕐 Історія",
     addFav: "❤️ В обране",
     favAddedShort: "❤️",
+    discount: "ЗНИЖКА",
+    sold: "продано",
+    freeShip: "Безкоштовна доставка",
+    priceDrop: "Ціна впала!",
+    was: "Було",
   },
   ru: {
     welcome: `🎯 <b>Привет, {name}!</b> 🎯
@@ -173,6 +178,11 @@ const LANG_TEXTS: Record<string, any> = {
     countrySelected: "✅ Страна выбрана! Теперь можно искать.",
     langSelected: "✅ Язык изменён!",
     error: "❌ Ошибка. Попробуй ещё раз.",
+    discount: "СКИДКА",
+    sold: "продано",
+    freeShip: "Бесплатная доставка",
+    priceDrop: "Цена упала!",
+    was: "Было",
   },
   en: {
     welcome: `🎯 <b>Hey {name}!</b> 🎯
@@ -260,6 +270,11 @@ You invited 5 friends and earned a coupon!`,
     history: "🕐 History",
     addFav: "❤️ Add to favorites",
     favAddedShort: "❤️",
+    discount: "OFF",
+    sold: "sold",
+    freeShip: "Free shipping",
+    priceDrop: "Price dropped!",
+    was: "Was",
   },
   de: {
     welcome: "Hallo {name}! 🛍️ Ich helfe dir, die besten AliExpress-Angebote zu finden. Wähle dein Land:",
@@ -294,6 +309,11 @@ You invited 5 friends and earned a coupon!`,
     countrySelected: "✅ Land ausgewählt!",
     langSelected: "✅ Sprache geändert!",
     error: "❌ Fehler. Bitte erneut versuchen.",
+    discount: "RABATT",
+    sold: "verkauft",
+    freeShip: "Kostenloser Versand",
+    priceDrop: "Preis gefallen!",
+    was: "War",
   },
   pl: {
     welcome: "Cześć {name}! 🛍️ Pomogę Ci znaleźć najlepsze oferty. Wybierz kraj:",
@@ -328,6 +348,11 @@ You invited 5 friends and earned a coupon!`,
     countrySelected: "✅ Kraj wybrany!",
     langSelected: "✅ Język zmieniony!",
     error: "❌ Błąd. Spróbuj ponownie.",
+    discount: "ZNIŻKA",
+    sold: "sprzedano",
+    freeShip: "Darmowa dostawa",
+    priceDrop: "Cena spadła!",
+    was: "Było",
   },
   fr: {
     welcome: "Salut {name}! 🛍️ Je t'aide à trouver les meilleures offres. Choisis ton pays:",
@@ -362,6 +387,11 @@ You invited 5 friends and earned a coupon!`,
     countrySelected: "✅ Pays sélectionné!",
     langSelected: "✅ Langue changée!",
     error: "❌ Erreur. Réessaie.",
+    discount: "PROMO",
+    sold: "vendu",
+    freeShip: "Livraison gratuite",
+    priceDrop: "Prix baissé!",
+    was: "Était",
   },
   es: {
     welcome: "¡Hola {name}! 🛍️ Te ayudo a encontrar las mejores ofertas. Elige tu país:",
@@ -396,6 +426,11 @@ You invited 5 friends and earned a coupon!`,
     countrySelected: "✅ ¡País seleccionado!",
     langSelected: "✅ ¡Idioma cambiado!",
     error: "❌ Error. Inténtalo de nuevo.",
+    discount: "DESCUENTO",
+    sold: "vendido",
+    freeShip: "Envío gratis",
+    priceDrop: "¡Precio bajó!",
+    was: "Era",
   },
   it: {
     welcome: "Ciao {name}! 🛍️ Ti aiuto a trovare le migliori offerte. Scegli il tuo paese:",
@@ -430,6 +465,11 @@ You invited 5 friends and earned a coupon!`,
     countrySelected: "✅ Paese selezionato!",
     langSelected: "✅ Lingua cambiata!",
     error: "❌ Errore. Riprova.",
+    discount: "SCONTO",
+    sold: "venduto",
+    freeShip: "Spedizione gratuita",
+    priceDrop: "Prezzo sceso!",
+    was: "Era",
   },
   cs: {
     welcome: "Ahoj {name}! 🛍️ Pomohu ti najít nejlepší nabídky. Vyber svou zemi:",
@@ -464,6 +504,11 @@ You invited 5 friends and earned a coupon!`,
     countrySelected: "✅ Země vybrána!",
     langSelected: "✅ Jazyk změněn!",
     error: "❌ Chyba. Zkus to znovu.",
+    discount: "SLEVA",
+    sold: "prodáno",
+    freeShip: "Doprava zdarma",
+    priceDrop: "Cena klesla!",
+    was: "Bylo",
   },
   ro: {
     welcome: "Salut {name}! 🛍️ Te ajut să găsești cele mai bune oferte. Alege țara:",
@@ -498,6 +543,11 @@ You invited 5 friends and earned a coupon!`,
     countrySelected: "✅ Țară selectată!",
     langSelected: "✅ Limba schimbată!",
     error: "❌ Eroare. Încearcă din nou.",
+    discount: "REDUCERE",
+    sold: "vândut",
+    freeShip: "Livrare gratuită",
+    priceDrop: "Preț scăzut!",
+    was: "A fost",
   },
 };
 
@@ -919,13 +969,16 @@ const sendToTelegramStep = createStep({
       if (data.products && data.products.length > 0) {
         for (const p of data.products) {
           const rating = p.rating || 4.5;
-          const stars = "⭐".repeat(Math.round(rating));
-          const discountBadge = p.discount > 0 ? `\n🔥 <b>-${p.discount}% ЗНИЖКА!</b>` : "";
-          const originalPriceText = p.discount > 0 && p.originalPrice > p.price 
-            ? `<s>${p.originalPrice.toFixed(2)}</s> → ` 
+          const stars = "⭐".repeat(Math.max(1, Math.round(rating)));
+          const price = typeof p.price === 'number' ? p.price : parseFloat(p.price) || 0;
+          const origPrice = typeof p.originalPrice === 'number' ? p.originalPrice : parseFloat(p.originalPrice) || 0;
+          const discountBadge = p.discount > 0 ? `\n🔥 <b>-${p.discount}% ${t.discount || 'OFF'}!</b>` : "";
+          const originalPriceText = p.discount > 0 && origPrice > price 
+            ? `<s>${origPrice.toFixed(2)}</s> → ` 
             : "";
-          const ordersText = p.orders > 1000 ? `${(p.orders/1000).toFixed(1)}K` : String(p.orders || 0);
-          const caption = `<b>${p.title?.substring(0, 100)}</b>${discountBadge}\n\n💰 ${originalPriceText}<b>${p.price.toFixed(2)} ${p.currency}</b>\n${stars} ${rating.toFixed(1)} | 📦 ${ordersText} продано\n🚚 Безкоштовна доставка`;
+          const ordersNum = p.orders || 0;
+          const ordersText = ordersNum > 1000 ? `${(ordersNum/1000).toFixed(1)}K` : String(ordersNum);
+          const caption = `<b>${p.title?.substring(0, 100)}</b>${discountBadge}\n\n💰 ${originalPriceText}<b>${price.toFixed(2)} ${p.currency}</b>\n${stars} ${rating.toFixed(1)} | 📦 ${ordersText} ${t.sold || 'sold'}\n🚚 ${t.freeShip || 'Free shipping'}`;
           
           const productId = p.id || p.productId || String(Date.now());
           const encodedTitle = encodeURIComponent((p.title || "Product").substring(0, 50));
@@ -976,10 +1029,12 @@ const sendToTelegramStep = createStep({
 
       if (data.favorites && data.favorites.length > 0) {
         for (const f of data.favorites) {
-          const priceDropBadge = f.originalPrice && f.currentPrice < f.originalPrice 
-            ? `\n📉 <b>Ціна впала!</b> Було: <s>${f.originalPrice}</s>` 
+          const currPrice = typeof f.currentPrice === 'number' ? f.currentPrice : parseFloat(f.currentPrice) || 0;
+          const origPrice = typeof f.originalPrice === 'number' ? f.originalPrice : parseFloat(f.originalPrice) || 0;
+          const priceDropBadge = origPrice > 0 && currPrice < origPrice 
+            ? `\n📉 <b>${t.priceDrop || 'Price dropped!'}</b> ${t.was || 'Was'}: <s>${origPrice.toFixed(2)} ${f.currency}</s>` 
             : "";
-          const caption = `❤️ <b>${f.productTitle}</b>${priceDropBadge}\n\n💰 <b>${f.currentPrice} ${f.currency}</b>`;
+          const caption = `❤️ <b>${f.productTitle}</b>${priceDropBadge}\n\n💰 <b>${currPrice.toFixed(2)} ${f.currency}</b>`;
           const mk = { inline_keyboard: [
             [{ text: t.buy, url: f.productUrl }],
             [{ text: "❌ Remove", callback_data: `fav:remove:${f.productId}` }]
