@@ -64,8 +64,14 @@ const LANG_TEXTS: Record<string, any> = {
     referralTitle: `🎁 <b>РЕФЕРАЛЬНА ПРОГРАМА</b> 🎁
 
 ━━━━━━━━━━━━━━━━━
-💰 <b>Запроси 5 друзів — отримай КУПОН!</b>
+💰 <b>Запрошуй друзів — отримуй КУПОНИ!</b>
 ━━━━━━━━━━━━━━━━━
+
+📊 <b>Нагороди:</b>
+┣ 1 друг = 🎟️ <b>3%</b>
+┣ 3 друзі = 🎟️ <b>5%</b>
+┣ 5 друзів = 🎟️ <b>10%</b>
+┗ 10 друзів = 🎟️ <b>15%</b> VIP
 
 📲 <b>Твоє посилання:</b>`,
     referralStats: `
@@ -103,6 +109,21 @@ const LANG_TEXTS: Record<string, any> = {
     freeShip: "Безкоштовна доставка",
     priceDrop: "Ціна впала!",
     was: "Було",
+    myCoupons: "🎟️ Купони",
+    couponsTitle: `🎟️ <b>ТВОЇ КУПОНИ</b> 🎟️
+
+━━━━━━━━━━━━━━━━━`,
+    noCoupons: `😔 У тебе ще немає купонів
+
+📊 <b>Як отримати:</b>
+┣ 1 друг = 🎟️ <b>3%</b> купон
+┣ 3 друзі = 🎟️ <b>5%</b> купон
+┣ 5 друзів = 🎟️ <b>10%</b> купон
+┗ 10 друзів = 🎟️ <b>15%</b> VIP купон`,
+    couponItem: "🎟️ <b>{name}</b> — {percent}% знижка\n<code>{code}</code>",
+    nextMilestone: "\n\n📊 <b>До наступного купона:</b> {left} друзів",
+    allMilestonesReached: "\n\n🏆 <b>Вітаємо!</b> Ти отримав усі купони!",
+    newCouponEarned: "🎉 <b>НОВИЙ КУПОН!</b> 🎉\n\nТи запросив {refs} друзів і отримав купон на <b>{percent}%</b>!\n\n🎟️ <code>{code}</code>",
   },
   ru: {
     welcome: `🎯 <b>Привет, {name}!</b> 🎯
@@ -156,8 +177,14 @@ const LANG_TEXTS: Record<string, any> = {
     referralTitle: `🎁 <b>РЕФЕРАЛЬНАЯ ПРОГРАММА</b> 🎁
 
 ━━━━━━━━━━━━━━━━━
-💰 <b>Пригласи 5 друзей — получи КУПОН!</b>
+💰 <b>Приглашай друзей — получай КУПОНЫ!</b>
 ━━━━━━━━━━━━━━━━━
+
+📊 <b>Награды:</b>
+┣ 1 друг = 🎟️ <b>3%</b>
+┣ 3 друга = 🎟️ <b>5%</b>
+┣ 5 друзей = 🎟️ <b>10%</b>
+┗ 10 друзей = 🎟️ <b>15%</b> VIP
 
 📲 <b>Твоя ссылка:</b>`,
     referralStats: `
@@ -183,6 +210,21 @@ const LANG_TEXTS: Record<string, any> = {
     freeShip: "Бесплатная доставка",
     priceDrop: "Цена упала!",
     was: "Было",
+    myCoupons: "🎟️ Купоны",
+    couponsTitle: `🎟️ <b>ТВОИ КУПОНЫ</b> 🎟️
+
+━━━━━━━━━━━━━━━━━`,
+    noCoupons: `😔 У тебя ещё нет купонов
+
+📊 <b>Как получить:</b>
+┣ 1 друг = 🎟️ <b>3%</b> купон
+┣ 3 друга = 🎟️ <b>5%</b> купон
+┣ 5 друзей = 🎟️ <b>10%</b> купон
+┗ 10 друзей = 🎟️ <b>15%</b> VIP купон`,
+    couponItem: "🎟️ <b>{name}</b> — {percent}% скидка\n<code>{code}</code>",
+    nextMilestone: "\n\n📊 <b>До следующего купона:</b> {left} друзей",
+    allMilestonesReached: "\n\n🏆 <b>Поздравляем!</b> Ты получил все купоны!",
+    newCouponEarned: "🎉 <b>НОВЫЙ КУПОН!</b> 🎉\n\nТы пригласил {refs} друзей и получил купон на <b>{percent}%</b>!\n\n🎟️ <code>{code}</code>",
   },
   en: {
     welcome: `🎯 <b>Hey {name}!</b> 🎯
@@ -236,8 +278,14 @@ Choose what interests you:
     referralTitle: `🎁 <b>REFERRAL PROGRAM</b> 🎁
 
 ━━━━━━━━━━━━━━━━━
-💰 <b>Invite 5 friends — get a COUPON!</b>
+💰 <b>Invite friends — earn COUPONS!</b>
 ━━━━━━━━━━━━━━━━━
+
+📊 <b>Rewards:</b>
+┣ 1 friend = 🎟️ <b>3%</b>
+┣ 3 friends = 🎟️ <b>5%</b>
+┣ 5 friends = 🎟️ <b>10%</b>
+┗ 10 friends = 🎟️ <b>15%</b> VIP
 
 📲 <b>Your link:</b>`,
     referralStats: `
@@ -275,6 +323,21 @@ You invited 5 friends and earned a coupon!`,
     freeShip: "Free shipping",
     priceDrop: "Price dropped!",
     was: "Was",
+    myCoupons: "🎟️ Coupons",
+    couponsTitle: `🎟️ <b>YOUR COUPONS</b> 🎟️
+
+━━━━━━━━━━━━━━━━━`,
+    noCoupons: `😔 You don't have any coupons yet
+
+📊 <b>How to earn:</b>
+┣ 1 friend = 🎟️ <b>3%</b> coupon
+┣ 3 friends = 🎟️ <b>5%</b> coupon
+┣ 5 friends = 🎟️ <b>10%</b> coupon
+┗ 10 friends = 🎟️ <b>15%</b> VIP coupon`,
+    couponItem: "🎟️ <b>{name}</b> — {percent}% discount\n<code>{code}</code>",
+    nextMilestone: "\n\n📊 <b>To next coupon:</b> {left} more friends",
+    allMilestonesReached: "\n\n🏆 <b>Congrats!</b> You've earned all coupons!",
+    newCouponEarned: "🎉 <b>NEW COUPON!</b> 🎉\n\nYou invited {refs} friends and earned a <b>{percent}%</b> coupon!\n\n🎟️ <code>{code}</code>",
   },
   de: {
     welcome: "Hallo {name}! 🛍️ Ich helfe dir, die besten AliExpress-Angebote zu finden. Wähle dein Land:",
@@ -599,9 +662,23 @@ function getProfileButtons(lang: string, dailyTopEnabled: boolean) {
     [{ text: t.changeCountry, callback_data: "action:change_country" }],
     [{ text: t.changeLang, callback_data: "action:change_lang" }],
     [{ text: dailyTopEnabled ? t.disableNotif : t.enableNotif, callback_data: dailyTopEnabled ? "toggle:daily_off" : "toggle:daily_on" }],
-    [{ text: t.referral, callback_data: "action:referral" }],
+    [{ text: t.referral, callback_data: "action:referral" }, { text: t.myCoupons || "🎟️ Coupons", callback_data: "action:coupons" }],
     [{ text: t.back, callback_data: "action:menu" }],
   ];
+}
+
+const COUPON_MILESTONES = [
+  { refs: 1, percent: 3, name: "STARTER" },
+  { refs: 3, percent: 5, name: "BRONZE" },
+  { refs: 5, percent: 10, name: "SILVER" },
+  { refs: 10, percent: 15, name: "GOLD" },
+];
+
+function getNextMilestone(currentRefs: number) {
+  for (const m of COUPON_MILESTONES) {
+    if (currentRefs < m.refs) return m;
+  }
+  return null;
 }
 
 function getLangButtons() {
@@ -698,11 +775,27 @@ const processMessageStep = createStep({
             if (newUser) {
               await db.insert(referrals).values({ referrerId: referredById, referredId: newUser.id });
               const refCount = await db.select({ count: sql<number>`count(*)` }).from(referrals).where(eq(referrals.referrerId, referredById));
-              if (refCount[0]?.count >= 5) {
-                const [existingCoupon] = await db.select().from(coupons).where(eq(coupons.userId, referredById)).limit(1);
-                if (!existingCoupon) {
-                  const couponCode = `BW5-${referredById}-${Date.now().toString(36).toUpperCase()}`;
-                  await db.insert(coupons).values({ userId: referredById, code: couponCode, discountPercent: 5, earnedForReferrals: 5 });
+              const totalRefs = Number(refCount[0]?.count || 0);
+              
+              for (const milestone of COUPON_MILESTONES) {
+                if (totalRefs >= milestone.refs) {
+                  const existingCoupon = await db.select().from(coupons).where(and(eq(coupons.userId, referredById), eq(coupons.earnedForReferrals, milestone.refs))).limit(1);
+                  if (existingCoupon.length === 0) {
+                    const couponCode = `BW${milestone.percent}-${referredById}-${Date.now().toString(36).toUpperCase()}`;
+                    await db.insert(coupons).values({ userId: referredById, code: couponCode, discountPercent: milestone.percent, earnedForReferrals: milestone.refs });
+                    
+                    const [referrer] = await db.select().from(users).where(eq(users.id, referredById)).limit(1);
+                    if (referrer) {
+                      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+                      const referrerLang = referrer.language || "uk";
+                      const newCouponMsg = getText(referrerLang, "newCouponEarned", { refs: milestone.refs, percent: milestone.percent, code: couponCode });
+                      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ chat_id: referrer.telegramId, text: newCouponMsg, parse_mode: "HTML" })
+                      }).catch(() => {});
+                    }
+                  }
                 }
               }
             }
@@ -895,16 +988,45 @@ const processMessageStep = createStep({
 
             case "referral":
               const refCount = await db.select({ count: sql<number>`count(*)` }).from(referrals).where(eq(referrals.referrerId, user.id));
-              const count = Number(refCount[0]?.count || 0);
-              const [coupon] = await db.select().from(coupons).where(eq(coupons.userId, user.id)).limit(1);
+              const refTotal = Number(refCount[0]?.count || 0);
               
-              let refText = `${t("referralTitle")}\n\nhttps://t.me/BuyWises_bot?start=${user.referralCode}\n\n${t("referralStats", { count })}`;
-              if (coupon) {
-                refText += `\n\n${t("yourCoupon", { code: coupon.code })}`;
-              } else if (count < 5) {
-                refText += `\n\n${t("couponProgress", { left: 5 - count })}`;
+              let refText = `${t("referralTitle")}\n\nhttps://t.me/BuyWises_bot?start=${user.referralCode}\n\n${t("referralStats", { count: refTotal })}`;
+              
+              const nextM = getNextMilestone(refTotal);
+              if (nextM) {
+                refText += `\n\n📊 <b>До ${nextM.percent}% купона:</b> ${nextM.refs - refTotal} друзів`;
+              } else {
+                refText += t("allMilestonesReached");
               }
-              return { response: refText, chatId, telegramId, keyboard: "main", lang };
+              return { response: refText, chatId, telegramId, keyboard: "profile", lang };
+
+            case "coupons":
+              const userCoupons = await db.select().from(coupons).where(eq(coupons.userId, user.id)).orderBy(desc(coupons.discountPercent));
+              const couponRefCount = await db.select({ count: sql<number>`count(*)` }).from(referrals).where(eq(referrals.referrerId, user.id));
+              const couponRefs = Number(couponRefCount[0]?.count || 0);
+              
+              if (userCoupons.length === 0) {
+                let noCouponsText = t("noCoupons");
+                const nextCoupon = getNextMilestone(couponRefs);
+                if (nextCoupon) {
+                  noCouponsText += `\n\n👥 Запрошено: ${couponRefs}\n📊 До ${nextCoupon.percent}% купона: ${nextCoupon.refs - couponRefs} друзів`;
+                }
+                return { response: noCouponsText, chatId, telegramId, keyboard: "profile", lang };
+              }
+              
+              let couponsText = t("couponsTitle") + "\n\n";
+              for (const c of userCoupons) {
+                const milestone = COUPON_MILESTONES.find(m => m.percent === c.discountPercent);
+                couponsText += `🎟️ <b>${milestone?.name || "BONUS"}</b> — ${c.discountPercent}%\n<code>${c.code}</code>\n\n`;
+              }
+              
+              const nextCouponMilestone = getNextMilestone(couponRefs);
+              if (nextCouponMilestone) {
+                couponsText += `📊 <b>До ${nextCouponMilestone.percent}% купона:</b> ${nextCouponMilestone.refs - couponRefs} друзів`;
+              } else {
+                couponsText += t("allMilestonesReached");
+              }
+              return { response: couponsText, chatId, telegramId, keyboard: "profile", lang };
 
           }
         }

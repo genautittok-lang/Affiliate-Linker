@@ -57,11 +57,13 @@ Preferred communication style: Simple, everyday language.
 - Repeat callback handler triggers same search again
 - LangTexts: recentSearches, noSearchHistory
 
-### Referral Coupon System
-- Generates coupon code (BW5-userId-timestamp) when user reaches 5 referrals
+### Referral Coupon System (Progressive Milestones)
+- 4 milestone levels: 1 friend (3%), 3 friends (5%), 5 friends (10%), 10 friends (15% VIP)
+- Automatic coupon generation at each milestone with notification to referrer
+- Coupons page in profile showing all earned coupons and progress to next milestone
+- Coupon codes format: BW{percent}-{userId}-{timestamp}
 - Coupons table: userId, code, discountPercent, earnedForReferrals, isUsed, expiresAt
-- Shows coupon in referral section or progress tracker (3/5)
-- LangTexts: couponEarned, couponProgress, yourCoupon
+- LangTexts: myCoupons, couponsTitle, noCoupons, couponItem, nextMilestone, allMilestonesReached, newCouponEarned
 
 ### Price Drop Notifications
 - Cron at 18:00 checks all favorites for price changes
