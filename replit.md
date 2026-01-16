@@ -95,7 +95,21 @@ Preferred communication style: Simple, everyday language.
 - **DB Constraint**: Unique constraint on `users.referralCode` column to prevent duplicates
 - **Product Cache Table**: New `product_cache` table stores product data for favorites (productId, title, url, image, price, currency)
 - **Favorites Fix**: Short callback format `fav:add:{productId}` avoids Telegram 64-byte limit; products fetched from cache
-- **Admin Panel**: Enhanced with "Users by Country" (flag emojis), "Broadcast History" (last 10), improved button layout
+- **Country-Language Fix**: Changing country no longer changes language (only updates country and currency)
+
+### Admin & Moderation System (January 2026)
+- **Admin ID**: 7820995179 - full admin access with button in Support section
+- **Moderator ID**: 6141605098 - /admin command access only (no button in Support)
+- **isSuperAdmin Function**: Distinguishes main admin from moderators
+- **Enhanced Admin Panel**: Comprehensive stats showing users, today's new, notifications, searches, favorites, referrals
+- **Top Users Feature**: View top 15 users by points with country flags
+- **Users by Country**: Admin can see user distribution by country with flag emojis
+- **Broadcast History**: View last 10 broadcasts with message preview
+
+### Order Advertising Feature (January 2026)
+- **New Menu Button**: "📢 Реклама" / "📢 Advertise" added to main menu for all users
+- **Localized Info Page**: Advertising info translated in all 10 languages
+- **Contact Integration**: Links to admin for advertising inquiries
 
 ## System Architecture
 

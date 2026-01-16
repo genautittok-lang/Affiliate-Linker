@@ -1529,16 +1529,40 @@ ${t("notifications")}: ${currentUser.dailyTopEnabled ? t("notifOn") : t("notifOf
 
             case "admin":
               if (!isAdmin(telegramId)) {
+                console.log("⚠️ [Admin] Unauthorized access attempt by", telegramId);
                 return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
               }
+              console.log("🔐 [Admin] Panel accessed by", telegramId);
               const totalUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
               const today = new Date();
               today.setHours(0, 0, 0, 0);
               const todayISO = today.toISOString();
               const activeToday = await db.select({ count: sql<number>`count(*)` }).from(users).where(sql`${users.createdAt} >= ${todayISO}`);
               const withNotif = await db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.dailyTopEnabled, true));
+              const totalRefs = await db.select({ count: sql<number>`count(*)` }).from(referrals);
+              const totalFavs = await db.select({ count: sql<number>`count(*)` }).from(favorites);
+              const totalSearches = await db.select({ count: sql<number>`count(*)` }).from(searchHistory);
+              
+              const adminText = `🔐 <b>АДМІН-ПАНЕЛЬ</b>
+
+━━━━━━━━━━━━━━━━━
+📊 <b>СТАТИСТИКА</b>
+━━━━━━━━━━━━━━━━━
+
+👥 <b>Користувачі:</b> ${totalUsers[0]?.count || 0}
+📅 <b>Нові сьогодні:</b> ${activeToday[0]?.count || 0}
+🔔 <b>З сповіщеннями:</b> ${withNotif[0]?.count || 0}
+
+━━━━━━━━━━━━━━━━━
+📈 <b>АКТИВНІСТЬ</b>
+━━━━━━━━━━━━━━━━━
+
+🔍 <b>Пошуків:</b> ${totalSearches[0]?.count || 0}
+❤️ <b>В обране:</b> ${totalFavs[0]?.count || 0}
+👥 <b>Рефералів:</b> ${totalRefs[0]?.count || 0}`;
+              
               return {
-                response: `🔐 Адмін-панель\n\n${t("totalUsers", { count: totalUsers[0]?.count || 0 })}\n${t("activeToday", { count: activeToday[0]?.count || 0 })}\n${t("withNotif", { count: withNotif[0]?.count || 0 })}`,
+                response: adminText,
                 chatId,
                 telegramId,
                 keyboard: "admin",
@@ -1614,6 +1638,35 @@ ${t("notifications")}: ${currentUser.dailyTopEnabled ? t("notifOn") : t("notifOf
               }
               
               return { response: historyText, chatId, telegramId, keyboard: "admin", lang };
+
+            case "admin_top":
+              if (!isAdmin(telegramId)) {
+                console.log("⚠️ [AdminTop] Unauthorized access attempt by", telegramId);
+                return { response: t("mainMenu"), chatId, telegramId, keyboard: "main", lang };
+              }
+              console.log("🏆 [AdminTop] Top users view accessed by", telegramId);
+              const topUsersList = await db.select({
+                id: users.id,
+                firstName: users.firstName,
+                telegramId: users.telegramId,
+                points: users.points,
+                country: users.country,
+              })
+                .from(users)
+                .orderBy(desc(users.points))
+                .limit(15);
+              
+              let topUsersText = "🏆 <b>ТОП КОРИСТУВАЧІВ</b> 🏆\n\n━━━━━━━━━━━━━━━━━\n\n";
+              
+              topUsersList.forEach((u, i) => {
+                const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
+                const flag = u.country === "Ukraine" ? "🇺🇦" : 
+                             u.country === "Germany" ? "🇩🇪" :
+                             u.country === "Poland" ? "🇵🇱" : "🌍";
+                topUsersText += `${medal} <b>${u.firstName || "User"}</b> ${flag}\n   └ 🏆 ${u.points || 0} pts | ID: ${u.telegramId}\n\n`;
+              });
+              
+              return { response: topUsersText, chatId, telegramId, keyboard: "admin", lang };
 
             case "change_country":
               return { response: t("changeCountry"), chatId, keyboard: "country", lang };
@@ -1866,10 +1919,10 @@ const sendToTelegramStep = createStep({
           break;
         case "admin":
           kb = { inline_keyboard: [
-            [{ text: t.adminBroadcast || "📢 Broadcast", callback_data: "action:broadcast" }],
-            [{ text: "👥 Users by Country", callback_data: "action:admin_countries" }],
-            [{ text: "📜 Broadcast History", callback_data: "action:admin_history" }],
-            [{ text: t.adminStats || "📊 Refresh Stats", callback_data: "action:admin" }],
+            [{ text: "📢 Розсилка", callback_data: "action:broadcast" }],
+            [{ text: "🌍 По країнах", callback_data: "action:admin_countries" }, { text: "🏆 Топ юзери", callback_data: "action:admin_top" }],
+            [{ text: "📜 Історія розсилок", callback_data: "action:admin_history" }],
+            [{ text: "🔄 Оновити", callback_data: "action:admin" }],
             [{ text: t.back, callback_data: "action:menu" }]
           ]};
           break;
