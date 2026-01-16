@@ -5,7 +5,7 @@ import { users, searchHistory, favorites, referrals, coupons, broadcasts } from 
 import { eq, desc, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
-const ADMIN_IDS = ["8210587392", "6141605098"];
+const ADMIN_IDS = ["8210587392", "6141605098", "7820995179"];
 
 function isAdmin(telegramId: string): boolean {
   return ADMIN_IDS.includes(telegramId);

@@ -4,7 +4,7 @@ import { db } from "../../db";
 import { users, broadcasts } from "../../db/schema";
 import { eq, sql } from "drizzle-orm";
 
-const ADMIN_IDS = ["8210587392", "6141605098"];
+const ADMIN_IDS = ["8210587392", "6141605098", "7820995179"];
 const ADMIN_USERNAME = "@bogdan_OP24";
 
 export const isAdmin = (telegramId: string): boolean => {
