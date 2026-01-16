@@ -5,10 +5,10 @@ import { users, searchHistory, favorites, referrals, coupons, broadcasts } from 
 import { eq, desc, and, sql } from "drizzle-orm";
 import { searchProductsTool, getTopProductsTool } from "../tools/aliexpressSearchTool";
 
-const ADMIN_ID = "8210587392";
+const ADMIN_IDS = ["8210587392", "6141605098"];
 
 function isAdmin(telegramId: string): boolean {
-  return telegramId === ADMIN_ID;
+  return ADMIN_IDS.includes(telegramId);
 }
 
 const LANG_TEXTS: Record<string, any> = {
@@ -918,8 +918,14 @@ const sendToTelegramStep = createStep({
 
       if (data.products && data.products.length > 0) {
         for (const p of data.products) {
-          const discount = p.discount > 0 ? ` (-${p.discount}%)` : "";
-          const caption = `<b>${p.title?.substring(0, 100)}</b>\n\n💰 ${p.price} ${p.currency}${discount}\n⭐ ${p.rating?.toFixed(1) || "4.5"} | 📦 ${p.orders || 0} sold`;
+          const rating = p.rating || 4.5;
+          const stars = "⭐".repeat(Math.round(rating));
+          const discountBadge = p.discount > 0 ? `\n🔥 <b>-${p.discount}% ЗНИЖКА!</b>` : "";
+          const originalPriceText = p.discount > 0 && p.originalPrice > p.price 
+            ? `<s>${p.originalPrice.toFixed(2)}</s> → ` 
+            : "";
+          const ordersText = p.orders > 1000 ? `${(p.orders/1000).toFixed(1)}K` : String(p.orders || 0);
+          const caption = `<b>${p.title?.substring(0, 100)}</b>${discountBadge}\n\n💰 ${originalPriceText}<b>${p.price.toFixed(2)} ${p.currency}</b>\n${stars} ${rating.toFixed(1)} | 📦 ${ordersText} продано\n🚚 Безкоштовна доставка`;
           
           const productId = p.id || p.productId || String(Date.now());
           const encodedTitle = encodeURIComponent((p.title || "Product").substring(0, 50));
@@ -970,7 +976,10 @@ const sendToTelegramStep = createStep({
 
       if (data.favorites && data.favorites.length > 0) {
         for (const f of data.favorites) {
-          const caption = `❤️ <b>${f.productTitle}</b>\n💰 ${f.currentPrice} ${f.currency}`;
+          const priceDropBadge = f.originalPrice && f.currentPrice < f.originalPrice 
+            ? `\n📉 <b>Ціна впала!</b> Було: <s>${f.originalPrice}</s>` 
+            : "";
+          const caption = `❤️ <b>${f.productTitle}</b>${priceDropBadge}\n\n💰 <b>${f.currentPrice} ${f.currency}</b>`;
           const mk = { inline_keyboard: [
             [{ text: t.buy, url: f.productUrl }],
             [{ text: "❌ Remove", callback_data: `fav:remove:${f.productId}` }]
