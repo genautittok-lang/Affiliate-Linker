@@ -1688,10 +1688,14 @@ const sendToTelegramStep = createStep({
           kb = { inline_keyboard: [...getLangButtons(), [{ text: t.back, callback_data: "action:menu" }]] };
           break;
         case "support":
-          kb = { inline_keyboard: [
-            [{ text: "💬 @bogdan_OP24", url: "https://t.me/bogdan_OP24" }],
-            [{ text: t.back, callback_data: "action:menu" }]
-          ]};
+          const supportButtons: any[][] = [
+            [{ text: "💬 @bogdan_OP24", url: "https://t.me/bogdan_OP24" }]
+          ];
+          if (data.telegramId && isAdmin(data.telegramId)) {
+            supportButtons.push([{ text: "🔐 Адмін-панель", callback_data: "action:admin" }]);
+          }
+          supportButtons.push([{ text: t.back, callback_data: "action:menu" }]);
+          kb = { inline_keyboard: supportButtons };
           break;
         case "admin":
           kb = { inline_keyboard: [
