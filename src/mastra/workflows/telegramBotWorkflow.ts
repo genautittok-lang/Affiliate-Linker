@@ -844,7 +844,8 @@ const processMessageStep = createStep({
               const totalUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
               const today = new Date();
               today.setHours(0, 0, 0, 0);
-              const activeToday = await db.select({ count: sql<number>`count(*)` }).from(users).where(sql`${users.createdAt} >= ${today}`);
+              const todayISO = today.toISOString();
+              const activeToday = await db.select({ count: sql<number>`count(*)` }).from(users).where(sql`${users.createdAt} >= ${todayISO}`);
               const withNotif = await db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.dailyTopEnabled, true));
               return {
                 response: `🔐 Адмін-панель\n\n${t("totalUsers", { count: totalUsers[0]?.count || 0 })}\n${t("activeToday", { count: activeToday[0]?.count || 0 })}\n${t("withNotif", { count: withNotif[0]?.count || 0 })}`,
