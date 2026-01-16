@@ -929,7 +929,7 @@ const sendToTelegramStep = createStep({
       
       switch (data.keyboard) {
         case "main":
-          kb = { inline_keyboard: getMainMenuButtons(lang) };
+          kb = { inline_keyboard: getMainMenuButtons(lang, data.telegramId) };
           break;
         case "country":
           kb = { inline_keyboard: COUNTRY_BUTTONS };
