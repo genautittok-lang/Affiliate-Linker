@@ -937,7 +937,29 @@ const processMessageStep = createStep({
 
             case "profile":
               const [currentUser] = await db.select().from(users).where(eq(users.telegramId, telegramId)).limit(1);
-              const profileText = `${t("profileTitle")}\n\n${t("country")}: ${currentUser.country || "-"}\n${t("language")}: ${currentUser.language}\n${t("notifications")}: ${currentUser.dailyTopEnabled ? t("notifOn") : t("notifOff")}`;
+              const profileRefCount = await db.select({ count: sql<number>`count(*)` }).from(referrals).where(eq(referrals.referrerId, currentUser.id));
+              const profileRefs = Number(profileRefCount[0]?.count || 0);
+              const profileCoupons = await db.select({ count: sql<number>`count(*)` }).from(coupons).where(eq(coupons.userId, currentUser.id));
+              const couponsCount = Number(profileCoupons[0]?.count || 0);
+              
+              let userRank = "🌱 Новачок";
+              let rankEmoji = "🌱";
+              if (profileRefs >= 10) { userRank = "👑 VIP"; rankEmoji = "👑"; }
+              else if (profileRefs >= 5) { userRank = "🥇 Золото"; rankEmoji = "🥇"; }
+              else if (profileRefs >= 3) { userRank = "🥈 Срібло"; rankEmoji = "🥈"; }
+              else if (profileRefs >= 1) { userRank = "🥉 Бронза"; rankEmoji = "🥉"; }
+              
+              const profileText = `${t("profileTitle")}
+
+━━━━━━━━━━━━━━━━━
+${rankEmoji} <b>Рейтинг:</b> ${userRank}
+👥 <b>Запрошено:</b> ${profileRefs} друзів
+🎟️ <b>Купонів:</b> ${couponsCount}
+━━━━━━━━━━━━━━━━━
+
+${t("country")}: ${currentUser.country || "-"}
+${t("language")}: ${currentUser.language}
+${t("notifications")}: ${currentUser.dailyTopEnabled ? t("notifOn") : t("notifOff")}`;
               return { response: profileText, chatId, telegramId, keyboard: "profile", lang, dailyTopEnabled: currentUser.dailyTopEnabled };
 
             case "history":
